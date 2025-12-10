@@ -1,21 +1,39 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 using AtelierProject.Data;
 using AtelierProject.Models;
 
 namespace AtelierProject.Pages.Salon.Appointments
 {
+    [Authorize]
     public class DetailsModel : PageModel
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public DetailsModel(ApplicationDbContext context)
+        public DetailsModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         public SalonAppointment Appointment { get; set; } = default!;
+
+        // 🛡️ الدالة الأمنية (Centralized Security Check)
+        private async Task<bool> IsUserAllowed(int? branchId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return false;
+
+            // المدير العام (بدون فرع) يرى كل شيء
+            if (user.BranchId == null) return true;
+
+            // الموظف يجب أن يطابق فرع الحجز
+            return user.BranchId == branchId;
+        }
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
@@ -29,57 +47,54 @@ namespace AtelierProject.Pages.Salon.Appointments
 
             if (Appointment == null) return NotFound();
 
+            // 🛡️ التحقق الأمني قبل العرض
+            if (!await IsUserAllowed(Appointment.BranchId)) return Forbid();
+
             return Page();
         }
 
-        // دالة سداد المبلغ المتبقي
+        // 1. تسجيل دفعة نقدية
         public async Task<IActionResult> OnPostPayRemainingAsync(int id, decimal amount)
-        {
-            var appt = await _context.SalonAppointments.FindAsync(id);
-            if (appt == null || amount <= 0) return RedirectToPage(new { id = id });
-
-            // حماية: عدم دفع أكثر من المتبقي
-            if (amount > appt.RemainingAmount)
-            {
-                amount = appt.RemainingAmount;
-            }
-
-            appt.PaidAmount += amount;
-
-            // تحديث الحالة تلقائياً إذا تم سداد كامل المبلغ
-            // افتراضاً أن لديك حالة باسم Completed
-            if (appt.RemainingAmount <= 0)
-            {
-                appt.Status = SalonAppointmentStatus.Completed;
-            }
-
-            await _context.SaveChangesAsync();
-            return RedirectToPage(new { id = id });
-        }
-
-        // دالة إلغاء الموعد
-        public async Task<IActionResult> OnPostCancelAsync(int id, decimal refundAmount)
         {
             var appt = await _context.SalonAppointments.FindAsync(id);
             if (appt == null) return NotFound();
 
-            // 1. تغيير الحالة
-            appt.Status = SalonAppointmentStatus.Cancelled;
+            // 🛡️ التحقق الأمني قبل الدفع
+            if (!await IsUserAllowed(appt.BranchId)) return Forbid();
 
-            // 2. معالجة استرداد العربون
-            if (refundAmount > 0)
+            if (amount > 0)
             {
-                // حماية: لا يمكن رد أكثر مما دفع
-                if (refundAmount > appt.PaidAmount)
-                {
-                    appt.PaidAmount = 0; // رد كامل المبلغ
-                }
-                else
-                {
-                    appt.PaidAmount -= refundAmount; // خصم المبلغ المسترد من المدفوعات المسجلة
-                }
+                // يمكن السماح بدفع أكثر من المتبقي (إكرامية) أو تقييده
+                appt.PaidAmount += amount;
+                await _context.SaveChangesAsync();
             }
+            return RedirectToPage(new { id = id });
+        }
 
+        // 2. إلغاء الموعد (مهم جداً إضافتها)
+        public async Task<IActionResult> OnPostCancelAsync(int id)
+        {
+            var appt = await _context.SalonAppointments.FindAsync(id);
+            if (appt == null) return NotFound();
+
+            // 🛡️ التحقق الأمني قبل الإلغاء
+            if (!await IsUserAllowed(appt.BranchId)) return Forbid();
+
+            appt.Status = SalonAppointmentStatus.Cancelled;
+            await _context.SaveChangesAsync();
+            return RedirectToPage(new { id = id });
+        }
+
+        // 3. تحديث الحالة (مثلاً: تم الانتهاء Completed)
+        public async Task<IActionResult> OnPostUpdateStatusAsync(int id, SalonAppointmentStatus newStatus)
+        {
+            var appt = await _context.SalonAppointments.FindAsync(id);
+            if (appt == null) return NotFound();
+
+            // 🛡️ التحقق الأمني
+            if (!await IsUserAllowed(appt.BranchId)) return Forbid();
+
+            appt.Status = newStatus;
             await _context.SaveChangesAsync();
             return RedirectToPage(new { id = id });
         }

@@ -1,16 +1,18 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity; // 1. إضافة مكتبة الهوية
+using Microsoft.AspNetCore.Identity; // مكتبة الهوية
 using AtelierProject.Data;
 using AtelierProject.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AtelierProject.Pages.Bookings
 {
+    [Authorize] // إجبار تسجيل الدخول
     public class DetailsModel : PageModel
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager; // 2. تعريف المانجر
+        private readonly UserManager<ApplicationUser> _userManager; // لإدارة المستخدمين
 
         public DetailsModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
@@ -21,17 +23,23 @@ namespace AtelierProject.Pages.Bookings
         public Booking Booking { get; set; } = default!;
         public decimal RemainingRental => Booking.TotalAmount - Booking.PaidAmount;
 
-        // دالة مساعدة للتحقق من الصلاحية (لتجنب تكرار الكود)
-        private async Task<bool> IsUserAllowed(Booking booking)
+        // 🛡️ دالة أمنية للتحقق من الصلاحية (Helper Method)
+        private async Task<bool> IsUserAllowed(int? bookingBranchId)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return false;
 
-            // إذا كان أدمن (ليس له فرع)، مسموح له بكل شيء
+            // 1. الأدمن (الذي ليس له فرع) يرى كل شيء
             if (user.BranchId == null) return true;
 
-            // إذا كان موظف، يجب أن يكون فرعه مطابق لفرع الحجز
-            return booking.BranchId == user.BranchId;
+            // 2. الموظف يجب أن يكون في نفس فرع الحجز
+            // إذا كان الحجز ليس له فرع (بيانات قديمة) أو يختلف عن فرع الموظف -> مرفوض
+            if (bookingBranchId == null || bookingBranchId != user.BranchId)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public async Task<IActionResult> OnGetAsync(int? id)
@@ -47,15 +55,16 @@ namespace AtelierProject.Pages.Bookings
 
             if (Booking == null) return NotFound();
 
-            // 3. التحقق الأمني: هل الموظف مسموح له برؤية هذا الحجز؟
-            if (!await IsUserAllowed(Booking))
+            // 🛡️ تفتيش أمني قبل عرض الصفحة
+            if (!await IsUserAllowed(Booking.BranchId))
             {
-                return Forbid(); // عرض صفحة "غير مسموح" (403)
+                return Forbid(); // صفحة "غير مسموح لك"
             }
 
             return Page();
         }
 
+        // دالة تغيير الحالة (تسليم)
         public async Task<IActionResult> OnPostUpdateStatusAsync(int id, BookingStatus newStatus)
         {
             var booking = await _context.Bookings
@@ -65,12 +74,12 @@ namespace AtelierProject.Pages.Bookings
 
             if (booking == null) return NotFound();
 
-            // 4. التحقق الأمني قبل التعديل (هام جداً)
-            if (!await IsUserAllowed(booking)) return Forbid();
+            // 🛡️ تفتيش أمني قبل التعديل
+            if (!await IsUserAllowed(booking.BranchId)) return Forbid();
 
             booking.Status = newStatus;
 
-            // تحديث المخزون
+            // تحديث المخزون عند التسليم
             if (newStatus == BookingStatus.PickedUp)
             {
                 foreach (var item in booking.BookingItems)
@@ -83,13 +92,14 @@ namespace AtelierProject.Pages.Bookings
             return RedirectToPage(new { id = id });
         }
 
+        // دالة الدفع
         public async Task<IActionResult> OnPostAddPaymentAsync(int id, decimal paymentAmount)
         {
             var booking = await _context.Bookings.FindAsync(id);
             if (booking == null) return NotFound();
 
-            // 5. التحقق الأمني قبل الدفع
-            if (!await IsUserAllowed(booking)) return Forbid();
+            // 🛡️ تفتيش أمني قبل استلام الفلوس
+            if (!await IsUserAllowed(booking.BranchId)) return Forbid();
 
             if (paymentAmount > 0)
             {
@@ -99,6 +109,7 @@ namespace AtelierProject.Pages.Bookings
             return RedirectToPage(new { id = id });
         }
 
+        // دالة الإرجاع
         public async Task<IActionResult> OnPostReturnAsync(int id, decimal deductionAmount)
         {
             var booking = await _context.Bookings
@@ -108,13 +119,13 @@ namespace AtelierProject.Pages.Bookings
 
             if (booking == null) return NotFound();
 
-            // 6. التحقق الأمني قبل الإرجاع
-            if (!await IsUserAllowed(booking)) return Forbid();
+            // 🛡️ تفتيش أمني
+            if (!await IsUserAllowed(booking.BranchId)) return Forbid();
 
             booking.Status = BookingStatus.Returned;
             booking.InsuranceDeduction = deductionAmount;
 
-            // إعادة المخزون
+            // إعادة المخزون متاح
             foreach (var item in booking.BookingItems)
             {
                 if (item.ProductItem != null) item.ProductItem.Status = ItemStatus.Available;
