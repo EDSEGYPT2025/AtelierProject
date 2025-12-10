@@ -1,0 +1,96 @@
+﻿@page
+@model AtelierProject.Pages.Reports.DailyModel
+@using AtelierProject.Models
+@inject UserManager<ApplicationUser> UserManager
+@{
+    ViewData["Title"] = "التقرير اليومي للخزينة";
+    var user = await UserManager.GetUserAsync(User);
+}
+
+<div class="container-fluid py-4">
+
+    <div class="card bg-light border-0 shadow-sm mb-5 p-3">
+        <form method="get" class="row align-items-center justify-content-center">
+            <div class="col-auto">
+                <label class="fw-bold text-muted">عرض تقرير يوم:</label>
+            </div>
+            <div class="col-auto">
+                <input type="date" asp-for="ReportDate" class="form-control fw-bold" onchange="this.form.submit()" />
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary px-4">تحديث</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="row g-4">
+
+        @if (user.CanAccessMenSection || user.BranchId == null)
+        {
+            <div class="col-md-6">
+                <div class="card shadow border-top border-4 border-dark h-100">
+                    <div class="card-header bg-dark text-white text-center py-3">
+                        <h4 class="mb-0"><i class="fa-solid fa-user-tie"></i> خزينة قسم الرجال</h4>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="py-4">
+                            <h6 class="text-muted text-uppercase mb-2">إيراد اليوم (تسليمات)</h6>
+                            <h1 class="display-4 fw-bold text-dark">@Model.MenIncome.ToString("N0") <small class="fs-6">ج.م</small></h1>
+                            <span class="badge bg-light text-dark border mt-2">عدد العمليات: @Model.MenCount</span>
+                        </div>
+                        <hr>
+                        <div class="alert alert-secondary mb-0">
+                            <strong><i class="fa-solid fa-sack-dollar"></i> الصافي في الدرج:</strong>
+                            <br>
+                            يتم توريد هذا المبلغ منفصلاً.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (user.CanAccessWomenSection || user.CanAccessBeautySection || user.BranchId == null)
+        {
+            <div class="col-md-6">
+                <div class="card shadow border-top border-4 border-danger h-100">
+                    <div class="card-header bg-danger text-white text-center py-3" style="background: linear-gradient(45deg, #d63384, #dc3545);">
+                        <h4 class="mb-0"><i class="fa-solid fa-gem"></i> الخزينة المشتركة (حريمي + تجميل)</h4>
+                    </div>
+                    <div class="card-body">
+
+                        @if (user.CanAccessWomenSection || user.BranchId == null)
+                        {
+                            <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded border-start border-4 border-danger">
+                                <div>
+                                    <h6 class="fw-bold text-danger mb-0"><i class="fa-solid fa-person-dress"></i> إيراد الأتيليه (حريمي)</h6>
+                                    <small class="text-muted">عدد العمليات: @Model.WomenCount</small>
+                                </div>
+                                <h4 class="fw-bold mb-0">@Model.WomenIncome.ToString("N0") <small class="fs-6">ج.م</small></h4>
+                            </div>
+                        }
+
+                        @if (user.CanAccessBeautySection || user.BranchId == null)
+                        {
+                            <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded border-start border-4 border-info">
+                                <div>
+                                    <h6 class="fw-bold text-info mb-0"><i class="fa-solid fa-spa"></i> إيراد البيوتي سنتر</h6>
+                                    <small class="text-muted">عدد العمليات: @Model.BeautyCount</small>
+                                </div>
+                                <h4 class="fw-bold mb-0">@Model.BeautyIncome.ToString("N0") <small class="fs-6">ج.م</small></h4>
+                            </div>
+                        }
+
+                        <hr>
+
+                        <div class="text-center py-2">
+                            <h6 class="text-muted text-uppercase">إجمالي المبلغ في الدرج (المشترك)</h6>
+                            <h1 class="display-4 fw-bold text-danger">@Model.TotalWomenAndBeautyTreasury.ToString("N0") <small class="fs-6">ج.م</small></h1>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>

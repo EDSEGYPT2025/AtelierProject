@@ -4,9 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity; // هام
 using AtelierProject.Data;
 using AtelierProject.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AtelierProject.Pages.Definitions
 {
+    [Authorize]
     public class DetailsModel : PageModel
     {
         private readonly ApplicationDbContext _context;

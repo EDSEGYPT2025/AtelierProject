@@ -1,5 +1,6 @@
 ﻿using AtelierProject.Data;
 using AtelierProject.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity; // 1. إضافة مكتبة الهوية
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -7,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AtelierProject.Pages.Definitions
 {
+    [Authorize]
     public class CreateModel : PageModel
     {
         private readonly ApplicationDbContext _context;

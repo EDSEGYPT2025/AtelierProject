@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using AtelierProject.Data;
 using AtelierProject.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AtelierProject.Pages.Definitions
 {
+    [Authorize]
     public class EditModel : PageModel
     {
         private readonly ApplicationDbContext _context;
