@@ -1,0 +1,115 @@
+﻿@page
+@model AtelierProject.Pages.Definitions.IndexModel
+@{
+    ViewData["Title"] = "كتالوج المنتجات";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-dark"><i class="fa-solid fa-layer-group text-primary me-2"></i> تعريفات الموديلات</h3>
+        <a asp-page="Create" class="btn btn-primary shadow-sm">
+            <i class="fa-solid fa-plus me-2"></i> إضافة موديل جديد
+        </a>
+    </div>
+
+    <div class="card card-custom">
+        <div class="card-body">
+            @if (Model.ProductDefinitions != null && Model.ProductDefinitions.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.ProductDefinitions[0].Code)
+                                </th>
+                                <th>اسم الموديل</th>
+                                <th>القسم</th>
+                                <th>سعر الإيجار</th>
+                                <th>التأمين</th>
+                                <th>إجراءات</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.ProductDefinitions)
+                            {
+                                <tr>
+                                    <td class="fw-bold text-primary">
+                                        @Html.DisplayFor(modelItem => item.Code)
+                                    </td>
+
+                                    <td class="fw-bold">@item.Name</td>
+                                    <td>
+                                        @if (item.Department == AtelierProject.Models.DepartmentType.Men)
+                                        {
+                                            <span class="badge bg-dark">رجالي</span>
+                                        }
+                                        else if (item.Department == AtelierProject.Models.DepartmentType.Women)
+                                        {
+                                            <span class="badge bg-danger">حريمي</span>
+                                        }
+                                    </td>
+                                    <td>@item.RentalPrice.ToString("N0") ج.م</td>
+                                    <td>@item.DepositAmount.ToString("N0") ج.م</td>
+                                    <td>
+
+                                        <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="تعديل"><i class="fa-solid fa-pen"></i></a>
+                                        <a asp-page="./Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="تفاصيل"><i class="fa-solid fa-circle-info"></i></a>
+
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteModal"
+                                                onclick="setDeleteId(@item.Id, '@item.Name')">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </td>
+
+
+
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info text-center">
+                    لا توجد موديلات مضافة بعد. ابدأ بإضافة أول موديل!
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                هل أنت متأكد أنك تريد حذف الموديل: <strong id="productNameDelete"></strong>؟
+                <br>
+                <small class="text-danger">لا يمكن التراجع عن هذا الإجراء.</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+
+                <form method="post" asp-page-handler="Delete">
+                    <input type="hidden" name="id" id="deleteInputId" value="" />
+                    <button type="submit" class="btn btn-danger">نعم، احذف</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function setDeleteId(id, name) {
+        document.getElementById('deleteInputId').value = id;
+        document.getElementById('productNameDelete').textContent = name;
+    }
+</script>

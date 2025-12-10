@@ -1,0 +1,87 @@
+﻿@page
+@model AtelierProject.Pages.Salon.Services.IndexModel
+@{
+    ViewData["Title"] = "خدمات الكوافير";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-dark"><i class="fa fa-scissors text-primary"></i> قائمة خدمات الكوافير</h3>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+            <i class="fa fa-plus"></i> إضافة خدمة جديدة
+        </button>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>اسم الخدمة</th>
+                        <th>الوصف</th>
+                        <th>المدة (دقيقة)</th>
+                        <th>السعر</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Services)
+                    {
+                        <tr>
+                            <td class="fw-bold">@item.Name</td>
+                            <td class="text-muted">@item.Description</td>
+                            <td><span class="badge bg-info text-dark">@item.DurationMinutes دقيقة</span></td>
+                            <td class="fw-bold text-success">@item.Price.ToString("N0") ج.م</td>
+                            <td>
+                                <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" onsubmit="return confirm('هل أنت متأكد من حذف هذه الخدمة؟');">
+                                    <button class="btn btn-sm btn-outline-danger"><i class="fa fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addServiceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إضافة خدمة جديدة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" asp-page-handler="Add">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label asp-for="NewService.Name" class="form-label fw-bold"></label>
+                        <input asp-for="NewService.Name" class="form-control" required placeholder="مثال: مكياج سواريه" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NewService.Price" class="form-label fw-bold"></label>
+                        <div class="input-group">
+                            <input asp-for="NewService.Price" class="form-control" required />
+                            <span class="input-group-text">ج.م</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NewService.DurationMinutes" class="form-label fw-bold">المدة المتوقعة</label>
+                        <div class="input-group">
+                            <input asp-for="NewService.DurationMinutes" class="form-control" placeholder="30" />
+                            <span class="input-group-text">دقيقة</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NewService.Description" class="form-label"></label>
+                        <textarea asp-for="NewService.Description" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ الخدمة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

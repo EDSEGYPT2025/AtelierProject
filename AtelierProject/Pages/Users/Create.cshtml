@@ -1,0 +1,106 @@
+﻿@page
+@model AtelierProject.Pages.Users.CreateModel
+@{
+    ViewData["Title"] = "تسجيل موظف جديد";
+}
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fa fa-user-plus"></i> تسجيل موظف جديد</h5>
+                    <small>نظام إدارة الصلاحيات</small>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <div asp-validation-summary="All" class="text-danger"></div>
+
+                        <div class="row">
+                            <div class="col-md-6 border-end">
+                                <h6 class="text-primary mb-3">البيانات الشخصية والفرع</h6>
+
+                                <div class="mb-3">
+                                    <label asp-for="Input.FullName" class="form-label fw-bold"></label>
+                                    <input asp-for="Input.FullName" class="form-control" placeholder="الاسم ثلاثي" />
+                                    <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Input.BranchId" class="form-label fw-bold"></label>
+                                    <select asp-for="Input.BranchId" class="form-select" asp-items="ViewBag.BranchId">
+                                        <option value="">-- اختر الفرع --</option>
+                                    </select>
+                                    <span asp-validation-for="Input.BranchId" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3">بيانات الدخول للنظام</h6>
+
+                                <div class="mb-3">
+                                    <label asp-for="Input.Email" class="form-label fw-bold"></label>
+                                    <input asp-for="Input.Email" class="form-control" placeholder="name@example.com" />
+                                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Input.Password" class="form-label fw-bold"></label>
+                                    <input asp-for="Input.Password" class="form-control" />
+                                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <h6 class="text-success mb-3"><i class="fa fa-lock"></i> صلاحيات الوصول للأقسام</h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="card bg-light border-0 h-100">
+                                    <div class="card-body text-center">
+                                        <div class="form-check form-switch d-flex justify-content-center flex-column align-items-center">
+                                            <input class="form-check-input mb-2" style="width: 3em; height: 1.5em;" type="checkbox" asp-for="Input.CanAccessMen">
+                                            <label class="form-check-label fw-bold mt-2">قسم الرجال</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-light border-0 h-100">
+                                    <div class="card-body text-center">
+                                        <div class="form-check form-switch d-flex justify-content-center flex-column align-items-center">
+                                            <input class="form-check-input mb-2" style="width: 3em; height: 1.5em;" type="checkbox" asp-for="Input.CanAccessWomen">
+                                            <label class="form-check-label fw-bold mt-2">قسم النساء</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-light border-0 h-100">
+                                    <div class="card-body text-center">
+                                        <div class="form-check form-switch d-flex justify-content-center flex-column align-items-center">
+                                            <input class="form-check-input mb-2" style="width: 3em; height: 1.5em;" type="checkbox" asp-for="Input.CanAccessBeauty">
+                                            <label class="form-check-label fw-bold mt-2">الكوافير (بيوتي سنتر)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex justify-content-end gap-2">
+                            <a href="#" class="btn btn-secondary">إلغاء</a>
+                            <button type="submit" class="btn btn-success px-5">
+                                <i class="fa fa-save"></i> إنشاء الحساب
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

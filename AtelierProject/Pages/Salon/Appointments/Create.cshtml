@@ -1,0 +1,132 @@
+﻿@page
+@model AtelierProject.Pages.Salon.Appointments.CreateModel
+@{
+    ViewData["Title"] = "حجز موعد كوافير";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-header bg-danger text-white p-3">
+                    <h4 class="mb-0"><i class="fa fa-calendar-check"></i> حجز موعد كوافير</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Appointment.ClientId" class="form-label fw-bold">العميلة</label>
+                                <select asp-for="Appointment.ClientId" class="form-select" asp-items="ViewBag.ClientId" required>
+                                    <option value="">-- اختر العميلة --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Appointment.AppointmentDate" class="form-label fw-bold">تاريخ ووقت الموعد</label>
+                                <input asp-for="Appointment.AppointmentDate"
+                                       class="form-control"
+                                       type="datetime-local"
+                                       asp-format="{0:yyyy-MM-ddTHH:mm}"
+                                       required />
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold d-block border-bottom pb-2">الخدمات المطلوبة</label>
+
+                            <div class="row g-3">
+                                @foreach (var service in Model.AvailableServices)
+                                {
+                                    <div class="col-md-6">
+                                        <div class="form-check p-3 border rounded bg-light">
+                                            <input class="form-check-input service-check" type="checkbox"
+                                                   name="SelectedServiceIds"
+                                                   value="@service.Id"
+                                                   id="srv_@service.Id"
+                                                   data-price="@service.Price">
+                                            <label class="form-check-label w-100 d-flex justify-content-between" for="srv_@service.Id">
+                                                <span>@service.Name</span>
+                                                <span class="fw-bold text-success">@service.Price.ToString("N0") ج.م</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info d-flex justify-content-between align-items-center">
+                            <span class="h5 mb-0">إجمالي التكلفة المتوقعة:</span>
+                            <span class="h4 mb-0 fw-bold" id="totalPriceDisplay">0 ج.م</span>
+                        </div>
+
+                        <div class="row mt-4 p-3 bg-light rounded border">
+                            <div class="col-md-6">
+                                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0">
+                                    <span>إجمالي الخدمات:</span>
+                                    <span class="h5 mb-0 fw-bold" id="totalPriceDisplayBottom">0 ج.م</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Appointment.PaidAmount" class="form-label fw-bold text-success">العربون المدفوع (إن وجد)</label>
+                                <div class="input-group">
+                                    <input asp-for="Appointment.PaidAmount" class="form-control fw-bold" placeholder="0" value="0" />
+                                    <span class="input-group-text">ج.م</span>
+                                </div>
+                                <div class="form-text">اتركه 0 إذا لم يدفع العميل شيئاً الآن.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Appointment.Notes" class="form-label">ملاحظات إضافية</label>
+                            <textarea asp-for="Appointment.Notes" class="form-control" rows="2"></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg shadow-sm">تأكيد الحجز</button>
+                            <a href="/Index" class="btn btn-outline-secondary">إلغاء</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // تعريف العناصر
+        const checkboxes = document.querySelectorAll('.service-check');
+        const totalDisplayTop = document.getElementById('totalPriceDisplay');       // العنصر العلوي
+        const totalDisplayBottom = document.getElementById('totalPriceDisplayBottom'); // العنصر السفلي الجديد
+
+        function updateTotal() {
+            let total = 0;
+
+            // حساب المجموع
+            checkboxes.forEach(chk => {
+                if (chk.checked) {
+                    total += parseFloat(chk.getAttribute('data-price')) || 0;
+                }
+            });
+
+            const formattedTotal = total.toLocaleString() + ' ج.م';
+
+            // تحديث العنصر العلوي إذا وجد
+            if (totalDisplayTop) {
+                totalDisplayTop.textContent = formattedTotal;
+            }
+
+            // تحديث العنصر السفلي إذا وجد
+            if (totalDisplayBottom) {
+                totalDisplayBottom.textContent = formattedTotal;
+            }
+        }
+
+        // ربط الحدث
+        checkboxes.forEach(chk => chk.addEventListener('change', updateTotal));
+
+        // استدعاء الدالة مرة واحدة عند التحميل (لحساب أي خدمات مختارة مسبقاً)
+        updateTotal();
+    </script>
+}

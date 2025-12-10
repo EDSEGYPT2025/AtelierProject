@@ -1,0 +1,149 @@
+﻿@page
+@model AtelierProject.Pages.Definitions.DetailsModel
+@{
+    ViewData["Title"] = "تفاصيل الموديل";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card card-custom border-top border-4 border-primary">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="bg-light rounded-circle d-inline-flex p-3 mb-3">
+                            <i class="fa-solid fa-shirt fa-3x text-primary"></i>
+                        </div>
+                        <h3 class="fw-bold">@Model.ProductDefinition.Name</h3>
+                        <span class="badge bg-dark fs-6">@Model.ProductDefinition.Code</span>
+                    </div>
+
+                    <div class="row g-4 border-top pt-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-1">القسم</h6>
+                            <p class="fw-bold fs-5">@Model.ProductDefinition.Department</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-1">الوصف</h6>
+                            <p>@(Model.ProductDefinition.Description ?? "لا يوجد وصف")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-1">سعر الإيجار</h6>
+                            <p class="fw-bold fs-5 text-success">@Model.ProductDefinition.RentalPrice.ToString("N0") ج.م</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-1">مبلغ التأمين</h6>
+                            <p class="fw-bold fs-5 text-warning">@Model.ProductDefinition.DepositAmount.ToString("N0") ج.م</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-5">
+                        <a asp-page="./Index" class="btn btn-outline-secondary">عودة للقائمة</a>
+                        <a asp-page="./Edit" asp-route-id="@Model.ProductDefinition.Id" class="btn btn-primary px-4">
+                            <i class="fa-solid fa-pen me-2"></i> تعديل
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-10">
+            <div class="card card-custom">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-boxes-stacked text-primary me-2"></i> المخزون (النسخ المتاحة)</h5>
+                    <button class="btn btn-success btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                        <i class="fa-solid fa-plus me-1"></i> إضافة قطعة
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>الباركود</th>
+                                <th>المقاس</th>
+                                <th>الحالة</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.ProductItems)
+                            {
+                                <tr>
+                                    <td class="font-monospace">@item.Barcode</td>
+                                    <td class="fw-bold">@item.Size</td>
+                                    <td>
+                                        @switch (item.Status)
+                                        {
+                                            case AtelierProject.Models.ItemStatus.Available:
+                                                <span class="badge bg-success">متاح</span>
+                                                break;
+                                            case AtelierProject.Models.ItemStatus.Rented:
+                                                <span class="badge bg-warning text-dark">مؤجر</span>
+                                                break;
+                                            case AtelierProject.Models.ItemStatus.Maintenance:
+                                                <span class="badge bg-info text-dark">غسيل/صيانة</span>
+                                                break;
+                                            default:
+                                                <span class="badge bg-secondary">غير متاح</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td>
+                                        <form method="post" asp-page-handler="DeleteItem" class="d-inline">
+                                            <input type="hidden" name="itemId" value="@item.Id" />
+                                            <input type="hidden" name="definitionId" value="@Model.ProductDefinition.Id" />
+                                            <button class="btn btn-sm btn-outline-danger border-0" onclick="return confirm('حذف هذه النسخة؟')">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                            @if (!Model.ProductItems.Any())
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">لا توجد نسخ مضافة لهذا الموديل بعد.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addItemModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">إضافة قطعة جديدة للمخزون</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" asp-page-handler="AddItem">
+                    <div class="modal-body">
+                        <input type="hidden" name="definitionId" value="@Model.ProductDefinition.Id" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">المقاس</label>
+                            <input asp-for="NewItem.Size" class="form-control" placeholder="مثال: 42, XL" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">الباركود</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-barcode"></i></span>
+                                <input asp-for="NewItem.Barcode" class="form-control" placeholder="اتركه فارغاً للتوليد التلقائي" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-success">إضافة للمخزون</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>

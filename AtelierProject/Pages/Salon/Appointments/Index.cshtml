@@ -1,0 +1,96 @@
+﻿@page
+@model AtelierProject.Pages.Salon.Appointments.IndexModel
+
+@{
+    ViewData["Title"] = "سجل المواعيد";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fa fa-calendar-check text-primary"></i> سجل المواعيد</h1>
+    <a asp-page="Create" class="btn btn-primary shadow-sm">
+        <i class="fa fa-plus"></i> حجز جديد
+    </a>
+</div>
+
+<div class="card card-body bg-light mb-4 shadow-sm">
+    <form method="get" class="row g-3">
+        <div class="col-md-4">
+            <input type="text" name="SearchString" value="@Model.SearchString" class="form-control" placeholder="بحث باسم العميل أو الهاتف..." />
+        </div>
+        <div class="col-md-3">
+            <input type="date" name="FilterDate" value="@(Model.FilterDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+        </div>
+        <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-secondary">بحث / تصفية</button>
+        </div>
+        <div class="col-md-2 d-grid">
+            <a asp-page="./Index" class="btn btn-outline-dark">عرض الكل</a>
+        </div>
+    </form>
+</div>
+
+<div class="table-responsive shadow-sm rounded">
+    <table class="table table-hover table-striped align-middle mb-0 bg-white">
+        <thead class="table-dark">
+            <tr>
+                <th>رقم الحجز</th>
+                <th>التاريخ والوقت</th>
+                <th>العميلة</th>
+                <th>الإجمالي</th>
+                <th>الحالة</th>
+                <th class="text-center">إجراءات</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Appointments)
+            {
+                <tr>
+                    <td>#@item.Id</td>
+                    <td>
+                        <div class="fw-bold">@item.AppointmentDate.ToString("yyyy-MM-dd")</div>
+                        <small class="text-muted">@item.AppointmentDate.ToString("hh:mm tt")</small>
+                    </td>
+                    <td>
+                        @item.Client.Name
+                        <br />
+                        <small class="text-muted">@item.Client.Phone</small>
+                    </td>
+                    <td>@item.TotalAmount.ToString("N0") ج.م</td>
+
+                    @* تعديل منطق الحالة ليعتمد على الوقت فقط *@
+                    <td>
+                        @if (item.AppointmentDate < DateTime.Now)
+                        {
+                            <span class="badge bg-success">مكتمل</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">قادم</span>
+                        }
+                    </td>
+
+                    <td class="text-center">
+                        <div class="btn-group btn-group-sm">
+                            <a asp-page="./Details" asp-route-id="@item.Id" class="btn btn-info text-white" title="التفاصيل والفاتورة">
+                                <i class="fa fa-file-invoice"></i>
+                            </a>
+                            <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-warning" title="تعديل">
+                                <i class="fa fa-pen"></i>
+                            </a>
+                            <a asp-page="./Delete" asp-route-id="@item.Id" class="btn btn-danger" title="حذف">
+                                <i class="fa fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Appointments.Any())
+{
+    <div class="alert alert-info mt-3 text-center">
+        لا توجد مواعيد مطابقة للبحث.
+    </div>
+}

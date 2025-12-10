@@ -1,0 +1,77 @@
+﻿@page
+@model AtelierProject.Pages.Branches.IndexModel
+
+@{
+    ViewData["Title"] = "إدارة الفروع";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-primary"><i class="fa fa-building"></i> فروع الأتيليه</h3>
+        <a asp-page="Create" class="btn btn-primary">
+            <i class="fa fa-plus"></i> إضافة فرع جديد
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4">اسم الفرع</th>
+                            <th>العنوان</th>
+                            <th>الهاتف</th>
+                            <th class="text-center">الحالة</th>
+                            <th class="text-center">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Branch)
+                        {
+                            <tr>
+                                <td class="px-4 fw-bold">
+                                    @item.Name
+                                </td>
+                                <td>
+                                    <span class="text-muted">@item.Address</span>
+                                </td>
+                                <td>
+                                    <span dir="ltr">@item.Phone</span>
+                                </td>
+                                <td class="text-center">
+                                    @if (item.IsMain)
+                                    {
+                                        <span class="badge bg-success">الرئيسي</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">فرعي</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning mx-1" title="تعديل">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                    <a asp-page="./Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info mx-1" title="تفاصيل">
+                                        <i class="fa fa-info-circle"></i>
+                                    </a>
+                                    <a asp-page="./Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger mx-1" title="حذف">
+                                        <i class="fa fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!Model.Branch.Any())
+            {
+                <div class="text-center py-5">
+                    <p class="text-muted">لا توجد فروع مسجلة حتى الآن</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

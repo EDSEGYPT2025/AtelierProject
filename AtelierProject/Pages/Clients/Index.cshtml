@@ -1,0 +1,141 @@
+﻿@page
+@model AtelierProject.Pages.Clients.IndexModel
+@{
+    ViewData["Title"] = "قاعدة العملاء";
+}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-primary fw-bold"><i class="fa-solid fa-users"></i> قاعدة العملاء</h3>
+        <a asp-page="Create" class="btn btn-success shadow-sm">
+            <i class="fa-solid fa-user-plus me-2"></i> عميل جديد
+        </a>
+    </div>
+
+    <div class="card bg-light border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-2 align-items-center">
+                <div class="col-md-10">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white text-muted border-end-0"><i class="fa-solid fa-search"></i></span>
+                        <input type="text" name="SearchTerm" value="@Model.SearchTerm"
+                               class="form-control border-start-0 ps-0"
+                               placeholder="ابحث باسم العميل أو رقم الهاتف..." />
+                    </div>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-primary">بحث</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="px-4">اسم العميل</th>
+                            <th>رقم الهاتف</th>
+                            <th>الرقم القومي</th>
+                            <th>العنوان</th>
+                            <th class="text-center">الحالة</th>
+                            <th>تاريخ التسجيل</th>
+                            <th class="text-center">تواصل</th>
+                            <th class="text-center">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Clients.Any())
+                        {
+                            @foreach (var item in Model.Clients)
+                            {
+                                // تمييز الصف باللون الأحمر الخفيف إذا كان العميل محظوراً
+                                <tr class="@(item.IsBlacklisted ? "table-danger" : "")">
+
+                                    <td class="px-4 fw-bold">@item.Name</td>
+
+                                    <td dir="ltr" class="text-end font-monospace">@item.Phone</td>
+
+                                    <td class="font-monospace">
+                                        @(!string.IsNullOrEmpty(item.NationalId) ? item.NationalId : "-")
+                                    </td>
+
+                                    <td>
+                                        @(!string.IsNullOrEmpty(item.Address) ? item.Address : "-")
+                                    </td>
+
+                                    <td class="text-center">
+                                        @if (item.IsBlacklisted)
+                                        {
+                                            <span class="badge bg-danger"><i class="fa-solid fa-ban"></i> محظور</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">نشط</span>
+                                        }
+                                    </td>
+
+                                    <td>@item.RegistrationDate.ToString("yyyy-MM-dd")</td>
+
+                                    <td class="text-center">
+                                        @{
+                                            // 1. تنظيف الرقم: إزالة المسافات والفواصل لضمان عمل الرابط
+                                            var rawPhone = item.Phone ?? "";
+                                            var cleanPhone = rawPhone.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "");
+
+                                            // 2. تجهيز رقم الواتساب (مخصص لمصر)
+                                            // واتساب يحتاج كود الدولة (20) وبدون الصفر الأول
+                                            // مثال: 01012345678 يصبح 201012345678
+                                            var whatsappPhone = cleanPhone;
+
+                                            if (cleanPhone.StartsWith("0"))
+                                            {
+                                                whatsappPhone = "20" + cleanPhone.Substring(1);
+                                            }
+                                            else if (!cleanPhone.StartsWith("20"))
+                                            {
+                                                // لو الرقم مش بيبدأ بـ 0 ولا بـ 20، نضيف 20 احتياطي
+                                                whatsappPhone = "20" + cleanPhone;
+                                            }
+                                        }
+
+                                        <a href="tel:@cleanPhone" class="btn btn-sm btn-outline-secondary" title="اتصال">
+                                            <i class="fa-solid fa-phone"></i>
+                                        </a>
+
+                                        <a href="https://wa.me/@whatsappPhone" target="_blank" class="btn btn-sm btn-outline-success" title="واتساب">
+                                            <i class="fa-brands fa-whatsapp"></i>
+                                        </a>
+                                    </td>
+
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-outline-warning" title="تعديل">
+                                                <i class="fa-solid fa-pen"></i>
+                                            </a>
+                                            <a asp-page="./Details" asp-route-id="@item.Id" class="btn btn-outline-info" title="سجل التعاملات">
+                                                <i class="fa-solid fa-history"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <i class="fa-solid fa-folder-open fa-3x mb-3 d-block opacity-50"></i>
+                                    لا توجد نتائج مطابقة للبحث
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

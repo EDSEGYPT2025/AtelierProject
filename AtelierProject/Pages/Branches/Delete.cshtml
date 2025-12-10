@@ -1,0 +1,43 @@
+﻿@page
+@model AtelierProject.Pages.Branches.DeleteModel
+
+@{
+    ViewData["Title"] = "حذف الفرع";
+}
+
+<div class="container-fluid py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white text-center">
+                    <h4 class="mb-0"><i class="fa fa-exclamation-triangle"></i> تأكيد الحذف</h4>
+                </div>
+                <div class="card-body text-center">
+                    <h5 class="card-title mt-3">هل أنت متأكد من حذف هذا الفرع؟</h5>
+                    <p class="text-muted">هذا الإجراء قد يؤثر على السجلات المرتبطة بهذا الفرع.</p>
+
+                    <div class="alert alert-light border p-3 mt-4 text-start">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4 text-muted">اسم الفرع:</dt>
+                            <dd class="col-sm-8 fw-bold">@Model.Branch.Name</dd>
+
+                            <dt class="col-sm-4 text-muted">العنوان:</dt>
+                            <dd class="col-sm-8">@Model.Branch.Address</dd>
+
+                            <dt class="col-sm-4 text-muted">الهاتف:</dt>
+                            <dd class="col-sm-8">@Model.Branch.Phone</dd>
+                        </dl>
+                    </div>
+
+                    <form method="post" class="mt-4 d-flex justify-content-center gap-3">
+                        <input type="hidden" asp-for="Branch.Id" />
+                        <a asp-page="./Index" class="btn btn-outline-secondary px-4">تراجع</a>
+                        <button type="submit" class="btn btn-danger px-4">
+                            <i class="fa fa-trash-alt"></i> نعم، احذف الفرع
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,200 @@
+﻿@page "{id:int}"
+@model AtelierProject.Pages.Clients.DetailsModel
+@{
+    ViewData["Title"] = "ملف العميل وسجل التعاملات";
+}
+
+<div class="container-fluid py-4">
+
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm h-100 border-top border-4 border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h2 class="fw-bold mb-0">@Model.Client.Name</h2>
+                            <p class="text-muted mb-2"><i class="fa-solid fa-phone me-1"></i> @Model.Client.Phone</p>
+                            @if (Model.Client.IsBlacklisted)
+                            {
+                                <span class="badge bg-danger"><i class="fa-solid fa-ban"></i> محظور من التعامل (Blacklisted)</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">عميل نشط</span>
+                            }
+                        </div>
+                        <div class="text-end">
+                            <a asp-page="./Edit" asp-route-id="@Model.Client.Id" class="btn btn-outline-warning btn-sm">
+                                <i class="fa-solid fa-pen"></i> تعديل البيانات
+                            </a>
+                        </div>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">الرقم القومي</small>
+                            <span class="fw-bold">@(!string.IsNullOrEmpty(Model.Client.NationalId) ? Model.Client.NationalId : "-")</span>
+                        </div>
+                        <div class="col-md-8">
+                            <small class="text-muted d-block">العنوان</small>
+                            <span class="fw-bold">@(!string.IsNullOrEmpty(Model.Client.Address) ? Model.Client.Address : "-")</span>
+                        </div>
+                        <div class="col-12">
+                            <small class="text-muted d-block">ملاحظات</small>
+                            <p class="mb-0 bg-light p-2 rounded small">@(!string.IsNullOrEmpty(Model.Client.Notes) ? Model.Client.Notes : "لا توجد ملاحظات")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100 bg-dark text-white">
+                <div class="card-body">
+                    <h5 class="card-title text-white-50 mb-4"><i class="fa-solid fa-wallet me-2"></i> الملخص المالي</h5>
+
+                    <div class="mb-3">
+                        <small class="d-block text-white-50">إجمالي المديونية (متبقي عليه)</small>
+                        @if (Model.TotalDebt > 0)
+                        {
+                            <h2 class="text-danger fw-bold">@Model.TotalDebt.ToString("N0") ج.م</h2>
+                        }
+                        else
+                        {
+                            <h2 class="text-success fw-bold">0 ج.م</h2>
+                            <span class="badge bg-success">خالص</span>
+                        }
+                    </div>
+
+                    <div class="border-top border-secondary pt-3">
+                        <small class="d-block text-white-50">إجمالي مدفوعات العميل (تاريخياً)</small>
+                        <h4 class="text-info">@Model.TotalPaid.ToString("N0") ج.م</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white p-0">
+            <ul class="nav nav-tabs card-header-tabs m-0" id="clientTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active fw-bold py-3 px-4" id="atelier-tab" data-bs-toggle="tab" data-bs-target="#atelier" type="button">
+                        <i class="fa-solid fa-shirt me-2"></i> حجوزات الأتيليه (@Model.ClientBookings.Count)
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-bold py-3 px-4" id="salon-tab" data-bs-toggle="tab" data-bs-target="#salon" type="button">
+                        <i class="fa-solid fa-spa me-2"></i> سجل الكوافير (@Model.ClientAppointments.Count)
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="tab-content" id="clientTabsContent">
+
+                <div class="tab-pane fade show active" id="atelier" role="tabpanel">
+                    @if (Model.ClientBookings.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>رقم الحجز</th>
+                                        <th>تاريخ الاستلام</th>
+                                        <th>الأصناف</th>
+                                        <th>الحالة</th>
+                                        <th>الإجمالي</th>
+                                        <th>المتبقي</th>
+                                        <th>إجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.ClientBookings)
+                                    {
+                                        <tr>
+                                            <td>#@item.Id</td>
+                                            <td>@item.PickupDate.ToString("yyyy-MM-dd")</td>
+                                            <td>
+                                                @foreach (var prod in item.BookingItems)
+                                                {
+                                                    <span class="d-block small">• @prod.ProductItem?.ProductDefinition?.Name</span>
+                                                }
+                                            </td>
+                                            <td>@item.Status</td>
+                                            <td>@item.TotalAmount.ToString("N0")</td>
+                                            <td class="@(item.RemainingRentalAmount > 0 ? "text-danger fw-bold" : "text-success")">
+                                                @item.RemainingRentalAmount.ToString("N0")
+                                            </td>
+                                            <td>
+                                                <a asp-page="/Reservations/Details" asp-route-id="@item.Id" class="btn btn-sm btn-primary">تفاصيل</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 text-muted">لا توجد حجوزات ملابس سابقة.</div>
+                    }
+                </div>
+
+                <div class="tab-pane fade" id="salon" role="tabpanel">
+                    @if (Model.ClientAppointments.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>الموعد</th>
+                                        <th>الخدمات</th>
+                                        <th>الحالة</th>
+                                        <th>الإجمالي</th>
+                                        <th>المتبقي</th>
+                                        <th>إجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.ClientAppointments)
+                                    {
+                                        <tr>
+                                            <td>@item.AppointmentDate.ToString("yyyy-MM-dd hh:mm tt")</td>
+                                            <td>
+                                                @foreach (var srv in item.Items)
+                                                {
+                                                    <span class="badge bg-secondary me-1">@srv.SalonService?.Name</span>
+                                                }
+                                            </td>
+                                            <td>@item.Status</td>
+                                            <td>@item.TotalAmount.ToString("N0")</td>
+                                            <td class="@(item.RemainingAmount > 0 ? "text-danger fw-bold" : "text-success")">
+                                                @item.RemainingAmount.ToString("N0")
+                                            </td>
+                                            <td>
+                                                <a asp-page="/Salon/Appointments/Details" asp-route-id="@item.Id" class="btn btn-sm btn-primary">تفاصيل</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 text-muted">لا توجد زيارات سابقة للصالون.</div>
+                    }
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-page="./Index" class="btn btn-secondary">عودة للقائمة</a>
+    </div>
+</div>

@@ -1,0 +1,96 @@
+﻿@page
+@model AtelierProject.Pages.Users.IndexModel
+@{
+    ViewData["Title"] = "إدارة الموظفين";
+}
+
+<div class="container-fluid py-4">
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fa fa-users"></i> قائمة الموظفين والمستخدمين</h5>
+            <a asp-page="Create" class="btn btn-success btn-sm">
+                <i class="fa fa-plus"></i> إضافة موظف جديد
+            </a>
+        </div>
+        <div class="card-body">
+            @if (!Model.Users.Any())
+            {
+                <div class="alert alert-info text-center">
+                    لا يوجد موظفين مسجلين حالياً.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>اسم الموظف</th>
+                                <th>الفرع</th>
+                                <th>البريد الإلكتروني</th>
+                                <th>صلاحيات الوصول</th>
+                                <th>الحالة</th>
+                                <th class="text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Users)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@item.FullName</td>
+                                    <td>
+                                        @if (item.Branch != null)
+                                        {
+                                            <span class="badge bg-secondary">@item.Branch.Name</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted fst-italic">غير محدد (Admin)</span>
+                                        }
+                                    </td>
+                                    <td>@item.Email</td>
+                                    <td>
+                                        @if (item.CanAccessMenSection)
+                                        {
+                                            <span class="badge bg-primary me-1" title="قسم الرجال">رجالي</span>
+                                        }
+                                        @if (item.CanAccessWomenSection)
+                                        {
+                                            <span class="badge bg-danger me-1" title="قسم النساء">حريمي</span>
+                                        }
+                                        @if (item.CanAccessBeautySection)
+                                        {
+                                            <span class="badge bg-warning text-dark me-1" title="قسم الكوافير">كوافير</span>
+                                        }
+
+                                        @if (!item.CanAccessMenSection && !item.CanAccessWomenSection && !item.CanAccessBeautySection)
+                                        {
+                                            <small class="text-muted">لا توجد صلاحيات</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.IsActive)
+                                        {
+                                            <span class="badge bg-success">نشط</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">معطل</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-outline-primary btn-sm" title="تعديل">
+                                                <i class="fa fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

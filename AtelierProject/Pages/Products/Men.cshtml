@@ -1,0 +1,115 @@
+﻿@page
+@model MenModel
+@{
+    ViewData["Title"] = "قسم الرجالي";
+
+    // --- محاكاة للصلاحيات (غيّر هذه القيمة إلى false لتجربة وضع الموظف العادي) ---
+    bool IsAdmin = true;
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-dark"><i class="fa-solid fa-user-tie text-primary me-2"></i> مخزون قسم الرجالي</h3>
+            <p class="text-muted">إدارة البدل، القمصان، والاكسسوارات الرجالية.</p>
+        </div>
+
+        @if (IsAdmin)
+        {
+            <button class="btn btn-primary px-4 py-2 shadow-sm">
+                <i class="fa-solid fa-plus-circle me-2"></i> إضافة منتج جديد
+            </button>
+        }
+    </div>
+
+    <div class="card card-custom">
+        <div class="card-body">
+            <div class="row mb-3 g-2">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0"><i class="fa-solid fa-search text-muted"></i></span>
+                        <input type="text" class="form-control bg-light border-0" placeholder="بحث باسم المنتج أو الكود...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select bg-light border-0">
+                        <option selected>كل التصنيفات</option>
+                        <option>بدل زفاف</option>
+                        <option>بدل كلاسيك</option>
+                        <option>اكسسوارات</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light text-muted">
+                        <tr>
+                            <th>صورة</th>
+                            <th>اسم المنتج</th>
+                            <th>التصنيف</th>
+                            <th>سعر الإيجار</th>
+                            <th>العدد المتاح</th>
+                            <th>الحالة</th>
+                            @if (IsAdmin)
+                            {
+                                <th class="text-end">إجراءات</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Products)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-secondary bg-opacity-10 rounded p-2 text-center" style="width: 50px; height: 50px;">
+                                            <i class="fa-solid fa-shirt text-secondary fs-4"></i>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="fw-bold text-dark">@item.Name <br> <small class="text-muted fw-normal">@item.Code</small></td>
+                                <td><span class="badge bg-info bg-opacity-10 text-info text-dark">@item.Category</span></td>
+                                <td class="fw-bold">@item.Price ج.م</td>
+                                <td>@item.Stock</td>
+                                <td>
+                                    @if (item.Stock > 2)
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success">متوفر</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger bg-opacity-10 text-danger">نفاد وشيك</span>
+                                    }
+                                </td>
+
+                                @if (IsAdmin)
+                                {
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-primary me-1" title="تعديل">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" title="حذف">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled"><a class="page-link" href="#">السابق</a></li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item"><a class="page-link" href="#">التالي</a></li>
+                </ul>
+            </nav>
+
+        </div>
+    </div>
+</div>

@@ -1,0 +1,77 @@
+﻿@page
+@using AtelierProject.Models
+@model AtelierProject.Pages.Definitions.CreateModel
+@{
+    ViewData["Title"] = "إضافة موديل جديد";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card card-custom">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold">بيانات الموديل الجديد</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+                                <label asp-for="ProductDefinition.Code" class="form-label fw-bold"></label>
+                                <input asp-for="ProductDefinition.Code" class="form-control" placeholder="اتركه فارغاً للتوليد التلقائي" />
+                                <span class="text-muted small"><i class="fa-solid fa-circle-info"></i> سيتم توليد الكود تلقائياً إذا لم تكتبه (مثل MEN-001).</span>
+                                <span asp-validation-for="ProductDefinition.Code" class="text-danger"></span>
+                            </div>
+
+
+                            <div class="col-md-6">
+                                <label asp-for="ProductDefinition.Name" class="form-label fw-bold"></label>
+                                <input asp-for="ProductDefinition.Name" class="form-control" placeholder="مثال: بدلة سموكينج إيطالي" />
+                                <span asp-validation-for="ProductDefinition.Name" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="ProductDefinition.Department" class="form-label fw-bold"></label>
+                                <select asp-for="ProductDefinition.Department" class="form-select" asp-items="Html.GetEnumSelectList<DepartmentType>()">
+                                    <option value="">-- اختر القسم --</option>
+                                </select>
+                                <span asp-validation-for="ProductDefinition.Department" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="ProductDefinition.RentalPrice" class="form-label fw-bold"></label>
+                                <div class="input-group">
+                                    <input asp-for="ProductDefinition.RentalPrice" class="form-control" placeholder="0.00" />
+                                    <span class="input-group-text">ج.م</span>
+                                </div>
+                                <span asp-validation-for="ProductDefinition.RentalPrice" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="ProductDefinition.DepositAmount" class="form-label fw-bold"></label>
+                                <div class="input-group">
+                                    <input asp-for="ProductDefinition.DepositAmount" class="form-control" placeholder="0.00" />
+                                    <span class="input-group-text">ج.م</span>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="ProductDefinition.Description" class="form-label fw-bold"></label>
+                                <textarea asp-for="ProductDefinition.Description" class="form-control" rows="3"></textarea>
+                            </div>
+
+                            <div class="col-12 mt-4 text-end">
+                                <a asp-page="Index" class="btn btn-secondary me-2">إلغاء</a>
+                                <button type="submit" class="btn btn-primary px-4">حفظ الموديل</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

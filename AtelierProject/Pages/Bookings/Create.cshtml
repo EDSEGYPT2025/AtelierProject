@@ -1,0 +1,86 @@
+﻿@page
+@model AtelierProject.Pages.Bookings.CreateModel
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-primary text-white p-4 rounded-top-3">
+                    <h3 class="mb-0 card-title"><i class="fa fa-calendar-plus"></i> إنشاء حجز جديد</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger shadow-sm" role="alert"></div>
+
+                        <h5 class="text-muted mb-3 border-bottom pb-2">البيانات الأساسية</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-12">
+                                <label asp-for="Booking.ClientId" class="form-label fw-bold">العميل</label>
+                                <select asp-for="Booking.ClientId" class="form-select form-select-lg" asp-items="ViewBag.ClientId">
+                                    <option value="">-- اختر العميل --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12">
+                                <label for="SelectedItemId" class="form-label fw-bold">القطعة</label>
+                                <select asp-for="SelectedItemId" class="form-select form-select-lg" asp-items="ViewBag.ProductItemId">
+                                    <option value="">-- اختر الموديل --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <h5 class="text-muted mb-3 border-bottom pb-2 mt-4">الفترة</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="Booking.PickupDate" class="form-label fw-bold">تاريخ الاستلام</label>
+                                <input asp-for="Booking.PickupDate" class="form-control" type="date" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Booking.ReturnDate" class="form-label fw-bold">تاريخ الإرجاع</label>
+                                <input asp-for="Booking.ReturnDate" class="form-control" type="date" />
+                            </div>
+                        </div>
+
+                        <h5 class="text-muted mb-3 border-bottom pb-2 mt-4">الماليات والتأمين</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label asp-for="Booking.TotalAmount" class="form-label fw-bold">سعر الإيجار</label>
+                                <div class="input-group">
+                                    <input asp-for="Booking.TotalAmount" class="form-control" placeholder="0.00" />
+                                    <span class="input-group-text">ج.م</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Booking.PaidAmount" class="form-label fw-bold">العربون المدفوع</label>
+                                <div class="input-group">
+                                    <input asp-for="Booking.PaidAmount" class="form-control" placeholder="0.00" />
+                                    <span class="input-group-text">ج.م</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Booking.InsuranceAmount" class="form-label fw-bold text-danger">مبلغ التأمين</label>
+                                <div class="input-group">
+                                    <input asp-for="Booking.InsuranceAmount" class="form-control" placeholder="0.00" />
+                                    <span class="input-group-text">ج.م</span>
+                                </div>
+                                <div class="form-text text-muted">يسترد عند الإرجاع</div>
+                            </div>
+                        </div>
+
+                        <h5 class="text-muted mb-3 border-bottom pb-2 mt-4">ملاحظات الخياطة</h5>
+                        <div class="mb-4">
+                            <label asp-for="Booking.Notes" class="form-label fw-bold">تعديلات المقاسات / ملاحظات أخرى</label>
+                            <textarea asp-for="Booking.Notes" class="form-control" rows="3" placeholder="مثال: تضييق الوسط 2 سم، تقصير الذيل..."></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-5 pt-3 border-top">
+                            <a asp-page="Index" class="btn btn-secondary px-4">إلغاء</a>
+                            <button type="submit" class="btn btn-success btn-lg px-5">حفظ الحجز</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts { @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} }

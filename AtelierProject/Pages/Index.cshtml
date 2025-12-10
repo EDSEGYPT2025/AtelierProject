@@ -1,0 +1,174 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "لوحة التحكم";
+}
+
+<div class="container-fluid py-4">
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="mb-3 text-secondary border-bottom pb-2">الملخص المالي والمهام</h3>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-5">
+
+        <div class="col-md-4">
+            <div class="card bg-primary text-white h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase mb-1 opacity-75">تأمينات تحت العهدة (في الدرج)</h6>
+                            <h2 class="mb-0 fw-bold">@Model.TotalInsuranceHeld.ToString("N0") <small style="font-size:0.5em">ج.م</small></h2>
+                        </div>
+                        <i class="fa fa-shield-alt fa-3x opacity-50"></i>
+                    </div>
+                    <hr class="border-white opacity-25 my-3">
+                    <div class="row text-center fs-6">
+                        <div class="col-6 border-end border-white border-opacity-25">
+                            <small class="d-block opacity-75">حريمي</small>
+                            <span class="fw-bold">@Model.WomensInsurance.ToString("N0")</span>
+                        </div>
+                        <div class="col-6">
+                            <small class="d-block opacity-75">رجالي</small>
+                            <span class="fw-bold">@Model.MensInsurance.ToString("N0")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-success text-white h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase mb-1 opacity-75">إجمالي المتحصلات (إيراد)</h6>
+                            <h2 class="mb-0 fw-bold">@Model.TotalCollectedMoney.ToString("N0") <small style="font-size:0.5em">ج.م</small></h2>
+                            <small class="opacity-75" style="font-size: 0.75rem;">(أتيليه + كوافير)</small>
+                        </div>
+                        <i class="fa fa-sack-dollar fa-3x opacity-50"></i>
+                    </div>
+
+                    <hr class="border-white opacity-25 my-3">
+
+                    <div class="row text-center fs-6">
+                        <div class="col-4 border-end border-white border-opacity-25">
+                            <small class="d-block opacity-75">حريمي</small>
+                            <span class="fw-bold">@Model.IncomeWomen.ToString("N0")</span>
+                        </div>
+
+                        <div class="col-4 border-end border-white border-opacity-25">
+                            <small class="d-block opacity-75">رجالي</small>
+                            <span class="fw-bold">@Model.IncomeMen.ToString("N0")</span>
+                        </div>
+
+                        <div class="col-4">
+                            <small class="d-block opacity-75">تجميل</small>
+                            <span class="fw-bold">@Model.IncomeBeauty.ToString("N0")</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase mb-1 opacity-75">متبقيات على العملاء (آجل)</h6>
+                            <h2 class="mb-0 fw-bold">@Model.TotalPendingBalance.ToString("N0") <small style="font-size:0.5em">ج.م</small></h2>
+                            <small class="opacity-75">مبالغ سيتم تحصيلها مستقبلاً</small>
+                        </div>
+                        <i class="fa fa-hand-holding-usd fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white border-bottom pt-3 pb-2">
+                    <h5 class="mb-0 text-primary"><i class="fa fa-truck"></i> تسليمات اليوم (@Model.PickupsToday.Count)</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.PickupsToday.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>العميل</th>
+                                        <th>الهاتف</th>
+                                        <th>إجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.PickupsToday)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold px-3">@item.Client.Name</td>
+                                            <td dir="ltr">@item.Client.Phone</td>
+                                            <td class="px-3">
+                                                <a asp-page="/Bookings/Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">عرض</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center py-4 mb-0">لا توجد تسليمات اليوم</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white border-bottom pt-3 pb-2">
+                    <h5 class="mb-0 text-danger"><i class="fa fa-rotate-left"></i> مرتجعات اليوم (@Model.ReturnsToday.Count)</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.ReturnsToday.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>العميل</th>
+                                        <th>الهاتف</th>
+                                        <th>إجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.ReturnsToday)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold px-3">@item.Client.Name</td>
+                                            <td dir="ltr">@item.Client.Phone</td>
+                                            <td class="px-3">
+                                                <a asp-page="/Bookings/Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">استلام</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center py-4 mb-0">لا توجد مرتجعات اليوم</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
