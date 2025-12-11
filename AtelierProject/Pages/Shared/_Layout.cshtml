@@ -1,14 +1,27 @@
 ﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
 @using AtelierProject.Models
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
 @{
-    // 1. جلب بيانات المستخدم الحالي للصلاحيات
+    // 1. جلب بيانات المستخدم والفرع
     ApplicationUser currentUser = null;
+    string branchName = "الإدارة العامة";
+    string commercialName = ""; // متغير للاسم التجاري
+
     if (SignInManager.IsSignedIn(User))
     {
-        currentUser = await UserManager.GetUserAsync(User);
+        var userId = UserManager.GetUserId(User);
+        currentUser = await UserManager.Users
+            .Include(u => u.Branch)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (currentUser != null && currentUser.Branch != null)
+        {
+            branchName = currentUser.Branch.Name; // الاسم الداخلي
+            commercialName = currentUser.Branch.CommercialName; // الاسم التجاري
+        }
     }
 }
 
@@ -31,7 +44,7 @@
             overflow-x: hidden;
         }
 
-        /* --- هيكل الصفحة والقائمة (نفس الستايل القديم) --- */
+        /* --- هيكل الصفحة والقائمة --- */
         #wrapper {
             display: flex;
             width: 100%;
@@ -103,6 +116,67 @@
             padding: 20px;
         }
 
+        /* --- تنسيق شريط المستخدم والفرع --- */
+        .user-info-pill {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 50px;
+            padding: 5px 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            /* للتأكد من عدم تجاوز العرض في الشاشات الصغيرة */
+            max-width: 100%;
+        }
+
+            .user-info-pill:hover {
+                background-color: #fff;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+                border-color: #dee2e6;
+            }
+
+        .branch-badge {
+            background-color: #e3f2fd;
+            color: #0d6efd;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-align: right;
+            line-height: 1.2;
+        }
+
+        .user-name-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            flex-shrink: 0; /* منع انكماش الصورة */
+        }
+
+        .user-name-text {
+            font-weight: 700;
+            color: #495057;
+            font-size: 0.95rem;
+            white-space: nowrap; /* منع النص من النزول لسطر جديد */
+        }
+
+        /* --- تحسينات الموبايل (تم تعديلها لإظهار الأسماء) --- */
         @@media (max-width: 768px) {
             #sidebar-wrapper {
                 margin-right: -260px;
@@ -111,13 +185,33 @@
             #wrapper.toggled #sidebar-wrapper {
                 margin-right: 0;
             }
+            /* تم إزالة display: none لإظهار الأسماء */
+            .user-info-pill {
+                padding: 4px 10px;
+                gap: 8px;
+            }
+
+            .branch-badge {
+                padding: 4px 8px;
+                font-size: 0.75rem; /* تصغير الخط قليلاً فقط */
+            }
+
+            .user-name-text {
+                font-size: 0.85rem; /* تصغير اسم المستخدم قليلاً */
+            }
+            /* تقليل حجم الخطوط للعناوين الطويلة جداً في الموبايل */
+            .branch-details div {
+                max-width: 100px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
         }
     </style>
 </head>
 <body>
 
     <div class="d-flex" id="wrapper">
-
         @if (SignInManager.IsSignedIn(User) && currentUser != null)
         {
             <div id="sidebar-wrapper">
@@ -126,11 +220,11 @@
                 </div>
 
                 <div class="list-group list-group-flush my-3">
-
                     <a asp-page="/Index" class="list-group-item list-group-item-action">
                         <i class="fa-solid fa-gauge"></i> لوحة التحكم
                     </a>
 
+                    @* --- قسم الأتيليه --- *@
                     @if (currentUser.CanAccessMenSection || currentUser.CanAccessWomenSection || currentUser.BranchId == null)
                     {
                         <a href="#menuAtelier" data-bs-toggle="collapse" class="list-group-item list-group-item-action">
@@ -141,15 +235,12 @@
                             <a asp-page="/Bookings/Create" class="list-group-item list-group-item-action submenu-link">
                                 <i class="fa-solid fa-plus fs-6 ms-1 text-warning"></i> حجز جديد
                             </a>
-                            <a asp-page="/Bookings/Index" class="list-group-item list-group-item-action submenu-link">
-                                سجل الحجوزات
-                            </a>
-                            <a asp-page="/Definitions/Index" class="list-group-item list-group-item-action submenu-link">
-                                كتالوج الموديلات والمخزون
-                            </a>
+                            <a asp-page="/Bookings/Index" class="list-group-item list-group-item-action submenu-link">سجل الحجوزات</a>
+                            <a asp-page="/Definitions/Index" class="list-group-item list-group-item-action submenu-link">كتالوج الموديلات</a>
                         </div>
                     }
 
+                    @* --- قسم الصالون --- *@
                     @if (currentUser.CanAccessBeautySection || currentUser.BranchId == null)
                     {
                         <a href="#menuSalon" data-bs-toggle="collapse" class="list-group-item list-group-item-action">
@@ -157,15 +248,11 @@
                             <i class="fa-solid fa-chevron-down arrow-icon"></i>
                         </a>
                         <div class="collapse" id="menuSalon">
-                            <a asp-page="/Salon/Appointments/Create" class="list-group-item list-group-item-action submenu-link">
-                                <i class="fa-solid fa-plus fs-6 ms-1 text-warning"></i> حجز موعد
+                            <a asp-page="/Salon/Appointments/Create" class="list-group-item list-group-item-action submenu-link text-warning">
+                                <i class="fa-solid fa-plus fs-6 ms-1"></i> حجز موعد
                             </a>
-                            <a asp-page="/Salon/Appointments/Index" class="list-group-item list-group-item-action submenu-link">
-                                سجل المواعيد
-                            </a>
-                            <a asp-page="/Salon/Services/Index" class="list-group-item list-group-item-action submenu-link">
-                                خدمات الصالون
-                            </a>
+                            <a asp-page="/Salon/Appointments/Index" class="list-group-item list-group-item-action submenu-link">سجل المواعيد</a>
+                            <a asp-page="/Salon/Services/Index" class="list-group-item list-group-item-action submenu-link">خدمات الصالون</a>
                         </div>
                     }
 
@@ -178,10 +265,11 @@
                         <i class="fa-solid fa-chevron-down arrow-icon"></i>
                     </a>
                     <div class="collapse" id="menuReports">
-                        <a asp-page="/Reports/Daily" class="list-group-item list-group-item-action submenu-link">تقرير الخزنة اليومي</a>
-                        <a asp-page="/Reports/Monthly" class="list-group-item list-group-item-action submenu-link">التقرير الشهري</a>
+                        <a asp-page="/Reports/Daily" class="list-group-item list-group-item-action submenu-link">اليومية</a>
+                        <a asp-page="/Reports/Monthly" class="list-group-item list-group-item-action submenu-link">الشهرية</a>
                     </div>
 
+                    @* --- الإدارة --- *@
                     @if (currentUser.BranchId == null)
                     {
                         <div class="border-top border-secondary mx-3 my-2"></div>
@@ -199,11 +287,10 @@
         <div id="page-content-wrapper">
             <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
                 <div class="container-fluid">
-
                     @if (SignInManager.IsSignedIn(User))
                     {
-                        <button class="btn btn-primary" id="menu-toggle">
-                            <i class="fa-solid fa-bars"></i>
+                        <button class="btn btn-outline-primary border-0" id="menu-toggle">
+                            <i class="fa-solid fa-bars fa-lg"></i>
                         </button>
                     }
 
@@ -212,17 +299,48 @@
                     </button>
 
                     <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
                             @if (SignInManager.IsSignedIn(User) && currentUser != null)
                             {
                                 <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle fw-bold text-dark" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                        <i class="fa-solid fa-circle-user fa-lg text-primary ms-1"></i> مرحباً، @currentUser.FullName
+                                    <a class="nav-link p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+
+                                        <div class="user-info-pill">
+
+                                            <div class="branch-badge">
+                                                <i class="fa-solid fa-store fa-lg"></i>
+                                                <div class="branch-details">
+                                                    @if (!string.IsNullOrEmpty(commercialName))
+                                                    {
+                                                        <div style="font-weight: 700; font-size: 0.85rem;">@commercialName</div>
+                                                        <div style="font-size: 0.7rem; opacity: 0.8; font-weight: normal;">@branchName</div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>@branchName</span>
+                                                    }
+                                                </div>
+                                            </div>
+
+                                            <div style="width: 1px; height: 24px; background-color: #dee2e6;"></div>
+
+                                            <div class="user-name-container">
+                                                <span class="user-name-text">@currentUser.FullName</span>
+                                                <div class="user-avatar">
+                                                    <i class="fa-solid fa-user-tie"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                     </a>
-                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow mt-2" aria-labelledby="navbarDropdown">
+                                        <li><h6 class="dropdown-header text-center">@currentUser.Email</h6></li>
+                                        <li><hr class="dropdown-divider"></li>
                                         <li>
-                                            <form class="form-inline" asp-area="" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
-                                                <button type="submit" class="dropdown-item text-danger">تسجيل خروج</button>
+                                            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
+                                                <button type="submit" class="dropdown-item text-danger fw-bold">
+                                                    <i class="fa-solid fa-right-from-bracket me-2"></i> تسجيل خروج
+                                                </button>
                                             </form>
                                         </li>
                                     </ul>
@@ -231,7 +349,9 @@
                             else
                             {
                                 <li class="nav-item">
-                                    <a class="nav-link fw-bold" asp-area="" asp-page="/Account/Login">تسجيل الدخول</a>
+                                    <a class="btn btn-primary px-4 rounded-pill" asp-area="" asp-page="/Account/Login">
+                                        <i class="fa-solid fa-right-to-bracket me-2"></i> تسجيل الدخول
+                                    </a>
                                 </li>
                             }
                         </ul>

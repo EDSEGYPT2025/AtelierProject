@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Rendering; // هام للقوائم
 using AtelierProject.Data;
 using AtelierProject.Models;
 
@@ -23,82 +24,107 @@ namespace AtelierProject.Pages.Reports
         [BindProperty(SupportsGet = true)]
         public DateTime ReportDate { get; set; } = DateTime.Today;
 
-        // --- خزينة الرجالي ---
-        public decimal MenIncome { get; set; }
-        public int MenCount { get; set; }
+        // المتغير الجديد: اختيار الفرع (للأدمن فقط)
+        [BindProperty(SupportsGet = true)]
+        public int? SelectedBranchId { get; set; }
 
-        // --- خزينة الحريمي والبيوتي (مشتركة) ---
-        public decimal WomenIncome { get; set; }
-        public int WomenCount { get; set; }
+        // --- المتغيرات المالية (كما هي) ---
+        public decimal TotalCashIn_Men { get; set; }
+        public decimal TotalCashIn_Women { get; set; }
+        public decimal TotalCashIn_Beauty { get; set; }
 
-        public decimal BeautyIncome { get; set; }
-        public int BeautyCount { get; set; }
+        public decimal TotalRefunds_Men { get; set; }
+        public decimal TotalRefunds_Women { get; set; }
 
-        public decimal TotalWomenAndBeautyTreasury => WomenIncome + BeautyIncome;
+        public decimal NetTreasury_Men => TotalCashIn_Men - TotalRefunds_Men;
+        public decimal NetTreasury_WomenAndBeauty => (TotalCashIn_Women - TotalRefunds_Women) + TotalCashIn_Beauty;
 
         public async Task OnGetAsync()
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return;
 
-            // 1. جلب حجوزات الأتيليه لهذا اليوم (تسليمات)
-            var bookingsQuery = _context.Bookings
-                .Include(b => b.BookingItems)
-                    .ThenInclude(bi => bi.ProductItem)
-                        .ThenInclude(pi => pi.ProductDefinition)
-                .Where(b => b.PickupDate.Date == ReportDate.Date)
-                .Where(b => b.Status != BookingStatus.Cancelled); // استبعاد الملغي
-
-            // فلتر الفرع
-            if (user.BranchId.HasValue)
+            // 1. إعداد قائمة الفروع للأدمن فقط
+            if (user.BranchId == null)
             {
-                bookingsQuery = bookingsQuery.Where(b => b.BranchId == user.BranchId);
+                ViewData["BranchList"] = new SelectList(_context.Branches, "Id", "Name", SelectedBranchId);
             }
 
-            var bookings = await bookingsQuery.ToListAsync();
+            // 2. تحديد "فرع الفلترة"
+            // إذا كان موظفاً -> نستخدم فرعه الإجباري
+            // إذا كان أدمن واختار فرعاً -> نستخدم الفرع المختار
+            // إذا كان أدمن ولم يختر (اختار الكل) -> تظل null (لجلب الإجمالي)
+            int? filterBranchId = user.BranchId.HasValue ? user.BranchId : SelectedBranchId;
 
-            // 2. فصل الإيرادات (رجالي / حريمي)
-            foreach (var booking in bookings)
+
+            // =========================================================
+            // أولاً: حركة الوارد (التسليمات)
+            // =========================================================
+            var pickupsQuery = _context.Bookings
+                .Include(b => b.BookingItems).ThenInclude(bi => bi.ProductItem).ThenInclude(pi => pi.ProductDefinition)
+                .Where(b => b.PickupDate.Date == ReportDate.Date)
+                .Where(b => b.Status != BookingStatus.Cancelled);
+
+            // تطبيق الفلتر الذكي
+            if (filterBranchId.HasValue)
+            {
+                pickupsQuery = pickupsQuery.Where(b => b.BranchId == filterBranchId);
+            }
+
+            var pickups = await pickupsQuery.ToListAsync();
+
+            foreach (var booking in pickups)
             {
                 var dept = GetBookingDepartment(booking);
-
-                if (dept == DepartmentType.Men)
-                {
-                    MenIncome += booking.PaidAmount;
-                    MenCount++;
-                }
-                else if (dept == DepartmentType.Women)
-                {
-                    WomenIncome += booking.PaidAmount;
-                    WomenCount++;
-                }
+                if (dept == DepartmentType.Men) TotalCashIn_Men += booking.PaidAmount;
+                else TotalCashIn_Women += booking.PaidAmount;
             }
 
-            // 3. جلب إيرادات الصالون
+            // =========================================================
+            // ثانياً: حركة المنصرف (المرتجعات)
+            // =========================================================
+            var returnsQuery = _context.Bookings
+                .Include(b => b.BookingItems).ThenInclude(bi => bi.ProductItem).ThenInclude(pi => pi.ProductDefinition)
+                .Where(b => b.ReturnDate.Date == ReportDate.Date)
+                .Where(b => b.Status == BookingStatus.Returned);
+
+            // تطبيق الفلتر الذكي
+            if (filterBranchId.HasValue)
+            {
+                returnsQuery = returnsQuery.Where(b => b.BranchId == filterBranchId);
+            }
+
+            var returns = await returnsQuery.ToListAsync();
+
+            foreach (var booking in returns)
+            {
+                decimal refundAmount = booking.InsuranceAmount - booking.InsuranceDeduction;
+                var dept = GetBookingDepartment(booking);
+
+                if (dept == DepartmentType.Men) TotalRefunds_Men += refundAmount;
+                else TotalRefunds_Women += refundAmount;
+            }
+
+            // =========================================================
+            // ثالثاً: الكوافير
+            // =========================================================
             var salonQuery = _context.SalonAppointments
                 .Where(s => s.AppointmentDate.Date == ReportDate.Date)
                 .Where(s => s.Status != SalonAppointmentStatus.Cancelled);
 
-            if (user.BranchId.HasValue)
+            // تطبيق الفلتر الذكي
+            if (filterBranchId.HasValue)
             {
-                salonQuery = salonQuery.Where(s => s.BranchId == user.BranchId);
+                salonQuery = salonQuery.Where(s => s.BranchId == filterBranchId);
             }
 
-            var salonAppointments = await salonQuery.ToListAsync();
-
-            BeautyIncome = salonAppointments.Sum(s => s.PaidAmount);
-            BeautyCount = salonAppointments.Count;
+            TotalCashIn_Beauty = await salonQuery.SumAsync(s => s.PaidAmount);
         }
 
-        // دالة مساعدة لمعرفة قسم الحجز
         private DepartmentType GetBookingDepartment(Booking booking)
         {
             var item = booking.BookingItems.FirstOrDefault()?.ProductItem;
-            if (item?.ProductDefinition != null)
-            {
-                return item.ProductDefinition.Department;
-            }
-            return DepartmentType.Women; // افتراضي
+            return item?.ProductDefinition?.Department ?? DepartmentType.Women;
         }
     }
 }

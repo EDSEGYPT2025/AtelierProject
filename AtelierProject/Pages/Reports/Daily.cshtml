@@ -10,17 +10,46 @@
 <div class="container-fluid py-4">
 
     <div class="card bg-light border-0 shadow-sm mb-5 p-3">
-        <form method="get" class="row align-items-center justify-content-center">
+        <form method="get" class="row align-items-center justify-content-center g-3">
+
             <div class="col-auto">
-                <label class="fw-bold text-muted">عرض تقرير يوم:</label>
+                <label class="fw-bold text-muted">التاريخ:</label>
             </div>
             <div class="col-auto">
                 <input type="date" asp-for="ReportDate" class="form-control fw-bold" onchange="this.form.submit()" />
             </div>
+
+            @if (user.BranchId == null)
+            {
+                <div class="col-auto ms-3 border-start ps-3">
+                    <label class="fw-bold text-muted">الفرع:</label>
+                </div>
+                <div class="col-auto" style="min-width: 200px;">
+                    <select asp-for="SelectedBranchId" asp-items="ViewBag.BranchList" class="form-select fw-bold text-primary" onchange="this.form.submit()">
+                        <option value="">-- كل الفروع (الإجمالي) --</option>
+                    </select>
+                </div>
+            }
+
             <div class="col-auto">
-                <button type="submit" class="btn btn-primary px-4">تحديث</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-rotate"></i> تحديث</button>
             </div>
         </form>
+    </div>
+
+    <div class="text-center mb-4">
+        @if (user.BranchId != null)
+        {
+            <span class="badge bg-secondary fs-6">تقرير فرعك فقط</span>
+        }
+        else if (Model.SelectedBranchId == null)
+        {
+            <span class="badge bg-primary fs-6">عرض إجمالي لكافة الفروع</span>
+        }
+        else
+        {
+            <span class="badge bg-info text-dark fs-6">عرض فرع محدد</span>
+        }
     </div>
 
     <div class="row g-4">
@@ -28,21 +57,23 @@
         @if (user.CanAccessMenSection || user.BranchId == null)
         {
             <div class="col-md-6">
-                <div class="card shadow border-top border-4 border-dark h-100">
+                <div class="card shadow h-100 border-top border-4 border-dark">
                     <div class="card-header bg-dark text-white text-center py-3">
                         <h4 class="mb-0"><i class="fa-solid fa-user-tie"></i> خزينة قسم الرجال</h4>
                     </div>
-                    <div class="card-body text-center">
-                        <div class="py-4">
-                            <h6 class="text-muted text-uppercase mb-2">إيراد اليوم (تسليمات)</h6>
-                            <h1 class="display-4 fw-bold text-dark">@Model.MenIncome.ToString("N0") <small class="fs-6">ج.م</small></h1>
-                            <span class="badge bg-light text-dark border mt-2">عدد العمليات: @Model.MenCount</span>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-success"><i class="fa-solid fa-arrow-down"></i> وارد (تحصيل):</span>
+                            <span class="fw-bold">@Model.TotalCashIn_Men.ToString("N0")</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-danger"><i class="fa-solid fa-arrow-up"></i> منصرف (رد تأمين):</span>
+                            <span class="fw-bold text-danger">- @Model.TotalRefunds_Men.ToString("N0")</span>
                         </div>
                         <hr>
-                        <div class="alert alert-secondary mb-0">
-                            <strong><i class="fa-solid fa-sack-dollar"></i> الصافي في الدرج:</strong>
-                            <br>
-                            يتم توريد هذا المبلغ منفصلاً.
+                        <div class="text-center bg-light p-3 rounded">
+                            <small class="text-uppercase text-muted">الصافي الفعلي في الدرج</small>
+                            <h2 class="fw-bold text-dark mb-0">@Model.NetTreasury_Men.ToString("N0") <small class="fs-6">ج.م</small></h2>
                         </div>
                     </div>
                 </div>
@@ -52,45 +83,40 @@
         @if (user.CanAccessWomenSection || user.CanAccessBeautySection || user.BranchId == null)
         {
             <div class="col-md-6">
-                <div class="card shadow border-top border-4 border-danger h-100">
+                <div class="card shadow h-100 border-top border-4 border-danger">
                     <div class="card-header bg-danger text-white text-center py-3" style="background: linear-gradient(45deg, #d63384, #dc3545);">
-                        <h4 class="mb-0"><i class="fa-solid fa-gem"></i> الخزينة المشتركة (حريمي + تجميل)</h4>
+                        <h4 class="mb-0"><i class="fa-solid fa-gem"></i> الخزينة المشتركة</h4>
                     </div>
                     <div class="card-body">
 
-                        @if (user.CanAccessWomenSection || user.BranchId == null)
-                        {
-                            <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded border-start border-4 border-danger">
-                                <div>
-                                    <h6 class="fw-bold text-danger mb-0"><i class="fa-solid fa-person-dress"></i> إيراد الأتيليه (حريمي)</h6>
-                                    <small class="text-muted">عدد العمليات: @Model.WomenCount</small>
-                                </div>
-                                <h4 class="fw-bold mb-0">@Model.WomenIncome.ToString("N0") <small class="fs-6">ج.م</small></h4>
+                        <div class="mb-3">
+                            <h6 class="text-danger fw-bold border-bottom pb-2">قسم الحريمي</h6>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-success small">وارد:</span>
+                                <span class="fw-bold">@Model.TotalCashIn_Women.ToString("N0")</span>
                             </div>
-                        }
-
-                        @if (user.CanAccessBeautySection || user.BranchId == null)
-                        {
-                            <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded border-start border-4 border-info">
-                                <div>
-                                    <h6 class="fw-bold text-info mb-0"><i class="fa-solid fa-spa"></i> إيراد البيوتي سنتر</h6>
-                                    <small class="text-muted">عدد العمليات: @Model.BeautyCount</small>
-                                </div>
-                                <h4 class="fw-bold mb-0">@Model.BeautyIncome.ToString("N0") <small class="fs-6">ج.م</small></h4>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-danger small">منصرف (تأمين):</span>
+                                <span class="fw-bold text-danger">- @Model.TotalRefunds_Women.ToString("N0")</span>
                             </div>
-                        }
-
-                        <hr>
-
-                        <div class="text-center py-2">
-                            <h6 class="text-muted text-uppercase">إجمالي المبلغ في الدرج (المشترك)</h6>
-                            <h1 class="display-4 fw-bold text-danger">@Model.TotalWomenAndBeautyTreasury.ToString("N0") <small class="fs-6">ج.م</small></h1>
                         </div>
 
+                        <div class="mb-3">
+                            <h6 class="text-info fw-bold border-bottom pb-2">البيوتي سنتر</h6>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-success small">وارد:</span>
+                                <span class="fw-bold">@Model.TotalCashIn_Beauty.ToString("N0")</span>
+                            </div>
+                        </div>
+
+                        <hr>
+                        <div class="text-center bg-light p-3 rounded">
+                            <small class="text-uppercase text-muted">الصافي الفعلي في الدرج</small>
+                            <h2 class="fw-bold text-danger mb-0">@Model.NetTreasury_WomenAndBeauty.ToString("N0") <small class="fs-6">ج.م</small></h2>
+                        </div>
                     </div>
                 </div>
             </div>
         }
-
     </div>
 </div>

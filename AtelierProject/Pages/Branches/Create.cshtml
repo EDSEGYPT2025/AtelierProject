@@ -23,6 +23,13 @@
                                 <span asp-validation-for="Branch.Name" class="text-danger"></span>
                             </div>
 
+                            <div class="form-floating mb-3">
+                                <input asp-for="Branch.CommercialName" class="form-control" placeholder="الاسم التجاري" />
+                                <label asp-for="Branch.CommercialName"></label>
+                                <span asp-validation-for="Branch.CommercialName" class="text-danger"></span>
+                                <small class="text-muted">هذا الاسم هو الذي سيظهر في ترويسة الفواتير المطبوعة.</small>
+                            </div>
+
                             <div class="col-md-6">
                                 <label asp-for="Branch.Phone" class="form-label fw-bold"></label>
                                 <input asp-for="Branch.Phone" class="form-control" placeholder="01xxxxxxxxx" />

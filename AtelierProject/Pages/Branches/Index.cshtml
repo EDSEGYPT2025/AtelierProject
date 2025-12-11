@@ -19,7 +19,8 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light">
                         <tr>
-                            <th class="px-4">اسم الفرع</th>
+                            <th class="px-4">اسم الفرع (داخلي)</th>
+                            <th>الاسم التجاري (للفواتير)</th>
                             <th>العنوان</th>
                             <th>الهاتف</th>
                             <th class="text-center">الحالة</th>
@@ -33,6 +34,18 @@
                                 <td class="px-4 fw-bold">
                                     @item.Name
                                 </td>
+
+                                <td class="text-primary">
+                                    @if (!string.IsNullOrEmpty(item.CommercialName))
+                                    {
+                                        <span>@item.CommercialName</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">-</span>
+                                    }
+                                </td>
+
                                 <td>
                                     <span class="text-muted">@item.Address</span>
                                 </td>

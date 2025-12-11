@@ -7,6 +7,12 @@ namespace AtelierProject.Models
     {
         public int Id { get; set; }
 
+        // --- الإضافة الجديدة ---
+        [Display(Name = "اسم/وصف القطعة")]
+        [MaxLength(100)]
+        public string? Name { get; set; } // يمكن تركه فارغاً وسيأخذ اسم الموديل الأصلي
+        // -----------------------
+
         [Display(Name = "كود القطعة")]
         public string? UniqueCode { get; set; }
 

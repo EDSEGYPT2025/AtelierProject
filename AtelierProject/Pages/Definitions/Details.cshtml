@@ -61,6 +61,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>الباركود</th>
+                                <th>اسم القطعة</th>
                                 <th>المقاس</th>
                                 <th>الحالة</th>
                                 <th>إجراءات</th>
@@ -71,6 +72,11 @@
                             {
                                 <tr>
                                     <td class="font-monospace">@item.Barcode</td>
+
+                                    <td class="fw-bold text-primary">
+                                        @(string.IsNullOrEmpty(item.Name) ? "-" : item.Name)
+                                    </td>
+
                                     <td class="fw-bold">@item.Size</td>
                                     <td>
                                         @switch (item.Status)
@@ -123,6 +129,12 @@
                 <form method="post" asp-page-handler="AddItem">
                     <div class="modal-body">
                         <input type="hidden" name="definitionId" value="@Model.ProductDefinition.Id" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">اسم/وصف القطعة (اختياري)</label>
+                            <input asp-for="NewItem.Name" class="form-control" placeholder="مثال: النسخة المعدلة" />
+                            <span asp-validation-for="NewItem.Name" class="text-danger"></span>
+                        </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-bold">المقاس</label>

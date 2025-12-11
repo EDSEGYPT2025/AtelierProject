@@ -48,6 +48,7 @@ namespace AtelierProject.Pages.Bookings
 
             Booking = await _context.Bookings
                 .Include(b => b.Client)
+                .Include(b => b.Branch)
                 .Include(b => b.BookingItems)
                     .ThenInclude(bi => bi.ProductItem)
                         .ThenInclude(pi => pi.ProductDefinition)

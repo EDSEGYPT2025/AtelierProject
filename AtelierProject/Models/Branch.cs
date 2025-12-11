@@ -11,6 +11,12 @@ namespace AtelierProject.Models
         [MaxLength(100)]
         public string Name { get; set; } // مثلا: فرع القاهرة، فرع الإسكندرية
 
+        // --- الإضافة الجديدة ---
+        [Display(Name = "الاسم التجاري (للفواتير)")]
+        [MaxLength(150)]
+        public string? CommercialName { get; set; } // مثال: أتيليه مارينا - للأزياء الراقية
+                                                    // -----------------------
+
         [Display(Name = "العنوان")]
         [MaxLength(200)]
         public string Address { get; set; }
@@ -22,8 +28,5 @@ namespace AtelierProject.Models
         [Display(Name = "الفرع الرئيسي")]
         public bool IsMain { get; set; } = false; // لتحديد الفرع الرئيسي للنظام
 
-        // سنحتاج هذه القوائم لاحقاً للربط (Navigation Properties)
-        // public ICollection<Booking> Bookings { get; set; }
-        // public ICollection<ApplicationUser> Users { get; set; }
     }
 }

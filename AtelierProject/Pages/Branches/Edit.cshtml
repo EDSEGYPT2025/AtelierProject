@@ -20,8 +20,15 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label asp-for="Branch.Name" class="form-label fw-bold"></label>
-                                <input asp-for="Branch.Name" class="form-control" />
+                                <input asp-for="Branch.Name" class="form-control" placeholder="مثال: فرع القاهرة" />
                                 <span asp-validation-for="Branch.Name" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Branch.CommercialName" class="form-label fw-bold"></label>
+                                <input asp-for="Branch.CommercialName" class="form-control" placeholder="مثال: أتيليه مارينا - فرع المهندسين" />
+                                <span asp-validation-for="Branch.CommercialName" class="text-danger"></span>
+                                <div class="form-text small text-muted">سيظهر هذا الاسم في أعلى الفاتورة المطبوعة.</div>
                             </div>
 
                             <div class="col-md-6">
