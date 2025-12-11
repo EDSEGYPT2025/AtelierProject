@@ -4,7 +4,7 @@
 @inject UserManager<ApplicationUser> UserManager
 
 @{
-    // جلب بيانات المستخدم الحالي للتحقق من الصلاحيات المخصصة
+    // 1. جلب بيانات المستخدم الحالي للصلاحيات
     ApplicationUser currentUser = null;
     if (SignInManager.IsSignedIn(User))
     {
@@ -31,6 +31,7 @@
             overflow-x: hidden;
         }
 
+        /* --- هيكل الصفحة والقائمة (نفس الستايل القديم) --- */
         #wrapper {
             display: flex;
             width: 100%;
@@ -116,6 +117,7 @@
 <body>
 
     <div class="d-flex" id="wrapper">
+
         @if (SignInManager.IsSignedIn(User) && currentUser != null)
         {
             <div id="sidebar-wrapper">
@@ -124,46 +126,39 @@
                 </div>
 
                 <div class="list-group list-group-flush my-3">
+
                     <a asp-page="/Index" class="list-group-item list-group-item-action">
                         <i class="fa-solid fa-gauge"></i> لوحة التحكم
                     </a>
 
-                    @* --- قسم الأتيليه: يظهر إذا كان لديه صلاحية رجالي أو حريمي --- *@
-                    @if (currentUser.CanAccessMenSection || currentUser.CanAccessWomenSection)
+                    @if (currentUser.CanAccessMenSection || currentUser.CanAccessWomenSection || currentUser.BranchId == null)
                     {
                         <a href="#menuAtelier" data-bs-toggle="collapse" class="list-group-item list-group-item-action">
                             <i class="fa-solid fa-shirt"></i> إدارة الأتيليه
                             <i class="fa-solid fa-chevron-down arrow-icon"></i>
                         </a>
                         <div class="collapse" id="menuAtelier">
-                            @if (currentUser.CanAccessMenSection)
-                            {
-                                <a asp-page="/Definitions/Index" class="list-group-item list-group-item-action submenu-link">
-                                    تعريفات الموديلات
-                                </a>
-                            }
-                            @if (currentUser.CanAccessWomenSection)
-                            {
-                                <a asp-page="/Definitions/Index" class="list-group-item list-group-item-action submenu-link">
-                                    قسم الحريمي
-                                </a>
-                            }
+                            <a asp-page="/Bookings/Create" class="list-group-item list-group-item-action submenu-link">
+                                <i class="fa-solid fa-plus fs-6 ms-1 text-warning"></i> حجز جديد
+                            </a>
                             <a asp-page="/Bookings/Index" class="list-group-item list-group-item-action submenu-link">
-                                حجوزات الملابس
+                                سجل الحجوزات
+                            </a>
+                            <a asp-page="/Definitions/Index" class="list-group-item list-group-item-action submenu-link">
+                                كتالوج الموديلات والمخزون
                             </a>
                         </div>
                     }
 
-                    @* --- قسم الصالون: يظهر فقط لمن لديه صلاحية كوافير --- *@
-                    @if (currentUser.CanAccessBeautySection)
+                    @if (currentUser.CanAccessBeautySection || currentUser.BranchId == null)
                     {
                         <a href="#menuSalon" data-bs-toggle="collapse" class="list-group-item list-group-item-action">
                             <i class="fa-solid fa-spa"></i> صالون التجميل
                             <i class="fa-solid fa-chevron-down arrow-icon"></i>
                         </a>
                         <div class="collapse" id="menuSalon">
-                            <a asp-page="/Salon/Appointments/Create" class="list-group-item list-group-item-action submenu-link text-warning">
-                                <i class="fa-solid fa-plus fs-6 ms-2"></i> حجز جديد
+                            <a asp-page="/Salon/Appointments/Create" class="list-group-item list-group-item-action submenu-link">
+                                <i class="fa-solid fa-plus fs-6 ms-1 text-warning"></i> حجز موعد
                             </a>
                             <a asp-page="/Salon/Appointments/Index" class="list-group-item list-group-item-action submenu-link">
                                 سجل المواعيد
@@ -178,18 +173,25 @@
                         <i class="fa-solid fa-users"></i> قاعدة العملاء
                     </a>
 
-                    @* --- تقارير: يمكن قصرها على الأدمن فقط لاحقاً --- *@
                     <a href="#menuReports" data-bs-toggle="collapse" class="list-group-item list-group-item-action">
                         <i class="fa-solid fa-chart-pie"></i> التقارير المالية
                         <i class="fa-solid fa-chevron-down arrow-icon"></i>
                     </a>
                     <div class="collapse" id="menuReports">
-                        <a asp-page="/Reports/Daily" class="list-group-item list-group-item-action submenu-link">اليومية</a>
-                        <a asp-page="/Reports/Monthly" class="list-group-item list-group-item-action submenu-link">الشهرية</a>
+                        <a asp-page="/Reports/Daily" class="list-group-item list-group-item-action submenu-link">تقرير الخزنة اليومي</a>
+                        <a asp-page="/Reports/Monthly" class="list-group-item list-group-item-action submenu-link">التقرير الشهري</a>
                     </div>
-                    <a asp-page="/Users/Index" class="list-group-item list-group-item-action mt-4 border-top border-secondary pt-3">
-                        <i class="fa-solid fa-user-shield"></i> إدارة المستخدمين
-                    </a>
+
+                    @if (currentUser.BranchId == null)
+                    {
+                        <div class="border-top border-secondary mx-3 my-2"></div>
+                        <a asp-page="/Branches/Index" class="list-group-item list-group-item-action">
+                            <i class="fa-solid fa-building"></i> الفروع
+                        </a>
+                        <a asp-page="/Users/Index" class="list-group-item list-group-item-action">
+                            <i class="fa-solid fa-user-shield"></i> إدارة المستخدمين
+                        </a>
+                    }
                 </div>
             </div>
         }
@@ -197,6 +199,7 @@
         <div id="page-content-wrapper">
             <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
                 <div class="container-fluid">
+
                     @if (SignInManager.IsSignedIn(User))
                     {
                         <button class="btn btn-primary" id="menu-toggle">
@@ -217,10 +220,8 @@
                                         <i class="fa-solid fa-circle-user fa-lg text-primary ms-1"></i> مرحباً، @currentUser.FullName
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
-                                        <li><a class="dropdown-item" href="#">الإعدادات</a></li>
-                                        <li><hr class="dropdown-divider"></li>
                                         <li>
-                                            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
+                                            <form class="form-inline" asp-area="" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
                                                 <button type="submit" class="dropdown-item text-danger">تسجيل خروج</button>
                                             </form>
                                         </li>
@@ -230,7 +231,6 @@
                             else
                             {
                                 <li class="nav-item">
-                                    @* تم إزالة Identity من asp-area *@
                                     <a class="nav-link fw-bold" asp-area="" asp-page="/Account/Login">تسجيل الدخول</a>
                                 </li>
                             }
@@ -252,6 +252,7 @@
     <script>
         var el = document.getElementById("wrapper");
         var toggleButton = document.getElementById("menu-toggle");
+
         if (toggleButton) {
             toggleButton.onclick = function () {
                 el.classList.toggle("toggled");
