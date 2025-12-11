@@ -1,23 +1,27 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity; // هام
+using Microsoft.AspNetCore.Authorization; // هام
 using AtelierProject.Data;
 using AtelierProject.Models;
 
 namespace AtelierProject.Pages.Salon.Appointments
 {
+    [Authorize] // حماية الصفحة
     public class IndexModel : PageModel
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager; // 1. تعريف المانجر
 
-        public IndexModel(ApplicationDbContext context)
+        public IndexModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         public IList<SalonAppointment> Appointments { get; set; } = default!;
 
-        // خصائص البحث والفلترة
         [BindProperty(SupportsGet = true)]
         public string SearchString { get; set; }
 
@@ -26,25 +30,34 @@ namespace AtelierProject.Pages.Salon.Appointments
 
         public async Task OnGetAsync()
         {
-            // استعلام أساسي مع تضمين بيانات العميل
+            // 2. جلب المستخدم الحالي
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return;
+
+            // 3. الاستعلام الأساسي
             var query = _context.SalonAppointments
                 .Include(a => a.Client)
                 .AsQueryable();
 
-            // 1. فلتر البحث (اسم العميل أو الهاتف)
-            if (!string.IsNullOrEmpty(SearchString))
+            // 🛑 4. الفلترة حسب الفرع (الخطوة الأهم)
+            if (user.BranchId.HasValue)
             {
-                query = query.Where(a => a.Client.Name.Contains(SearchString)
-                                      || a.Client.Phone.Contains(SearchString));
+                query = query.Where(a => a.BranchId == user.BranchId);
             }
 
-            // 2. فلتر التاريخ (إذا تم تحديده)
+            // فلتر البحث
+            if (!string.IsNullOrEmpty(SearchString))
+            {
+                query = query.Where(a => a.Client.Name.Contains(SearchString) || a.Client.Phone.Contains(SearchString));
+            }
+
+            // فلتر التاريخ
             if (FilterDate.HasValue)
             {
                 query = query.Where(a => a.AppointmentDate.Date == FilterDate.Value.Date);
             }
 
-            // 3. الترتيب: الأحدث تاريخاً في الأعلى (أو يمكن عكسها للأقرب فالأبعد)
+            // الترتيب
             query = query.OrderByDescending(a => a.AppointmentDate);
 
             Appointments = await query.ToListAsync();

@@ -22,5 +22,11 @@ namespace AtelierProject.Models
         [Required]
         [Display(Name = "المدة المتوقعة (بالدقائق)")]
         public int DurationMinutes { get; set; } // 30, 60, 90...
+
+        // --- إضافة رابط الفرع ---
+        public int? BranchId { get; set; }
+        [ForeignKey("BranchId")]
+        public Branch? Branch { get; set; }
+
     }
 }
