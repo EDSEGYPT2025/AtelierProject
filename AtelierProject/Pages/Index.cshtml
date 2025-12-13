@@ -6,169 +6,191 @@
 
 <div class="container-fluid py-4">
 
-    <div class="row mb-4">
-        <div class="col-12">
-            <h3 class="mb-3 text-secondary border-bottom pb-2">الملخص المالي والمهام</h3>
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h3 class="fw-bold text-dark mb-0">لوحة القيادة</h3>
+            <p class="text-muted small mb-0">نظرة عامة على نشاط اليوم</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-white text-dark shadow-sm border p-2">
+                <i class="fa-regular fa-calendar me-2"></i> @DateTime.Now.ToString("dddd, dd MMMM yyyy")
+            </span>
         </div>
     </div>
 
     <div class="row g-3 mb-5">
 
-        <div class="col-md-4">
-            <div class="card bg-primary text-white h-100 shadow-sm">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-info">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-uppercase mb-1 opacity-75">تأمينات تحت العهدة (في الدرج)</h6>
-                            <h2 class="mb-0 fw-bold">@Model.TotalInsuranceHeld.ToString("N0") <small style="font-size:0.5em">ج.م</small></h2>
+                            <h6 class="text-muted text-uppercase small fw-bold">تسليمات اليوم</h6>
+                            <h2 class="mb-0 fw-bold text-info">@Model.PickupsTodayCount</h2>
                         </div>
-                        <i class="fa fa-shield-alt fa-3x opacity-50"></i>
-                    </div>
-                    <hr class="border-white opacity-25 my-3">
-                    <div class="row text-center fs-6">
-                        <div class="col-6 border-end border-white border-opacity-25">
-                            <small class="d-block opacity-75">حريمي</small>
-                            <span class="fw-bold">@Model.WomensInsurance.ToString("N0")</span>
-                        </div>
-                        <div class="col-6">
-                            <small class="d-block opacity-75">رجالي</small>
-                            <span class="fw-bold">@Model.MensInsurance.ToString("N0")</span>
+                        <div class="bg-info bg-opacity-10 p-3 rounded-circle text-info">
+                            <i class="fa-solid fa-shirt fa-xl"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card bg-success text-white h-100 shadow-sm">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-success">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-uppercase mb-1 opacity-75">إجمالي المتحصلات (إيراد)</h6>
-                            <h2 class="mb-0 fw-bold">@Model.TotalCollectedMoney.ToString("N0") <small style="font-size:0.5em">ج.م</small></h2>
-                            <small class="opacity-75" style="font-size: 0.75rem;">(أتيليه + كوافير)</small>
+                            <h6 class="text-muted text-uppercase small fw-bold">مرتجعات اليوم</h6>
+                            <h2 class="mb-0 fw-bold text-success">@Model.ReturnsTodayCount</h2>
                         </div>
-                        <i class="fa fa-sack-dollar fa-3x opacity-50"></i>
-                    </div>
-
-                    <hr class="border-white opacity-25 my-3">
-
-                    <div class="row text-center fs-6">
-                        <div class="col-4 border-end border-white border-opacity-25">
-                            <small class="d-block opacity-75">حريمي</small>
-                            <span class="fw-bold">@Model.IncomeWomen.ToString("N0")</span>
-                        </div>
-
-                        <div class="col-4 border-end border-white border-opacity-25">
-                            <small class="d-block opacity-75">رجالي</small>
-                            <span class="fw-bold">@Model.IncomeMen.ToString("N0")</span>
-                        </div>
-
-                        <div class="col-4">
-                            <small class="d-block opacity-75">تجميل</small>
-                            <span class="fw-bold">@Model.IncomeBeauty.ToString("N0")</span>
+                        <div class="bg-success bg-opacity-10 p-3 rounded-circle text-success">
+                            <i class="fa-solid fa-rotate-left fa-xl"></i>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card bg-warning text-dark h-100 shadow-sm">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-warning">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-uppercase mb-1 opacity-75">متبقيات على العملاء (آجل)</h6>
-                            <h2 class="mb-0 fw-bold">@Model.TotalPendingBalance.ToString("N0") <small style="font-size:0.5em">ج.م</small></h2>
-                            <small class="opacity-75">مبالغ سيتم تحصيلها مستقبلاً</small>
+                            <h6 class="text-muted text-uppercase small fw-bold">حجوزات نشطة (خارج)</h6>
+                            <h2 class="mb-0 fw-bold text-warning">@Model.ActiveRentalsCount</h2>
                         </div>
-                        <i class="fa fa-hand-holding-usd fa-3x opacity-50"></i>
+                        <div class="bg-warning bg-opacity-10 p-3 rounded-circle text-warning">
+                            <i class="fa-solid fa-clock fa-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-danger bg-danger bg-opacity-10">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-danger text-uppercase small fw-bold">متأخرات (تنبيه!)</h6>
+                            <h2 class="mb-0 fw-bold text-danger">@Model.OverdueCount</h2>
+                        </div>
+                        <div class="bg-white p-3 rounded-circle text-danger shadow-sm">
+                            <i class="fa-solid fa-bell fa-shake fa-xl"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-6 mb-4">
+    <div class="row g-4">
+
+        <div class="col-lg-6">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-white border-bottom pt-3 pb-2">
-                    <h5 class="mb-0 text-primary"><i class="fa fa-truck"></i> تسليمات اليوم (@Model.PickupsToday.Count)</h5>
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i> تنبيهات التأخير</h6>
+                    <small class="text-muted">يجب الاتصال بهم</small>
                 </div>
-                <div class="card-body p-0">
-                    @if (Model.PickupsToday.Any())
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small">
+                            <tr>
+                                <th>رقم الحجز</th>
+                                <th>العميل</th>
+                                <th>كان المفروض يرجع</th>
+                                <th>تأخير (أيام)</th>
+                                <th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.OverdueBookings.Any())
+                            {
+                                @foreach (var item in Model.OverdueBookings)
+                                {
+                                    var delayDays = (DateTime.Today - item.ReturnDate.Date).Days;
                                     <tr>
-                                        <th>العميل</th>
-                                        <th>الهاتف</th>
-                                        <th>إجراء</th>
+                                        <td class="fw-bold">#@item.Id</td>
+                                        <td>
+                                            <div>@item.Client.Name</div>
+                                            <a href="tel:@item.Client.Phone" class="small text-decoration-none">@item.Client.Phone</a>
+                                        </td>
+                                        <td class="text-danger">@item.ReturnDate.ToString("dd/MM")</td>
+                                        <td><span class="badge bg-danger rounded-pill">@delayDays يوم</span></td>
+                                        <td>
+                                            <a asp-page="/Bookings/Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-dark">
+                                                <i class="fa-solid fa-arrow-left"></i>
+                                            </a>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var item in Model.PickupsToday)
-                                    {
-                                        <tr>
-                                            <td class="fw-bold px-3">@item.Client.Name</td>
-                                            <td dir="ltr">@item.Client.Phone</td>
-                                            <td class="px-3">
-                                                <a asp-page="/Bookings/Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">عرض</a>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else
-                    {
-                        <p class="text-muted text-center py-4 mb-0">لا توجد تسليمات اليوم</p>
-                    }
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted small">
+                                        <i class="fa-solid fa-check-circle text-success mb-2 fs-4 d-block"></i>
+                                        ممتاز! لا توجد متأخرات اليوم.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-6 mb-4">
+        <div class="col-lg-6">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-white border-bottom pt-3 pb-2">
-                    <h5 class="mb-0 text-danger"><i class="fa fa-rotate-left"></i> مرتجعات اليوم (@Model.ReturnsToday.Count)</h5>
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="mb-0 fw-bold text-primary"><i class="fa-solid fa-clipboard-list me-2"></i> تجهيز تسليمات اليوم</h6>
                 </div>
-                <div class="card-body p-0">
-                    @if (Model.ReturnsToday.Any())
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small">
+                            <tr>
+                                <th>رقم الحجز</th>
+                                <th>العميل</th>
+                                <th>القطع</th>
+                                <th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.TodaysPickups.Any())
+                            {
+                                @foreach (var item in Model.TodaysPickups)
+                                {
                                     <tr>
-                                        <th>العميل</th>
-                                        <th>الهاتف</th>
-                                        <th>إجراء</th>
+                                        <td class="fw-bold">#@item.Id</td>
+                                        <td>@item.Client.Name</td>
+                                        <td>
+                                            @foreach (var p in item.BookingItems)
+                                            {
+                                                <span class="badge bg-secondary me-1">@p.ProductItem?.ProductDefinition?.Name</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <a asp-page="/Bookings/Details" asp-route-id="@item.Id" class="btn btn-sm btn-primary">
+                                                تسليم <i class="fa-solid fa-truck-fast ms-1"></i>
+                                            </a>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var item in Model.ReturnsToday)
-                                    {
-                                        <tr>
-                                            <td class="fw-bold px-3">@item.Client.Name</td>
-                                            <td dir="ltr">@item.Client.Phone</td>
-                                            <td class="px-3">
-                                                <a asp-page="/Bookings/Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">استلام</a>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else
-                    {
-                        <p class="text-muted text-center py-4 mb-0">لا توجد مرتجعات اليوم</p>
-                    }
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted small">
+                                        لا توجد تسليمات مقررة اليوم.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
+
     </div>
 </div>

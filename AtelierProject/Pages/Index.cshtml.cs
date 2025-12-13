@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using AtelierProject.Data;
 using AtelierProject.Models;
 
@@ -11,7 +12,7 @@ namespace AtelierProject.Pages
     public class IndexModel : PageModel
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager; // لإحضار بيانات المستخدم
+        private readonly UserManager<ApplicationUser> _userManager;
 
         public IndexModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
@@ -19,146 +20,62 @@ namespace AtelierProject.Pages
             _userManager = userManager;
         }
 
-        // --- المتغيرات المالية ---
-        public decimal TotalInsuranceHeld { get; set; }
-        public decimal WomensInsurance { get; set; }
-        public decimal MensInsurance { get; set; }
+        // --- الإحصائيات (Cards) ---
+        public int PickupsTodayCount { get; set; }
+        public int ReturnsTodayCount { get; set; }
+        public int ActiveRentalsCount { get; set; } // عدد القطع الموجودة حالياً عند العملاء
+        public int OverdueCount { get; set; } // المتأخرات
 
-        public decimal TotalCollectedMoney { get; set; }
-        public decimal IncomeWomen { get; set; }
-        public decimal IncomeMen { get; set; }
-        public decimal IncomeBeauty { get; set; }
-
-        public decimal TotalPendingBalance { get; set; }
-
-        // --- القوائم ---
-        public List<Booking> PickupsToday { get; set; } = new();
-        public List<Booking> ReturnsToday { get; set; } = new();
+        // --- القوائم (Tables) ---
+        public List<Booking> OverdueBookings { get; set; } = new List<Booking>(); // قائمة المتأخرين
+        public List<Booking> TodaysPickups { get; set; } = new List<Booking>(); // تسليمات اليوم
 
         public async Task OnGetAsync()
         {
-            // 1. معرفة المستخدم الحالي وفرعه وصلاحياته
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return; // حماية إضافية
-
-            // إذا كان المستخدم Admin (BranchId == null)، سنعرض له كل الفروع (أو نضع منطقاً آخر)
-            // هنا سنفترض أنه لو لم يكن له فرع، يرى كل شيء. لو له فرع، نفلتر به.
-            int? userBranchId = user.BranchId;
+            if (user == null) return;
 
             var today = DateTime.Today;
 
-            // =================================================================================
-            // أولاً: الأتيليه (Bookings)
-            // =================================================================================
-
-            // استعلام أساسي مفلتر حسب الفرع (إذا وجد)
+            // استعلام أساسي
             var bookingsQuery = _context.Bookings
-                .Include(b => b.BookingItems)
-                    .ThenInclude(bi => bi.ProductItem)
-                        .ThenInclude(pi => pi.ProductDefinition)
+                .Include(b => b.Client)
+                .Include(b => b.BookingItems).ThenInclude(bi => bi.ProductItem).ThenInclude(pi => pi.ProductDefinition)
                 .AsQueryable();
 
-            if (userBranchId.HasValue)
+            // 🛑 فلتر الفرع (هام جداً)
+            if (user.BranchId.HasValue)
             {
-                bookingsQuery = bookingsQuery.Where(b => b.BranchId == userBranchId.Value);
+                bookingsQuery = bookingsQuery.Where(b => b.BranchId == user.BranchId);
             }
 
-            // سحب البيانات للذاكرة لعمل الحسابات المعقدة
-            // (نستبعد الملغي والمرتجع لحساب العهدة)
-            var activeBookings = await bookingsQuery
-                .Where(b => b.Status != BookingStatus.Returned && b.Status != BookingStatus.Cancelled)
+            // 1. حسابات العدادات
+            // تسليمات اليوم (المفروض يستلموها النهاردة)
+            PickupsTodayCount = await bookingsQuery.CountAsync(b => b.PickupDate.Date == today && b.Status == BookingStatus.New);
+
+            // مرتجعات اليوم (المفروض يرجعوها النهاردة)
+            ReturnsTodayCount = await bookingsQuery.CountAsync(b => b.ReturnDate.Date == today && b.Status == BookingStatus.PickedUp);
+
+            // قطع خارج الأتيليه حالياً (مؤجرة)
+            ActiveRentalsCount = await bookingsQuery.CountAsync(b => b.Status == BookingStatus.PickedUp);
+
+            // المتأخرات (تاريخ الإرجاع فات، ولسه الحالة "مؤجر")
+            OverdueCount = await bookingsQuery.CountAsync(b => b.ReturnDate.Date < today && b.Status == BookingStatus.PickedUp);
+
+            // 2. جلب القوائم للتفاصيل
+            // قائمة المتأخرين (الأخطر)
+            OverdueBookings = await bookingsQuery
+                .Where(b => b.ReturnDate.Date < today && b.Status == BookingStatus.PickedUp)
+                .OrderBy(b => b.ReturnDate) // الأقدم تأخيراً يظهر أولاً
+                .Take(5) // عرض آخر 5 فقط في الرئيسية
                 .ToListAsync();
 
-            // --- تطبيق فلتر الأقسام (صلاحيات المستخدم) ---
-            // سنحسب فقط الأقسام المسموح له برؤيتها
-
-            if (user.CanAccessWomenSection)
-            {
-                WomensInsurance = activeBookings
-                    .Where(b => GetBookingDepartment(b) == DepartmentType.Women)
-                    .Sum(b => b.InsuranceAmount);
-            }
-
-            if (user.CanAccessMenSection)
-            {
-                MensInsurance = activeBookings
-                    .Where(b => GetBookingDepartment(b) == DepartmentType.Men)
-                    .Sum(b => b.InsuranceAmount);
-            }
-
-            TotalInsuranceHeld = WomensInsurance + MensInsurance;
-
-            // حساب المديونيات (الآجل) للموظف حسب صلاحياته
-            // (يمكن تبسيطها لتشمل كل المديونيات في الفرع، أو تصفيتها حسب القسم كما فعلنا في التأمين)
-            TotalPendingBalance = activeBookings.Sum(b => b.RemainingRentalAmount);
-
-
-            // --- حساب الإيرادات (المال المقبوض) ---
-            var revenueBookings = await bookingsQuery
-                .Where(b => b.PaidAmount > 0 || b.InsuranceDeduction > 0)
-                .ToListAsync();
-
-            if (user.CanAccessWomenSection)
-            {
-                IncomeWomen = revenueBookings
-                    .Where(b => GetBookingDepartment(b) == DepartmentType.Women)
-                    .Sum(b => b.PaidAmount + b.InsuranceDeduction);
-            }
-
-            if (user.CanAccessMenSection)
-            {
-                IncomeMen = revenueBookings
-                    .Where(b => GetBookingDepartment(b) == DepartmentType.Men)
-                    .Sum(b => b.PaidAmount + b.InsuranceDeduction);
-            }
-
-
-            // =================================================================================
-            // ثانياً: الكوافير (Salon)
-            // =================================================================================
-
-            if (user.CanAccessBeautySection)
-            {
-                var salonQuery = _context.SalonAppointments.AsQueryable();
-
-                if (userBranchId.HasValue)
-                {
-                    salonQuery = salonQuery.Where(s => s.BranchId == userBranchId.Value);
-                }
-
-                IncomeBeauty = await salonQuery.SumAsync(s => s.TotalAmount);
-            }
-            else
-            {
-                IncomeBeauty = 0;
-            }
-
-            // الإجمالي الكلي لما يراه الموظف
-            TotalCollectedMoney = IncomeWomen + IncomeMen + IncomeBeauty;
-
-
-            // =================================================================================
-            // ثالثاً: قوائم المهام (تسليمات ومرتجعات)
-            // =================================================================================
-
-            // التسليمات اليوم (New -> PickedUp)
-            PickupsToday = await bookingsQuery
-                .Include(b => b.Client)
+            // قائمة تسليمات اليوم (عشان نجهزها)
+            TodaysPickups = await bookingsQuery
                 .Where(b => b.PickupDate.Date == today && b.Status == BookingStatus.New)
+                .OrderBy(b => b.CreatedDate)
+                .Take(5)
                 .ToListAsync();
-
-            // المرتجعات اليوم (PickedUp -> Returned)
-            ReturnsToday = await bookingsQuery
-                .Include(b => b.Client)
-                .Where(b => b.ReturnDate.Date == today && b.Status == BookingStatus.PickedUp)
-                .ToListAsync();
-        }
-
-        private DepartmentType GetBookingDepartment(Booking booking)
-        {
-            var firstItem = booking.BookingItems.FirstOrDefault();
-            if (firstItem?.ProductItem?.ProductDefinition == null) return DepartmentType.Women;
-            return firstItem.ProductItem.ProductDefinition.Department;
         }
     }
 }
