@@ -26,6 +26,9 @@ namespace AtelierProject.Data
         public DbSet<SalonAppointment> SalonAppointments { get; set; }
         public DbSet<SalonAppointmentItem> SalonAppointmentItems { get; set; }
 
+        public DbSet<ExpenseCategory> ExpenseCategories { get; set; }
+        public DbSet<Expense> Expenses { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

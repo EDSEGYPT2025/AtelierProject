@@ -1,0 +1,66 @@
+﻿@page
+@model AtelierProject.Pages.Expenses.CreateModel
+@{
+    ViewData["Title"] = "تسجيل مصروف جديد";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-danger text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-money-bill-wave me-2"></i> تسجيل مصروف</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Expense.ExpenseDate" class="form-label fw-bold">تاريخ الحركة</label>
+                                <input asp-for="Expense.ExpenseDate" class="form-control" type="date" />
+                                <span asp-validation-for="Expense.ExpenseDate" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Expense.ExpenseCategoryId" class="form-label fw-bold">نوع المصروف</label>
+                                <div class="input-group">
+                                    <select asp-for="Expense.ExpenseCategoryId" class="form-select" asp-items="ViewBag.ExpenseCategoryId">
+                                        <option value="">-- اختر البند --</option>
+                                    </select>
+                                    <a asp-page="/Expenses/Categories/Index" class="btn btn-outline-secondary" title="إدارة البنود" target="_blank">
+                                        <i class="fa fa-plus"></i>
+                                    </a>
+                                </div>
+                                <span asp-validation-for="Expense.ExpenseCategoryId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Expense.Amount" class="form-label fw-bold">المبلغ</label>
+                            <div class="input-group input-group-lg">
+                                <input asp-for="Expense.Amount" class="form-control fw-bold" placeholder="0.00" type="number" step="0.5" />
+                                <span class="input-group-text bg-light">ج.م</span>
+                            </div>
+                            <span asp-validation-for="Expense.Amount" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Expense.Description" class="form-label fw-bold">تفاصيل / ملاحظات</label>
+                            <textarea asp-for="Expense.Description" class="form-control" rows="2" placeholder="اكتب تفاصيل إضافية هنا..."></textarea>
+                            <span asp-validation-for="Expense.Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-page="Index" class="btn btn-light me-md-2">إلغاء</a>
+                            <button type="submit" class="btn btn-danger btn-lg px-5">حفظ المصروف</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

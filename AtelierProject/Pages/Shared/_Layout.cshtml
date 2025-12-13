@@ -8,7 +8,7 @@
     // 1. جلب بيانات المستخدم والفرع
     ApplicationUser currentUser = null;
     string branchName = "الإدارة العامة";
-    string commercialName = ""; // متغير للاسم التجاري
+    string commercialName = "";
 
     if (SignInManager.IsSignedIn(User))
     {
@@ -19,8 +19,8 @@
 
         if (currentUser != null && currentUser.Branch != null)
         {
-            branchName = currentUser.Branch.Name; // الاسم الداخلي
-            commercialName = currentUser.Branch.CommercialName; // الاسم التجاري
+            branchName = currentUser.Branch.Name;
+            commercialName = currentUser.Branch.CommercialName;
         }
     }
 }
@@ -127,7 +127,6 @@
             gap: 12px;
             transition: all 0.3s ease;
             cursor: pointer;
-            /* للتأكد من عدم تجاوز العرض في الشاشات الصغيرة */
             max-width: 100%;
         }
 
@@ -166,17 +165,16 @@
             align-items: center;
             justify-content: center;
             font-size: 0.9rem;
-            flex-shrink: 0; /* منع انكماش الصورة */
+            flex-shrink: 0;
         }
 
         .user-name-text {
             font-weight: 700;
             color: #495057;
             font-size: 0.95rem;
-            white-space: nowrap; /* منع النص من النزول لسطر جديد */
+            white-space: nowrap;
         }
 
-        /* --- تحسينات الموبايل (تم تعديلها لإظهار الأسماء) --- */
         @@media (max-width: 768px) {
             #sidebar-wrapper {
                 margin-right: -260px;
@@ -185,7 +183,7 @@
             #wrapper.toggled #sidebar-wrapper {
                 margin-right: 0;
             }
-            /* تم إزالة display: none لإظهار الأسماء */
+
             .user-info-pill {
                 padding: 4px 10px;
                 gap: 8px;
@@ -193,13 +191,13 @@
 
             .branch-badge {
                 padding: 4px 8px;
-                font-size: 0.75rem; /* تصغير الخط قليلاً فقط */
+                font-size: 0.75rem;
             }
 
             .user-name-text {
-                font-size: 0.85rem; /* تصغير اسم المستخدم قليلاً */
+                font-size: 0.85rem;
             }
-            /* تقليل حجم الخطوط للعناوين الطويلة جداً في الموبايل */
+
             .branch-details div {
                 max-width: 100px;
                 overflow: hidden;
@@ -260,6 +258,21 @@
                         <i class="fa-solid fa-users"></i> قاعدة العملاء
                     </a>
 
+                    @* --- ✅ قسم المصروفات الجديد --- *@
+                    <a href="#menuExpenses" data-bs-toggle="collapse" class="list-group-item list-group-item-action">
+                        <i class="fa-solid fa-wallet"></i> المصروفات
+                        <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                    </a>
+                    <div class="collapse" id="menuExpenses">
+                        @* صفحة التسجيل (سننشئها تالياً) *@
+                        @* <a asp-page="/Expenses/Create" class="list-group-item list-group-item-action submenu-link text-warning">
+                                <i class="fa-solid fa-plus fs-6 ms-1"></i> تسجيل مصروف
+                            </a> *@
+                        <a asp-page="/Expenses/Index" class="list-group-item list-group-item-action submenu-link">سجل المصروفات</a>
+                        <a asp-page="/Expenses/Categories/Index" class="list-group-item list-group-item-action submenu-link">بنود المصروفات</a>
+                    </div>
+                    @* ----------------------------- *@
+
                     <a href="#menuReports" data-bs-toggle="collapse" class="list-group-item list-group-item-action">
                         <i class="fa-solid fa-chart-pie"></i> التقارير المالية
                         <i class="fa-solid fa-chevron-down arrow-icon"></i>
@@ -304,9 +317,7 @@
                             {
                                 <li class="nav-item dropdown">
                                     <a class="nav-link p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-
                                         <div class="user-info-pill">
-
                                             <div class="branch-badge">
                                                 <i class="fa-solid fa-store fa-lg"></i>
                                                 <div class="branch-details">
@@ -321,9 +332,7 @@
                                                     }
                                                 </div>
                                             </div>
-
                                             <div style="width: 1px; height: 24px; background-color: #dee2e6;"></div>
-
                                             <div class="user-name-container">
                                                 <span class="user-name-text">@currentUser.FullName</span>
                                                 <div class="user-avatar">
@@ -331,7 +340,6 @@
                                                 </div>
                                             </div>
                                         </div>
-
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end border-0 shadow mt-2" aria-labelledby="navbarDropdown">
                                         <li><h6 class="dropdown-header text-center">@currentUser.Email</h6></li>

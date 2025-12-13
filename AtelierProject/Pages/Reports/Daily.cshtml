@@ -3,77 +3,54 @@
 @using AtelierProject.Models
 @inject UserManager<ApplicationUser> UserManager
 @{
-    ViewData["Title"] = "التقرير اليومي للخزينة";
+    ViewData["Title"] = "التقرير اليومي الشامل";
     var user = await UserManager.GetUserAsync(User);
 }
 
 <div class="container-fluid py-4">
 
-    <div class="card bg-light border-0 shadow-sm mb-5 p-3">
+    <div class="card bg-white border-0 shadow-sm mb-4 p-3 rounded-3">
         <form method="get" class="row align-items-center justify-content-center g-3">
-
             <div class="col-auto">
-                <label class="fw-bold text-muted">التاريخ:</label>
-            </div>
-            <div class="col-auto">
-                <input type="date" asp-for="ReportDate" class="form-control fw-bold" onchange="this.form.submit()" />
+                <label class="fw-bold text-muted small text-uppercase">تاريخ التقرير</label>
+                <input type="date" asp-for="ReportDate" class="form-control fw-bold border-primary" onchange="this.form.submit()" />
             </div>
 
             @if (user.BranchId == null)
             {
-                <div class="col-auto ms-3 border-start ps-3">
-                    <label class="fw-bold text-muted">الفرع:</label>
-                </div>
-                <div class="col-auto" style="min-width: 200px;">
+                <div class="col-auto">
+                    <label class="fw-bold text-muted small text-uppercase">الفرع</label>
                     <select asp-for="SelectedBranchId" asp-items="ViewBag.BranchList" class="form-select fw-bold text-primary" onchange="this.form.submit()">
-                        <option value="">-- كل الفروع (الإجمالي) --</option>
+                        <option value="">-- الإجمالي (كل الفروع) --</option>
                     </select>
                 </div>
             }
 
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-rotate"></i> تحديث</button>
+            <div class="col-auto align-self-end">
+                <button type="submit" class="btn btn-dark px-4"><i class="fa-solid fa-sync me-2"></i> تحديث</button>
             </div>
         </form>
     </div>
 
-    <div class="text-center mb-4">
-        @if (user.BranchId != null)
-        {
-            <span class="badge bg-secondary fs-6">تقرير فرعك فقط</span>
-        }
-        else if (Model.SelectedBranchId == null)
-        {
-            <span class="badge bg-primary fs-6">عرض إجمالي لكافة الفروع</span>
-        }
-        else
-        {
-            <span class="badge bg-info text-dark fs-6">عرض فرع محدد</span>
-        }
-    </div>
-
-    <div class="row g-4">
+    <div class="row g-3 mb-4">
 
         @if (user.CanAccessMenSection || user.BranchId == null)
         {
-            <div class="col-md-6">
-                <div class="card shadow h-100 border-top border-4 border-dark">
-                    <div class="card-header bg-dark text-white text-center py-3">
-                        <h4 class="mb-0"><i class="fa-solid fa-user-tie"></i> خزينة قسم الرجال</h4>
-                    </div>
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm border-0 border-top border-4 border-dark">
                     <div class="card-body">
+                        <h6 class="text-muted fw-bold text-uppercase mb-3"><i class="fa-solid fa-user-tie me-2"></i> قسم الرجال</h6>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-success"><i class="fa-solid fa-arrow-down"></i> وارد (تحصيل):</span>
-                            <span class="fw-bold">@Model.TotalCashIn_Men.ToString("N0")</span>
+                            <span class="text-success fw-bold"><i class="fa-solid fa-circle-plus"></i> إيراد حجوزات:</span>
+                            <span>@Model.TotalCashIn_Men.ToString("N0")</span>
                         </div>
                         <div class="d-flex justify-content-between mb-3">
-                            <span class="text-danger"><i class="fa-solid fa-arrow-up"></i> منصرف (رد تأمين):</span>
-                            <span class="fw-bold text-danger">- @Model.TotalRefunds_Men.ToString("N0")</span>
+                            <span class="text-danger fw-bold"><i class="fa-solid fa-circle-minus"></i> مرتجع تأمين:</span>
+                            <span class="text-danger">- @Model.TotalRefunds_Men.ToString("N0")</span>
                         </div>
-                        <hr>
-                        <div class="text-center bg-light p-3 rounded">
-                            <small class="text-uppercase text-muted">الصافي الفعلي في الدرج</small>
-                            <h2 class="fw-bold text-dark mb-0">@Model.NetTreasury_Men.ToString("N0") <small class="fs-6">ج.م</small></h2>
+                        <div class="bg-light p-2 rounded text-center">
+                            <small class="text-muted">صافي الرجال</small>
+                            <div class="fw-bold fs-5">@((Model.TotalCashIn_Men - Model.TotalRefunds_Men).ToString("N0"))</div>
                         </div>
                     </div>
                 </div>
@@ -82,41 +59,68 @@
 
         @if (user.CanAccessWomenSection || user.CanAccessBeautySection || user.BranchId == null)
         {
-            <div class="col-md-6">
-                <div class="card shadow h-100 border-top border-4 border-danger">
-                    <div class="card-header bg-danger text-white text-center py-3" style="background: linear-gradient(45deg, #d63384, #dc3545);">
-                        <h4 class="mb-0"><i class="fa-solid fa-gem"></i> الخزينة المشتركة</h4>
-                    </div>
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm border-0 border-top border-4 border-danger">
                     <div class="card-body">
+                        <h6 class="text-muted fw-bold text-uppercase mb-3"><i class="fa-solid fa-gem me-2"></i> حريمي وصالون</h6>
 
-                        <div class="mb-3">
-                            <h6 class="text-danger fw-bold border-bottom pb-2">قسم الحريمي</h6>
-                            <div class="d-flex justify-content-between">
-                                <span class="text-success small">وارد:</span>
-                                <span class="fw-bold">@Model.TotalCashIn_Women.ToString("N0")</span>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span class="text-danger small">منصرف (تأمين):</span>
-                                <span class="fw-bold text-danger">- @Model.TotalRefunds_Women.ToString("N0")</span>
-                            </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-success"><i class="fa-solid fa-shirt"></i> إيراد فساتين:</span>
+                            <span>@Model.TotalCashIn_Women.ToString("N0")</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-danger small ms-3">↳ مرتجع تأمين:</span>
+                            <span class="text-danger small">- @Model.TotalRefunds_Women.ToString("N0")</span>
                         </div>
 
-                        <div class="mb-3">
-                            <h6 class="text-info fw-bold border-bottom pb-2">البيوتي سنتر</h6>
-                            <div class="d-flex justify-content-between">
-                                <span class="text-success small">وارد:</span>
-                                <span class="fw-bold">@Model.TotalCashIn_Beauty.ToString("N0")</span>
-                            </div>
+                        <div class="d-flex justify-content-between mb-3 pt-2 border-top border-dashed">
+                            <span class="text-success fw-bold"><i class="fa-solid fa-spa"></i> إيراد بيوتي سنتر:</span>
+                            <span class="fw-bold">@Model.TotalCashIn_Beauty.ToString("N0")</span>
                         </div>
 
-                        <hr>
-                        <div class="text-center bg-light p-3 rounded">
-                            <small class="text-uppercase text-muted">الصافي الفعلي في الدرج</small>
-                            <h2 class="fw-bold text-danger mb-0">@Model.NetTreasury_WomenAndBeauty.ToString("N0") <small class="fs-6">ج.م</small></h2>
+                        <div class="bg-light p-2 rounded text-center">
+                            <small class="text-muted">صافي حريمي وصالون</small>
+                            <div class="fw-bold fs-5 text-danger">
+                                @(((Model.TotalCashIn_Women - Model.TotalRefunds_Women) + Model.TotalCashIn_Beauty).ToString("N0"))
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         }
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0 border-top border-4 border-warning bg-warning bg-opacity-10">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="text-dark fw-bold text-uppercase mb-0"><i class="fa-solid fa-money-bill-transfer me-2"></i> المصروفات</h6>
+                        <a asp-page="/Expenses/Index" class="btn btn-sm btn-outline-dark px-3 rounded-pill">التفاصيل</a>
+                    </div>
+
+                    <div class="text-center py-4">
+                        <h1 class="display-6 fw-bold text-dark">@Model.TotalExpenses.ToString("N0")</h1>
+                        <span class="badge bg-warning text-dark">إجمالي منصرف اليوم</span>
+                    </div>
+
+                    <div class="text-muted small text-center">
+                        يشمل الرواتب، الفواتير، والمشتريات المسجلة بتاريخ اليوم.
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
+
+    <div class="card border-0 shadow-lg text-white" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+        <div class="card-body p-4 text-center">
+            <h5 class="text-uppercase opacity-75 mb-1">الصافي الفعلي في الخزينة (الدرج)</h5>
+            <h1 class="display-3 fw-bold mb-0">
+                @Model.GrandTotalNet.ToString("N0") <span class="fs-4">ج.م</span>
+            </h1>
+            <p class="mb-0 mt-2 opacity-75 small">
+                (إجمالي الإيرادات - إجمالي المرتجعات - إجمالي المصروفات)
+            </p>
+        </div>
+    </div>
+
 </div>

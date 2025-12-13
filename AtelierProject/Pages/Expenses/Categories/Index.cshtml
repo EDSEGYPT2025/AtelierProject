@@ -1,0 +1,59 @@
+﻿@page
+@model AtelierProject.Pages.Expenses.Categories.IndexModel
+@{
+    ViewData["Title"] = "أنواع المصاريف";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold text-dark"><i class="fa-solid fa-tags text-secondary"></i> بنود المصروفات</h3>
+        <a asp-page="Create" class="btn btn-primary shadow-sm">
+            <i class="fa fa-plus"></i> إضافة بند جديد
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">اسم البند</th>
+                        <th>الفرع</th>
+                        <th class="text-end pe-4">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.ExpenseCategories.Any())
+                    {
+                        @foreach (var item in Model.ExpenseCategories)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-bold">@item.Name</td>
+                                <td class="text-muted small">
+                                    @(item.Branch?.Name ?? "عام")
+                                </td>
+                                <td class="text-end pe-4">
+                                    <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id"
+                                          onsubmit="return confirm('هل أنت متأكد من حذف هذا البند؟');" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger border-0">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="3" class="text-center py-5 text-muted">
+                                <i class="fa-regular fa-folder-open fa-2x mb-3 d-block"></i>
+                                لم يتم تعريف أي بنود مصروفات لهذا الفرع بعد.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
