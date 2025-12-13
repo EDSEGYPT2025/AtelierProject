@@ -16,8 +16,8 @@
 
     // 2. تجهيز بيانات الأتيليه والفرع
     string atelierName = !string.IsNullOrEmpty(Model.Booking.Branch?.CommercialName)
-                         ? Model.Booking.Branch.CommercialName
-                         : (Model.Booking.Branch?.Name ?? "ATELIER PRO");
+                          ? Model.Booking.Branch.CommercialName
+                          : (Model.Booking.Branch?.Name ?? "ATELIER PRO");
     string atelierAddress = Model.Booking.Branch?.Address ?? "العنوان غير محدد";
     string atelierPhone = Model.Booking.Branch?.Phone ?? "";
 
@@ -27,7 +27,7 @@
     // الترويسة والتحية
     sb.AppendLine($"مرحباً بك أستاذ/ة {clientName}");
     sb.AppendLine($"نشكر ثقتكم الغالية واختياركم *{atelierName}*");
-    sb.AppendLine(); // سطر فارغ
+    sb.AppendLine();
 
     // تفاصيل الحجز
     sb.AppendLine("*تفاصيل الفاتورة:*");
@@ -216,7 +216,6 @@
                         </div>
 
                         <div class="item-details">
-                            @*<span class="item-tag"><b>الكود:</b> @(item.ProductItem.UniqueCode ?? "-")</span>*@
                             <span class="item-tag"><b>الباركود:</b> @(item.ProductItem.Barcode ?? "-")</span>
                             <span class="item-tag"><b>المقاس:</b> @item.ProductItem.Size</span>
 
@@ -236,7 +235,7 @@
         @if (!string.IsNullOrEmpty(Model.Booking.Notes))
         {
             <div class="notes-box">
-                <strong><i class="fa fa-scissors"></i> ملاحظات الخياطة / تعديلات:</strong>
+                <strong><i class="fa fa-scissors"></i> ملاحظات المقاسات / تعديلات:</strong>
                 <p style="white-space: pre-wrap; margin:5px 0 0 0;">@Model.Booking.Notes</p>
             </div>
         }
@@ -262,8 +261,14 @@
             </div>
         </div>
 
-        <div style="margin-top:auto; border-top:1px solid #eee; padding-top:20px; font-size:12px; color:#777;">
-            الشروط والأحكام: التأمين يسترد بالكامل في حال سلامة القطعة. يخصم من التأمين في حال التلف.
+        <div style="margin-top:auto; border-top:2px solid #eee; padding-top:15px;">
+            <h6 style="font-weight:bold; margin-bottom:8px; font-size:14px;">الشروط والأحكام:</h6>
+            <ul style="font-size:12px; color:#555; padding-right:20px; margin-bottom:0; line-height:1.7;">
+                <li>التأمين يسترد بالكامل في حالة سلامة القطعة.</li>
+                <li>في حالة وجود أي تلفيات يتم تقديرها وخصمها على العميل.</li>
+                <li>في حالة إلغاء الحجز يتم استرجاع العربون خلال 48 ساعة من تاريخ الحجز.</li>
+                <li>في حالة إلغاء الحجز بعد 48 ساعة من الحجز يتم خصم 50% من قيمة العربون أو تأجيل مفتوح لمدة سنة.</li>
+            </ul>
         </div>
     </div>
 

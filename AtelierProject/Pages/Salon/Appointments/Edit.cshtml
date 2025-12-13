@@ -1,98 +1,72 @@
-﻿@page "{id:int}"
+﻿@page
 @model AtelierProject.Pages.Salon.Appointments.EditModel
 
 @{
-    ViewData["Title"] = "تعديل حجز صالون";
+    ViewData["Title"] = "تعديل موعد صالون";
 }
 
-<h1>تعديل حجز صالون</h1>
-<hr />
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-warning text-dark">
+            <h4 class="mb-0">تعديل موعد</h4>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="SalonAppointment.Id" />
+                @* نحتفظ برقم الفرع والحالة كما هم *@
+                <input type="hidden" asp-for="SalonAppointment.BranchId" />
+                <input type="hidden" asp-for="SalonAppointment.Status" />
 
-<div class="row">
-    <div class="col-md-10">
-        <form method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Appointment.Id" />
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="SalonAppointment.ClientId" class="form-label fw-bold">العميل</label>
+                        <select asp-for="SalonAppointment.ClientId" class="form-select" asp-items="ViewBag.ClientId"></select>
+                        <span asp-validation-for="SalonAppointment.ClientId" class="text-danger"></span>
+                    </div>
 
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group mb-3">
-                        <label asp-for="Appointment.ClientId" class="control-label fw-bold">العميل</label>
-                        <select asp-for="Appointment.ClientId" class="form-control" asp-items="ViewBag.ClientId"></select>
-                        <span asp-validation-for="Appointment.ClientId" class="text-danger"></span>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="SalonAppointment.AppointmentDate" class="form-label fw-bold">الموعد</label>
+                        <input asp-for="SalonAppointment.AppointmentDate" class="form-control" />
+                        <span asp-validation-for="SalonAppointment.AppointmentDate" class="text-danger"></span>
                     </div>
                 </div>
 
-                <div class="col-md-6">
-                    <div class="form-group mb-3">
-                        <label asp-for="Appointment.AppointmentDate" class="control-label fw-bold">تاريخ وموعد الحجز</label>
-                        <input asp-for="Appointment.AppointmentDate" class="form-control" />
-                        <span asp-validation-for="Appointment.AppointmentDate" class="text-danger"></span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card mb-3 border-secondary">
-                <div class="card-header bg-light fw-bold">
-                    الخدمات المطلوبة
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        @foreach (var service in Model.AvailableServices)
-                        {
-                            <div class="col-md-4 mb-2">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox"
-                                           name="SelectedServiceIds"
-                                           value="@service.Id"
-                                           id="service_@service.Id"
-                                           @(Model.SelectedServiceIds.Contains(service.Id) ? "checked" : "") />
-
-                                    <label class="form-check-label" for="service_@service.Id">
-                                        @service.Name <span class="badge bg-secondary">@service.Price ج.م</span>
-                                    </label>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">الخدمات المطلوبة</label>
+                    <div class="card p-3 bg-light">
+                        <div class="row">
+                            @foreach (var service in Model.AvailableServices)
+                            {
+                                <div class="col-md-4 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                               name="SelectedServiceIds"
+                                               value="@service.Id"
+                                               id="service_@service.Id"
+                                               @(Model.SelectedServiceIds.Contains(service.Id) ? "checked" : "")>
+                                        <label class="form-check-label" for="service_@service.Id">
+                                            @service.Name (@service.Price.ToString("N0"))
+                                        </label>
+                                    </div>
                                 </div>
-                            </div>
-                        }
-                    </div>
-                    @if (ViewData.ModelState[""] != null && ViewData.ModelState[""].Errors.Count > 0)
-                    {
-                        <div class="text-danger mt-2">
-                            @Html.ValidationSummary(true)
+                            }
                         </div>
-                    }
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group mb-3">
-                        <label asp-for="Appointment.PaidAmount" class="control-label fw-bold">المبلغ المدفوع</label>
-                        <input asp-for="Appointment.PaidAmount" class="form-control" type="number" step="0.01" />
-                        <span asp-validation-for="Appointment.PaidAmount" class="text-danger"></span>
                     </div>
                 </div>
 
-                <div class="col-md-4">
-                    <div class="form-group mb-3">
-                        <label asp-for="Appointment.Status" class="control-label fw-bold">الحالة</label>
-                        <input asp-for="Appointment.Status" class="form-control" />
-                        <span asp-validation-for="Appointment.Status" class="text-danger"></span>
-                    </div>
+                <div class="mb-3">
+                    <label asp-for="SalonAppointment.Notes" class="form-label fw-bold">ملاحظات</label>
+                    <textarea asp-for="SalonAppointment.Notes" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="SalonAppointment.Notes" class="text-danger"></span>
                 </div>
-            </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="Appointment.Notes" class="control-label fw-bold">ملاحظات</label>
-                <textarea asp-for="Appointment.Notes" class="form-control" rows="3"></textarea>
-                <span asp-validation-for="Appointment.Notes" class="text-danger"></span>
-            </div>
-
-            <div class="form-group mt-4">
-                <input type="submit" value="حفظ التعديلات" class="btn btn-primary px-4" />
-                <a asp-page="./Index" class="btn btn-secondary px-4">عودة للقائمة</a>
-            </div>
-        </form>
+                <div class="mt-4 pt-3 border-top d-flex justify-content-between">
+                    <a asp-page="./Index" class="btn btn-secondary">إلغاء</a>
+                    <button type="submit" class="btn btn-warning px-4">حفظ التعديلات</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 

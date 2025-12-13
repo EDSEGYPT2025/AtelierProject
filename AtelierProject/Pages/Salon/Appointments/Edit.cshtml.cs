@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using AtelierProject.Data;
 using AtelierProject.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AtelierProject.Pages.Salon.Appointments
 {
+    [Authorize]
     public class EditModel : PageModel
     {
         private readonly ApplicationDbContext _context;
@@ -17,124 +19,88 @@ namespace AtelierProject.Pages.Salon.Appointments
         }
 
         [BindProperty]
-        public SalonAppointment Appointment { get; set; } = default!;
+        public SalonAppointment SalonAppointment { get; set; } = default!;
 
-        // لعرض الخدمات في الصفحة
-        public List<SalonService> AvailableServices { get; set; } = new List<SalonService>();
-
-        // لاستقبال الخدمات المختارة
+        // لحمل الخدمات المختارة
         [BindProperty]
         public List<int> SelectedServiceIds { get; set; } = new List<int>();
 
+        public List<SalonService> AvailableServices { get; set; } = new List<SalonService>();
+
         public async Task<IActionResult> OnGetAsync(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            // جلب الحجز مع العناصر المرتبطة به (Items) لتحديد الخدمات المختارة سابقاً
-            var appointment = await _context.SalonAppointments
-                .Include(a => a.Items)
+            // جلب الحجز مع التفاصيل
+            var salonappointment = await _context.SalonAppointments
+                .Include(s => s.Items) // جلب الخدمات المسجلة للحجز
                 .FirstOrDefaultAsync(m => m.Id == id);
 
-            if (appointment == null)
-            {
-                return NotFound();
-            }
+            if (salonappointment == null) return NotFound();
 
-            Appointment = appointment;
+            SalonAppointment = salonappointment;
 
-            // تعبئة القوائم المنسدلة
+            // ملء القوائم
             ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name");
+
+            // جلب الخدمات المتاحة (يفضل فلترتها حسب الفرع إذا أردت، هنا سنجلب الكل)
             AvailableServices = await _context.SalonServices.ToListAsync();
 
-            // تعبئة قائمة الـ IDs للخدمات المختارة حالياً لتظهر في الـ Checkboxes
-            SelectedServiceIds = appointment.Items
-                .Select(i => i.SalonServiceId)
-                .ToList();
+            // تحديد الخدمات التي اختارها العميل سابقاً لتظهر محددة في القائمة
+            SelectedServiceIds = SalonAppointment.Items.Select(i => i.SalonServiceId).ToList();
 
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync(int id)
+        public async Task<IActionResult> OnPostAsync()
         {
-            // التحقق من اختيار خدمة واحدة على الأقل
-            if (SelectedServiceIds.Count == 0)
-            {
-                ModelState.AddModelError(string.Empty, "يجب اختيار خدمة واحدة على الأقل.");
-            }
+            // 1. استبعاد الحقول التي تسبب مشاكل التحقق
+            ModelState.Remove("SalonAppointment.Branch");
+            ModelState.Remove("SalonAppointment.Client");
+            ModelState.Remove("SalonAppointment.Items");
 
             if (!ModelState.IsValid)
             {
+                // إعادة تحميل القوائم في حال فشل التحقق
                 ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name");
                 AvailableServices = await _context.SalonServices.ToListAsync();
                 return Page();
             }
 
-            // جلب الحجز الأصلي من قاعدة البيانات لتعديله
-            // (نستخدم Include للعناصر لأننا سنقوم بتعديلها)
+            // 2. جلب الحجز الأصلي من قاعدة البيانات للتعديل عليه
             var appointmentToUpdate = await _context.SalonAppointments
-                .Include(a => a.Items)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .Include(a => a.Items) // ضروري لجلب الخدمات القديمة لحذفها
+                .FirstOrDefaultAsync(m => m.Id == SalonAppointment.Id);
 
-            if (appointmentToUpdate == null)
-            {
-                return NotFound();
-            }
+            if (appointmentToUpdate == null) return NotFound();
 
-            // 1. تحديث البيانات الأساسية
-            appointmentToUpdate.ClientId = Appointment.ClientId;
-            appointmentToUpdate.AppointmentDate = Appointment.AppointmentDate;
-            appointmentToUpdate.Status = Appointment.Status;
-            appointmentToUpdate.Notes = Appointment.Notes;
-            appointmentToUpdate.PaidAmount = Appointment.PaidAmount; // القيمة الجديدة للمدفوع
+            // 3. تحديث البيانات الأساسية
+            appointmentToUpdate.ClientId = SalonAppointment.ClientId;
+            appointmentToUpdate.AppointmentDate = SalonAppointment.AppointmentDate;
+            appointmentToUpdate.Notes = SalonAppointment.Notes;
+            // يمكنك تحديث الحالة إذا كانت موجودة في الفورم، أو تركها كما هي
+            // appointmentToUpdate.Status = SalonAppointment.Status; 
 
-            // 2. تحديث الخدمات (Items)
-            // أ) حذف الخدمات التي أزال المستخدم العلامة عنها
-            var itemsToRemove = appointmentToUpdate.Items
-                .Where(i => !SelectedServiceIds.Contains(i.SalonServiceId))
-                .ToList();
+            // 4. تحديث الخدمات (الأصعب): نحذف القديم ونضيف الجديد
+            // أ) حذف الخدمات القديمة
+            _context.SalonAppointmentItems.RemoveRange(appointmentToUpdate.Items);
 
-            foreach (var item in itemsToRemove)
-            {
-                _context.SalonAppointmentItems.Remove(item);
-            }
-
-            // ب) إضافة الخدمات الجديدة التي اختارها المستخدم ولم تكن موجودة
-            var currentServiceIds = appointmentToUpdate.Items
-                .Select(i => i.SalonServiceId)
-                .ToList();
-
-            var newServiceIds = SelectedServiceIds.Except(currentServiceIds).ToList();
-
-            // نحتاج لجلب أسعار الخدمات الجديدة من الداتا بيز
-            if (newServiceIds.Any())
-            {
-                var newServicesInfo = await _context.SalonServices
-                    .Where(s => newServiceIds.Contains(s.Id))
-                    .ToListAsync();
-
-                foreach (var service in newServicesInfo)
-                {
-                    appointmentToUpdate.Items.Add(new SalonAppointmentItem
-                    {
-                        SalonServiceId = service.Id,
-                        Price = service.Price,
-                        SalonAppointmentId = appointmentToUpdate.Id
-                    });
-                }
-            }
-
-            // 3. إعادة حساب الإجمالي الكلي (TotalAmount) بناءً على القائمة النهائية للخدمات
-            // نقوم بجلب أسعار كل الخدمات المختارة حالياً (سواء القديمة أو الجديدة) لضمان دقة الحساب
-            var allSelectedServices = await _context.SalonServices
+            // ب) إضافة الخدمات الجديدة المختارة
+            var selectedServicesInfo = await _context.SalonServices
                 .Where(s => SelectedServiceIds.Contains(s.Id))
                 .ToListAsync();
 
-            appointmentToUpdate.TotalAmount = allSelectedServices.Sum(s => s.Price);
+            foreach (var service in selectedServicesInfo)
+            {
+                appointmentToUpdate.Items.Add(new SalonAppointmentItem
+                {
+                    SalonServiceId = service.Id,
+                    Price = service.Price
+                });
+            }
 
-            // ملاحظة: لا نعدل RemainingAmount يدوياً، سيتم حسابه تلقائياً عند العرض بناءً على التعديلات أعلاه
+            // 5. إعادة حساب الإجمالي
+            appointmentToUpdate.TotalAmount = selectedServicesInfo.Sum(s => s.Price);
 
             try
             {
@@ -142,7 +108,7 @@ namespace AtelierProject.Pages.Salon.Appointments
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!SalonAppointmentExists(Appointment.Id))
+                if (!SalonAppointmentExists(SalonAppointment.Id))
                 {
                     return NotFound();
                 }

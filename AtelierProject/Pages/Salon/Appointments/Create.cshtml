@@ -16,10 +16,11 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label asp-for="Appointment.ClientId" class="form-label fw-bold">العميلة</label>
-                                <select asp-for="Appointment.ClientId" class="form-select" asp-items="ViewBag.ClientId" required>
+                                <label asp-for="Appointment.ClientId" class="form-label fw-bold">العميلة (ابحث بالاسم أو الرقم)</label>
+                                <select asp-for="Appointment.ClientId" id="clientSelect" class="form-select" asp-items="ViewBag.ClientId" required>
                                     <option value="">-- اختر العميلة --</option>
                                 </select>
+                                <span asp-validation-for="Appointment.ClientId" class="text-danger"></span>
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Appointment.AppointmentDate" class="form-label fw-bold">تاريخ ووقت الموعد</label>
@@ -28,16 +29,21 @@
                                        type="datetime-local"
                                        asp-format="{0:yyyy-MM-ddTHH:mm}"
                                        required />
+                                <span asp-validation-for="Appointment.AppointmentDate" class="text-danger"></span>
                             </div>
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label fw-bold d-block border-bottom pb-2">الخدمات المطلوبة</label>
+                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                                <label class="form-label fw-bold mb-0">الخدمات المطلوبة</label>
+                                <input type="text" id="serviceSearchInput" class="form-control form-control-sm w-50" placeholder="🔍 ابحث عن اسم الخدمة..." autocomplete="off">
+                            </div>
 
-                            <div class="row g-3">
+                            <div class="row g-3" id="servicesListContainer">
                                 @foreach (var service in Model.AvailableServices)
                                 {
-                                    <div class="col-md-6">
+                                    /* 2. أضفنا كلاس service-item للبحث */
+                                    <div class="col-md-6 service-item">
                                         <div class="form-check p-3 border rounded bg-light">
                                             <input class="form-check-input service-check" type="checkbox"
                                                    name="SelectedServiceIds"
@@ -45,12 +51,15 @@
                                                    id="srv_@service.Id"
                                                    data-price="@service.Price">
                                             <label class="form-check-label w-100 d-flex justify-content-between" for="srv_@service.Id">
-                                                <span>@service.Name</span>
+                                                <span class="service-name-text">@service.Name</span>
                                                 <span class="fw-bold text-success">@service.Price.ToString("N0") ج.م</span>
                                             </label>
                                         </div>
                                     </div>
                                 }
+                            </div>
+                            <div id="noServicesFound" class="alert alert-warning text-center mt-2" style="display: none;">
+                                لا توجد خدمة بهذا الاسم
                             </div>
                         </div>
 
@@ -84,7 +93,7 @@
 
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-danger btn-lg shadow-sm">تأكيد الحجز</button>
-                            <a href="/Index" class="btn btn-outline-secondary">إلغاء</a>
+                            <a asp-page="./Index" class="btn btn-outline-secondary">إلغاء</a>
                         </div>
                     </form>
                 </div>
@@ -94,39 +103,70 @@
 </div>
 
 @section Scripts {
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script>
-        // تعريف العناصر
+        $(document).ready(function () {
+            // تفعيل Select2 للعملاء
+            $('#clientSelect').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- ابحث عن العميلة --',
+                width: '100%',
+                language: { noResults: function () { return "لا توجد نتائج"; } }
+            });
+        });
+
+        // ============================
+        // 1. كود فلترة الخدمات (بحث)
+        // ============================
+        document.getElementById('serviceSearchInput').addEventListener('keyup', function () {
+            let filter = this.value.toLowerCase(); // النص المكتوب
+            let items = document.querySelectorAll('.service-item'); // كل كروت الخدمات
+            let hasVisibleItems = false;
+
+            items.forEach(function (item) {
+                // البحث داخل اسم الخدمة فقط
+                let serviceName = item.querySelector('.service-name-text').textContent.toLowerCase();
+
+                if (serviceName.includes(filter)) {
+                    item.style.display = ''; // إظهار
+                    hasVisibleItems = true;
+                } else {
+                    item.style.display = 'none'; // إخفاء
+                }
+            });
+
+            // إظهار رسالة "لا توجد نتائج" إذا اختفى كل شيء
+            let noResultMsg = document.getElementById('noServicesFound');
+            if (!hasVisibleItems) {
+                noResultMsg.style.display = 'block';
+            } else {
+                noResultMsg.style.display = 'none';
+            }
+        });
+
+        // ============================
+        // 2. كود حساب الأسعار (كما هو)
+        // ============================
         const checkboxes = document.querySelectorAll('.service-check');
-        const totalDisplayTop = document.getElementById('totalPriceDisplay');       // العنصر العلوي
-        const totalDisplayBottom = document.getElementById('totalPriceDisplayBottom'); // العنصر السفلي الجديد
+        const totalDisplayTop = document.getElementById('totalPriceDisplay');
+        const totalDisplayBottom = document.getElementById('totalPriceDisplayBottom');
 
         function updateTotal() {
             let total = 0;
-
-            // حساب المجموع
             checkboxes.forEach(chk => {
                 if (chk.checked) {
                     total += parseFloat(chk.getAttribute('data-price')) || 0;
                 }
             });
-
             const formattedTotal = total.toLocaleString() + ' ج.م';
-
-            // تحديث العنصر العلوي إذا وجد
-            if (totalDisplayTop) {
-                totalDisplayTop.textContent = formattedTotal;
-            }
-
-            // تحديث العنصر السفلي إذا وجد
-            if (totalDisplayBottom) {
-                totalDisplayBottom.textContent = formattedTotal;
-            }
+            if (totalDisplayTop) totalDisplayTop.textContent = formattedTotal;
+            if (totalDisplayBottom) totalDisplayBottom.textContent = formattedTotal;
         }
 
-        // ربط الحدث
         checkboxes.forEach(chk => chk.addEventListener('change', updateTotal));
-
-        // استدعاء الدالة مرة واحدة عند التحميل (لحساب أي خدمات مختارة مسبقاً)
-        updateTotal();
+        updateTotal(); // للحساب عند التحميل
     </script>
 }
