@@ -69,7 +69,9 @@
                                         }
                                     </td>
                                     <td>
-                                        @if (item.IsActive)
+                                    <td>
+                                        @* إذا كان التاريخ فارغاً أو في الماضي = نشط *@
+                                        @if (item.LockoutEnd == null || item.LockoutEnd <= DateTimeOffset.Now)
                                         {
                                             <span class="badge bg-success">نشط</span>
                                         }
@@ -77,6 +79,7 @@
                                         {
                                             <span class="badge bg-danger">معطل</span>
                                         }
+                                    </td>
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group" role="group">

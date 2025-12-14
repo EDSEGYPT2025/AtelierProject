@@ -10,10 +10,12 @@ namespace AtelierProject.Pages.Account
     public class LoginModel : PageModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager)
+        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger)
         {
             _signInManager = signInManager;
+            _logger = logger;
         }
 
         [BindProperty]
@@ -54,23 +56,31 @@ namespace AtelierProject.Pages.Account
 
             if (ModelState.IsValid)
             {
-                // محاولة تسجيل الدخول
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                // ✅ التعديل هنا: lockoutOnFailure: true لتفعيل التحقق من القفل
+                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: true);
 
                 if (result.Succeeded)
                 {
+                    _logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);
                 }
+
+                // ✅ التعديل هنا: التعامل مع الحساب المقفول (غير النشط)
                 if (result.IsLockedOut)
                 {
-                    return RedirectToPage("./Lockout");
+                    _logger.LogWarning("User account locked out.");
+                    // بدلاً من التوجيه لصفحة أخرى، نعرض الرسالة هنا
+                    ModelState.AddModelError(string.Empty, "هذا الحساب غير نشط (مغلق)، يرجى مراجعة الإدارة.");
+                    return Page();
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "محاولة دخول غير صحيحة.");
+                    ModelState.AddModelError(string.Empty, "بيانات الدخول غير صحيحة.");
                     return Page();
                 }
             }
+
+            // إذا وصلنا هنا فهذا يعني أن البيانات غير مكتملة
             return Page();
         }
     }

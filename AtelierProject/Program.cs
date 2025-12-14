@@ -16,20 +16,29 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// --- 1. تعديل خدمة Identity لدعم الأدوار (Roles) وإلغاء تأكيد الإيميل للتسهيل حالياً ---
+// --- 1. تعديل خدمة Identity لدعم الأدوار (Roles) ---
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = false; // جعلناها false للتجربة السريعة
+    options.SignIn.RequireConfirmedAccount = false;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// --- 2. إعدادات الكوكيز (لحل مشكلة التوجيه الخاطئ) ---
+// ✅✅✅ هذا هو الجزء الجديد والمهم جداً للإيقاف اللحظي ✅✅✅
+builder.Services.Configure<SecurityStampValidatorOptions>(options =>
+{
+    // جعل الفاصل الزمني صفر يجبر النظام على التحقق من "بصمة الأمان" مع كل طلب
+    // بمجرد تغيير البصمة في صفحة التعديل، سيتم طرد المستخدم فوراً
+    options.ValidationInterval = TimeSpan.Zero;
+});
+// -------------------------------------------------------------
+
+// --- 2. إعدادات الكوكيز ---
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath = "/Account/Login";        // مسار صفحة الدخول الجديدة
-    options.LogoutPath = "/Account/Logout";      // مسار الخروج
-    options.AccessDeniedPath = "/Account/AccessDenied"; // مسار عدم الصلاحية
+    options.LoginPath = "/Account/Login";
+    options.LogoutPath = "/Account/Logout";
+    options.AccessDeniedPath = "/Account/AccessDenied";
 });
 
 builder.Services.AddRazorPages();
@@ -37,10 +46,7 @@ builder.Services.AddRazorPages();
 var app = builder.Build();
 
 // ---------------- بداية كود العملة ----------------
-// إجبار التطبيق على استخدام الثقافة المصرية (اللغة العربية - مصر)
 var defaultCulture = new CultureInfo("ar-EG");
-
-// اختياري: إذا أردت التأكد من شكل العملة بدقة (مثلاً "ج.م" بدلاً من EGP)
 defaultCulture.NumberFormat.CurrencySymbol = "ج.م";
 
 var localizationOptions = new RequestLocalizationOptions
@@ -67,8 +73,7 @@ else
 app.UseHttpsRedirection();
 app.UseRouting();
 
-// الترتيب هنا مهم جداً: Authentication ثم Authorization
-app.UseAuthentication(); // <-- تأكد من وجود هذا السطر (مهم جداً لعمل الـ Identity)
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
@@ -82,10 +87,8 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-
-        // الإيميل وكلمة المرور للمستخدم الافتراضي
         string email = "admin@admin.com";
-        string password = "Oe@123456"; // كلمة المرور يجب أن تكون قوية (حرف كبير، رقم، رمز)
+        string password = "Oe@123456";
 
         var user = await userManager.FindByEmailAsync(email);
         if (user == null)
@@ -94,14 +97,13 @@ using (var scope = app.Services.CreateScope())
             {
                 UserName = email,
                 Email = email,
-                EmailConfirmed = true, // تفعيل الإيميل مباشرة
-                FullName = "مدير النظام" // تأكد أن هذا الحقل موجود في المودل الخاص بك
+                EmailConfirmed = true,
+                FullName = "مدير النظام"
             };
 
             var result = await userManager.CreateAsync(user, password);
             if (!result.Succeeded)
             {
-                // طباعة الأخطاء في الكونسول إذا فشل الإنشاء
                 foreach (var error in result.Errors)
                 {
                     Console.WriteLine($">>> Error creating user: {error.Description}");

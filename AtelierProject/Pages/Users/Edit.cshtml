@@ -7,18 +7,20 @@
 <div class="container-fluid py-4">
     <div class="row justify-content-center">
         <div class="col-md-10">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fa fa-user-edit"></i> تعديل بيانات الموظف</h5>
+            <div class="card shadow border-0">
+
+                <div class="card-header bg-primary bg-gradient text-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fa fa-user-edit me-2"></i> تعديل بيانات الموظف</h5>
                 </div>
-                <div class="card-body">
+
+                <div class="card-body p-4">
                     <form method="post">
                         <input type="hidden" asp-for="Input.Id" />
-                        <div asp-validation-summary="All" class="text-danger"></div>
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger shadow-sm"></div>
 
-                        <div class="row">
+                        <div class="row g-4">
                             <div class="col-md-6 border-end">
-                                <h6 class="text-primary mb-3">البيانات الأساسية</h6>
+                                <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">البيانات الأساسية</h6>
 
                                 <div class="mb-3">
                                     <label asp-for="Input.FullName" class="form-label fw-bold"></label>
@@ -32,7 +34,7 @@
                                     <span asp-validation-for="Input.Email" class="text-danger"></span>
                                 </div>
 
-                                <div class="mb-3">
+                                <div class="mb-4">
                                     <label asp-for="Input.BranchId" class="form-label fw-bold"></label>
                                     <select asp-for="Input.BranchId" class="form-select" asp-items="ViewBag.BranchId">
                                         <option value="">-- اختر الفرع --</option>
@@ -40,34 +42,41 @@
                                     <span asp-validation-for="Input.BranchId" class="text-danger"></span>
                                 </div>
 
-                                <div class="mb-3 bg-light p-3 rounded">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" asp-for="Input.IsActive">
-                                        <label class="form-check-label fw-bold" asp-for="Input.IsActive">حساب نشط (تفعيل الدخول)</label>
+                                <div class="card border-warning bg-warning bg-opacity-10 mb-3">
+                                    <div class="card-body">
+                                        <div class="form-check form-switch d-flex align-items-center">
+                                            <input class="form-check-input ms-0 me-3" type="checkbox" asp-for="Input.IsActive" style="transform: scale(1.4); cursor: pointer;">
+                                            <div>
+                                                <label class="form-check-label fw-bold text-dark" asp-for="Input.IsActive">حساب نشط (السماح بالدخول)</label>
+                                                <div class="form-text text-muted small mt-1">
+                                                    عند إلغاء التفعيل، سيتم منع الموظف من الدخول للنظام فوراً، ولكن لن يتم حذف بياناته.
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <small class="text-muted">إلغاء التفعيل يمنع الموظف من الدخول للنظام دون حذف بياناته.</small>
                                 </div>
                             </div>
 
                             <div class="col-md-6">
-                                <h6 class="text-success mb-3"><i class="fa fa-lock"></i> تعديل الصلاحيات</h6>
-                                <div class="alert alert-info py-2">
-                                    <small><i class="fa fa-info-circle"></i> حدد الأقسام التي يمكن للموظف رؤيتها والعمل عليها.</small>
+                                <h6 class="text-success fw-bold mb-3 border-bottom pb-2"><i class="fa fa-lock me-1"></i> إدارة الصلاحيات</h6>
+
+                                <div class="alert alert-info py-2 small mb-3">
+                                    <i class="fa fa-info-circle me-1"></i> حدد الأقسام التي يمتلك الموظف حق الوصول إليها.
                                 </div>
 
-                                <div class="card mb-3">
+                                <div class="card bg-light border-0">
                                     <div class="card-body">
                                         <div class="form-check form-switch mb-3">
                                             <input class="form-check-input" type="checkbox" asp-for="Input.CanAccessMen">
-                                            <label class="form-check-label" asp-for="Input.CanAccessMen">قسم الرجال (بدل ورسمي)</label>
+                                            <label class="form-check-label fw-bold" asp-for="Input.CanAccessMen">قسم الرجال (بدل ورسمي)</label>
                                         </div>
                                         <div class="form-check form-switch mb-3">
                                             <input class="form-check-input" type="checkbox" asp-for="Input.CanAccessWomen">
-                                            <label class="form-check-label" asp-for="Input.CanAccessWomen">قسم النساء (فساتين وسواريه)</label>
+                                            <label class="form-check-label fw-bold" asp-for="Input.CanAccessWomen">قسم النساء (فساتين وسواريه)</label>
                                         </div>
                                         <div class="form-check form-switch">
                                             <input class="form-check-input" type="checkbox" asp-for="Input.CanAccessBeauty">
-                                            <label class="form-check-label" asp-for="Input.CanAccessBeauty">قسم الكوافير (بيوتي سنتر)</label>
+                                            <label class="form-check-label fw-bold" asp-for="Input.CanAccessBeauty">قسم الكوافير (بيوتي سنتر)</label>
                                         </div>
                                     </div>
                                 </div>
@@ -76,10 +85,10 @@
 
                         <hr class="my-4" />
 
-                        <div class="d-flex justify-content-between">
-                            <a asp-page="./Index" class="btn btn-secondary">عودة للقائمة</a>
-                            <button type="submit" class="btn btn-primary px-5">
-                                <i class="fa fa-save"></i> حفظ التغييرات
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a asp-page="./Index" class="btn btn-secondary px-4"><i class="fa fa-arrow-right me-1"></i> عودة للقائمة</a>
+                            <button type="submit" class="btn btn-primary px-5 btn-lg shadow-sm">
+                                <i class="fa fa-save me-1"></i> حفظ التغييرات
                             </button>
                         </div>
                     </form>

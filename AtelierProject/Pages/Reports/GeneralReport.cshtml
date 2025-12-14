@@ -1,0 +1,271 @@
+﻿@page
+@model AtelierProject.Pages.Reports.GeneralReportModel
+@{
+    ViewData["Title"] = "التقرير المالي الشامل";
+}
+
+<style>
+    /* تنسيقات الطباعة والشاشة */
+    .report-card {
+        border-right: 4px solid var(--royal-gold);
+        transition: transform 0.3s;
+    }
+
+        .report-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .bg-royal-dark {
+        background-color: #1a1a1a;
+        color: #fff;
+    }
+
+    .text-royal-gold {
+        color: #c5a059;
+    }
+
+    @@media print {
+        .no-print {
+            display: none !important;
+        }
+
+        .card {
+            border: 1px solid #ddd !important;
+        }
+
+        .bg-royal-dark {
+            background-color: #fff !important;
+            color: #000 !important;
+            border: 1px solid #000;
+        }
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm mb-4 no-print border-0 bg-light">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">من تاريخ</label>
+                    <input asp-for="StartDate" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">إلى تاريخ</label>
+                    <input asp-for="EndDate" class="form-control" />
+                </div>
+
+                @if (Model.IsAdmin)
+                {
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">الفرع</label>
+                        <select asp-for="BranchId" asp-items="ViewBag.BranchList" class="form-select">
+                            <option value="">-- كل الفروع (تقرير مجمع) --</option>
+                        </select>
+                    </div>
+                }
+
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                        <i class="fa fa-filter"></i> عرض التقرير
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="text-center mb-4">
+        <h2 class="fw-bold" style="font-family:'Playfair Display'">التقرير المالي العام</h2>
+        <p class="text-muted">
+            الفترة من: <span class="fw-bold text-dark">@Model.StartDate.ToString("yyyy-MM-dd")</span>
+            إلى: <span class="fw-bold text-dark">@Model.EndDate.ToString("yyyy-MM-dd")</span>
+            @if (Model.BranchId.HasValue)
+            {<span class="badge bg-info text-dark">فرع محدد</span> }
+            else
+            { <span class="badge bg-dark">كل الفروع</span>}
+        </p>
+    </div>
+
+    <div class="row g-3 mb-5 text-center">
+        <div class="col-md-3">
+            <div class="card report-card shadow h-100">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase small">إيرادات الأتيليه</h6>
+                    <h3 class="fw-bold text-primary mb-0">@Model.Summary.TotalAtelier.ToString("N0")</h3>
+                    <small>ج.م</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card report-card shadow h-100">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase small">إيرادات الصالون</h6>
+                    <h3 class="fw-bold text-success mb-0">@Model.Summary.TotalSalon.ToString("N0")</h3>
+                    <small>ج.م</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card report-card shadow h-100" style="border-color: #dc3545;">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase small">المصروفات</h6>
+                    <h3 class="fw-bold text-danger mb-0">@Model.Summary.TotalExpenses.ToString("N0")</h3>
+                    <small>ج.م</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow h-100 bg-royal-dark text-white border-0">
+                <div class="card-body">
+                    <h6 class="text-royal-gold text-uppercase small">صافي الدخل (الربح)</h6>
+                    <h3 class="fw-bold text-white mb-0">@Model.Summary.NetIncome.ToString("N0")</h3>
+                    <small class="text-white-50">ج.م</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.IsAdmin && !Model.BranchId.HasValue && Model.BranchPerformances.Count > 1)
+    {
+        <h5 class="border-bottom pb-2 mb-3 fw-bold"><i class="fa fa-building text-secondary"></i> ملخص أداء الفروع</h5>
+        <div class="table-responsive mb-5">
+            <table class="table table-bordered table-striped text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>الفرع</th>
+                        <th>إيراد الأتيليه</th>
+                        <th>إيراد الصالون</th>
+                        <th>المصروفات</th>
+                        <th>الصافي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var bp in Model.BranchPerformances)
+                    {
+                        <tr>
+                            <td class="fw-bold">@bp.BranchName</td>
+                            <td class="text-success">@bp.AtelierRevenue.ToString("N0")</td>
+                            <td class="text-success">@bp.SalonRevenue.ToString("N0")</td>
+                            <td class="text-danger">(@bp.Expenses.ToString("N0"))</td>
+                            <td class="fw-bold @(bp.Net >= 0 ? "text-primary" : "text-danger")">@bp.Net.ToString("N0")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <ul class="nav nav-tabs no-print mb-3" id="reportTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#atelier-tab">
+                <i class="fa fa-shirt"></i> تفاصيل الأتيليه <span class="badge bg-secondary rounded-pill">@Model.DetailedBookings.Count</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#salon-tab">
+                <i class="fa fa-spa"></i> تفاصيل الصالون <span class="badge bg-secondary rounded-pill">@Model.DetailedAppointments.Count</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold text-danger" data-bs-toggle="tab" data-bs-target="#expenses-tab">
+                <i class="fa fa-wallet"></i> تفاصيل المصروفات <span class="badge bg-danger rounded-pill">@Model.DetailedExpenses.Count</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="atelier-tab">
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>التاريخ</th>
+                            <th>الفرع</th>
+                            <th>العميل</th>
+                            <th>الإجمالي</th>
+                            <th>المدفوع</th>
+                            <th>المتبقي</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.DetailedBookings)
+                        {
+                            <tr>
+                                <td>@item.Id</td>
+                                <td>@item.PickupDate.ToString("yyyy-MM-dd")</td>
+                                <td>@item.Branch?.Name</td>
+                                <td>@item.Client?.Name</td>
+                                <td>@item.TotalAmount.ToString("N0")</td>
+                                <td class="text-success fw-bold">@item.PaidAmount.ToString("N0")</td>
+                                <td class="text-danger">@((item.TotalAmount - item.PaidAmount).ToString("N0"))</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="salon-tab">
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>الموعد</th>
+                            <th>الفرع</th>
+                            <th>العميلة</th>
+                            <th>المدفوع</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.DetailedAppointments)
+                        {
+                            <tr>
+                                <td>@item.Id</td>
+                                <td>@item.AppointmentDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@item.Branch?.Name</td>
+                                <td>@item.Client?.Name</td>
+                                <td class="text-success fw-bold">@item.PaidAmount.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="expenses-tab">
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>الفرع</th>
+                            <th>البند</th>
+                            <th>ملاحظات</th>
+                            <th>المبلغ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.DetailedExpenses)
+                        {
+                            <tr>
+                                <td>@item.ExpenseDate.ToString("yyyy-MM-dd")</td>
+                                <td>@item.Branch?.Name</td>
+                                <td>@item.ExpenseCategory?.Name</td>
+                                <td>@item.Description</td>
+                                <td class="text-danger fw-bold">@item.Amount.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <button onclick="window.print()" class="btn btn-dark rounded-circle shadow-lg no-print"
+            style="position: fixed; bottom: 30px; left: 30px; width: 60px; height: 60px; font-size: 24px;">
+        <i class="fa fa-print"></i>
+    </button>
+
+</div>

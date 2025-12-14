@@ -6,60 +6,23 @@
     Layout = null;
     ViewData["Title"] = $"فاتورة #{Model.Booking.Id}";
 
-    // 1. تجهيز بيانات العميل ورقم الهاتف
+    // تجهيز البيانات (نفس المنطق)
     string clientName = Model.Booking.Client?.Name ?? "عميلنا العزيز";
     string originalPhone = Model.Booking.Client?.Phone ?? "";
-
-    // تنظيف رقم الهاتف ليكون بصيغة دولية صحيحة
     string cleanPhone = new string(originalPhone.Where(char.IsDigit).ToArray());
     if (cleanPhone.StartsWith("0")) cleanPhone = "20" + cleanPhone.Substring(1);
 
-    // 2. تجهيز بيانات الأتيليه والفرع
-    string atelierName = !string.IsNullOrEmpty(Model.Booking.Branch?.CommercialName)
-                          ? Model.Booking.Branch.CommercialName
-                          : (Model.Booking.Branch?.Name ?? "ATELIER PRO");
+    string atelierName = !string.IsNullOrEmpty(Model.Booking.Branch?.CommercialName) ? Model.Booking.Branch.CommercialName : (Model.Booking.Branch?.Name ?? "ATELIER PRO");
     string atelierAddress = Model.Booking.Branch?.Address ?? "العنوان غير محدد";
     string atelierPhone = Model.Booking.Branch?.Phone ?? "";
 
-    // 3. بناء نص الرسالة الاحترافي
     var sb = new System.Text.StringBuilder();
-
-    // الترويسة والتحية
     sb.AppendLine($"مرحباً بك أستاذ/ة {clientName}");
     sb.AppendLine($"نشكر ثقتكم الغالية واختياركم *{atelierName}*");
     sb.AppendLine();
-
-    // تفاصيل الحجز
-    sb.AppendLine("*تفاصيل الفاتورة:*");
     sb.AppendLine($"رقم الحجز: *#{Model.Booking.Id}*");
-    sb.AppendLine($"موعد الاستلام: *{Model.Booking.PickupDate:yyyy-MM-dd}*");
-    sb.AppendLine();
+    sb.AppendLine($"المبلغ المتبقي: *{Model.RemainingRental:N0} ج.م*");
 
-    // التفاصيل المالية
-    sb.AppendLine("*التفاصيل المالية:*");
-    sb.AppendLine($"المبلغ المدفوع: *{Model.Booking.PaidAmount:N0} ج.م*");
-
-    if (Model.RemainingRental > 0)
-    {
-        sb.AppendLine($"المبلغ المتبقي: *{Model.RemainingRental:N0} ج.م*");
-    }
-    else
-    {
-        sb.AppendLine($"الحالة: *خالص بالكامل*");
-    }
-    sb.AppendLine();
-
-    // معلومات التواصل والعنوان
-    sb.AppendLine("*عنواننا:*");
-    sb.AppendLine($"{atelierAddress}");
-    if (!string.IsNullOrEmpty(atelierPhone))
-    {
-        sb.AppendLine($"*للتواصل:* {atelierPhone}");
-    }
-    sb.AppendLine();
-    sb.AppendLine("نسعد دائماً بخدمتكم وتألقكم معنا ❤️");
-
-    // 4. تشفير الرسالة لتصلح للرابط
     string msgContent = Uri.EscapeDataString(sb.ToString());
     string waLink = string.IsNullOrEmpty(cleanPhone) ? "#" : $"https://wa.me/{cleanPhone}?text={msgContent}";
 }
@@ -74,22 +37,176 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
+        :root {
+            --primary-gold: #c5a059;
+            --primary-dark: #1a1a1a;
+            --bg-cream: #fdfbf7;
+            --text-grey: #555;
+            --border-light: #eaeaea;
+        }
+
         body {
             font-family: 'Cairo', sans-serif;
-            background-color: #555;
+            background-color: #eef2f5;
             padding: 20px;
+            color: var(--primary-dark);
         }
 
+        /* --- إعدادات الصفحة A4 --- */
         .invoice-page {
             background: white;
-            width: 210mm;
-            min-height: 297mm;
+            width: 210mm; /* عرض A4 */
+            min-height: 297mm; /* طول A4 */
             margin: 0 auto;
-            padding: 15mm;
-            display: flex;
-            flex-direction: column;
+            padding: 10mm 15mm; /* هوامش الصفحة */
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border-top: 5px solid var(--primary-gold);
         }
 
+        /* --- هيكل الجدول الرئيسي للطباعة --- */
+        /* هذا الجدول يحتوي الفاتورة بالكامل لضمان تكرار الهيدر */
+        .main-print-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px; /* المسافة بين الكروت */
+        }
+
+        /* --- تصميم الهيدر (يتكرر في كل صفحة) --- */
+        .header-content {
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px double var(--primary-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-height: 100px;
+        }
+
+        .atelier-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            color: var(--primary-dark);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+            text-align: center;
+        }
+
+        .atelier-info {
+            font-size: 13px;
+            color: var(--text-grey);
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        .logo-img {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            max-height: 80px;
+            width: auto;
+        }
+
+        /* --- تنسيق عناوين الجدول (تتكرر في كل صفحة) --- */
+        .column-headers th {
+            color: #888;
+            font-size: 12px;
+            padding: 5px 15px;
+            font-weight: normal;
+            border-bottom: 1px solid #ddd;
+        }
+
+        /* --- تنسيق صفوف الأصناف (ستايل الكروت المودرن) --- */
+        .item-row td {
+            background-color: #fff;
+            padding: 15px 20px;
+            border-top: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border-light);
+            vertical-align: middle;
+        }
+
+            /* تدوير الحواف للكروت */
+            .item-row td:first-child {
+                border-top-right-radius: 10px;
+                border-bottom-right-radius: 10px;
+                border-right: 1px solid var(--border-light);
+            }
+
+            .item-row td:last-child {
+                border-top-left-radius: 10px;
+                border-bottom-left-radius: 10px;
+                border-left: 1px solid var(--border-light);
+                text-align: left;
+                font-weight: 700;
+                color: var(--primary-dark);
+            }
+
+        /* --- شبكة معلومات العميل (تظهر مرة واحدة في البداية) --- */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            background-color: var(--bg-cream);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #f0ebe0;
+            margin-bottom: 10px;
+        }
+
+        .info-group h6 {
+            color: var(--primary-gold);
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .item-tag {
+            display: inline-block;
+            font-size: 11px;
+            padding: 2px 8px;
+            border: 1px solid #eee;
+            background: #fcfcfc;
+            border-radius: 10px;
+            margin-left: 5px;
+            color: #666;
+        }
+
+        /* --- الفوتر والملخص --- */
+        .footer-wrapper {
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+            margin-top: 20px;
+        }
+
+        .financial-summary {
+            background: var(--bg-cream);
+            border: 1px solid #efe8d8;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            margin-right: auto; /* محاذاة لليسار */
+        }
+
+        .fin-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+            .fin-row.total {
+                border-top: 1px solid #dacfb8;
+                padding-top: 8px;
+                margin-top: 8px;
+                font-size: 16px;
+                font-weight: 700;
+            }
+
+        /* --- إعدادات الطباعة الدقيقة --- */
         @@media print {
             .no-print {
                 display: none !important;
@@ -97,8 +214,8 @@
 
             body {
                 background: white;
-                margin: 0;
                 padding: 0;
+                margin: 0;
             }
 
             .invoice-page {
@@ -106,40 +223,40 @@
                 margin: 0;
                 border: none;
                 box-shadow: none;
+                padding: 0;
+            }
+            /* 🛑 السحر هنا: تكرار الهيدر في كل صفحة */
+            thead {
+                display: table-header-group;
+            }
+
+            tfoot {
+                display: table-footer-group;
+            }
+            /* منع قص السطور في المنتصف */
+            tr {
+                page-break-inside: avoid;
+            }
+            /* فرض الخلفيات */
+            .info-grid, .financial-summary, .item-row td {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
         }
 
-        .notes-box {
-            margin-top: 20px;
-            padding: 10px;
-            border: 1px dashed #ccc;
-            background-color: #fcfcfc;
-            font-size: 13px;
-        }
-
-        .item-details {
-            font-size: 12px;
-            color: #666;
-            margin-top: 4px;
-        }
-
-        .item-tag {
-            border: 1px solid #ddd;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background-color: #f9f9f9;
-            display: inline-block;
-            margin-left: 5px;
-            margin-bottom: 3px;
+        @@page {
+            size: A4;
+            margin: 10mm; /* هوامش الطابعة */
         }
     </style>
 </head>
 <body>
-    <div class="no-print container mb-4">
-        <div class="bg-white p-3 rounded shadow-sm d-flex justify-content-between align-items-center">
-            <a href="/Bookings/Index" class="btn btn-outline-secondary btn-sm"><i class="fa fa-arrow-right"></i> عودة</a>
 
-            <div class="d-flex gap-2">
+    <div class="no-print container mb-4">
+        <div class="bg-white p-3 rounded shadow-sm border d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <a href="/Bookings/Index" class="btn btn-outline-secondary btn-sm px-3"><i class="fa fa-arrow-right"></i> عودة</a>
+
+            <div class="d-flex gap-2 flex-wrap">
                 @if (Model.Booking.Status == BookingStatus.New)
                 {
                     <form method="post" asp-page-handler="UpdateStatus">
@@ -150,171 +267,164 @@
                 }
                 else if (Model.Booking.Status == BookingStatus.PickedUp)
                 {
-                    <button class="btn btn-info btn-sm text-white fw-bold" data-bs-toggle="modal" data-bs-target="#returnModal">
-                        <i class="fa fa-undo"></i> استلام (إرجاع)
-                    </button>
+                    <button class="btn btn-info btn-sm text-white fw-bold" data-bs-toggle="modal" data-bs-target="#returnModal"><i class="fa fa-undo"></i> استلام</button>
                 }
 
                 @if (Model.RemainingRental > 0)
                 {
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#paymentModal"><i class="fa fa-money-bill"></i> دفع الإيجار</button>
+                    <button class="btn btn-primary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#paymentModal"><i class="fa fa-money-bill"></i> دفع</button>
                 }
-
                 @if (!string.IsNullOrEmpty(originalPhone))
                 {
-                    <a href="@waLink" target="_blank" class="btn btn-success btn-sm shadow-sm">
-                        <i class="fa-brands fa-whatsapp fa-lg me-1"></i> إرسال الفاتورة
-                    </a>
+                    <a href="@waLink" target="_blank" class="btn btn-success btn-sm px-3"><i class="fa-brands fa-whatsapp"></i> واتساب</a>
                 }
-
-                <button onclick="window.print()" class="btn btn-dark btn-sm"><i class="fa fa-print"></i> طباعة</button>
+                <button onclick="window.print()" class="btn btn-dark btn-sm px-4"><i class="fa fa-print"></i> طباعة</button>
             </div>
         </div>
     </div>
 
     <div class="invoice-page">
-        <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:20px; margin-bottom:30px;">
-            <h1 style="font-family:'Playfair Display'; font-size:40px; margin:0;">
-                @( !string.IsNullOrEmpty(Model.Booking.Branch?.CommercialName)
-            ? Model.Booking.Branch.CommercialName
-            : (Model.Booking.Branch?.Name ?? "ATELIER PRO") )
-            </h1>
+        <table class="main-print-table">
 
-            <div style="font-size:14px; margin-top:5px;">
-                @Model.Booking.Branch?.Address
-                @if (!string.IsNullOrEmpty(Model.Booking.Branch?.Phone))
-                {<span> | ت: @Model.Booking.Branch.Phone</span>}
-            </div>
-        </div>
-
-        <div style="display:flex; justify-content:space-between; margin-bottom:30px;">
-            <div>
-                <strong>العميل:</strong> @Model.Booking.Client.Name<br>
-                <strong>رقم الفاتورة:</strong> #@Model.Booking.Id
-            </div>
-            <div style="text-align:left;">
-                <strong>الاستلام:</strong> @Model.Booking.PickupDate.ToString("yyyy-MM-dd")<br>
-                <strong>الإرجاع:</strong> @Model.Booking.ReturnDate.ToString("yyyy-MM-dd")
-            </div>
-        </div>
-
-        <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
-            <tr style="border-bottom:1px solid #000;">
-                <th style="text-align:right; padding:10px;">الصنف</th>
-                <th style="text-align:left; padding:10px;">السعر</th>
-            </tr>
-            @foreach (var item in Model.Booking.BookingItems)
-            {
-                <tr style="border-bottom:1px solid #eee;">
-                    <td style="padding:10px;">
-                        <div style="font-weight:bold; font-size:16px;">
-                            @item.ProductItem.ProductDefinition?.Name
-                            @if (!string.IsNullOrEmpty(item.ProductItem.Name))
-                            {
-                                <span style="font-weight:normal; font-size:14px;"> - @item.ProductItem.Name</span>
-                            }
+            <thead>
+                <tr>
+                    <th colspan="2" style="border:none; font-weight:normal; padding:0;">
+                        <div class="header-content">
+                            <div style="width:100%; text-align:center;">
+                                <h1 class="atelier-title">
+                                    @( !string.IsNullOrEmpty(Model.Booking.Branch?.CommercialName) ? Model.Booking.Branch.CommercialName : (Model.Booking.Branch?.Name ?? "ATELIER PRO") )
+                                </h1>
+                                <div class="atelier-info">
+                                    @Model.Booking.Branch?.Address
+                                    @if (!string.IsNullOrEmpty(Model.Booking.Branch?.Phone))
+                                    {<span> | @Model.Booking.Branch.Phone</span>}
+                                </div>
+                            </div>
+                            <img src="~/img/logo.png" class="logo-img" alt="Logo" />
                         </div>
+                    </th>
+                </tr>
+                <tr class="column-headers">
+                    <th style="text-align:right;">تفاصيل الصنف / الخدمة</th>
+                    <th style="text-align:left;">السعر</th>
+                </tr>
+            </thead>
 
-                        <div class="item-details">
-                            <span class="item-tag"><b>الباركود:</b> @(item.ProductItem.Barcode ?? "-")</span>
-                            <span class="item-tag"><b>المقاس:</b> @item.ProductItem.Size</span>
+            <tbody>
 
-                            @if (!string.IsNullOrEmpty(item.ProductItem.Color))
-                            {
-                                <span class="item-tag"><b>اللون:</b> @item.ProductItem.Color</span>
-                            }
+                <tr>
+                    <td colspan="2" style="padding:0; border:none; background:none;">
+                        <div class="info-grid">
+                            <div class="info-group">
+                                <h6>العميل</h6>
+                                <div>@Model.Booking.Client.Name</div>
+                                <small class="text-muted" dir="ltr">@Model.Booking.Client.Phone</small>
+                            </div>
+                            <div class="info-group ps-3 border-end">
+                                <h6>الفاتورة #@Model.Booking.Id</h6>
+                                <div class="d-flex justify-content-between small mt-1">
+                                    <span>استلام: @Model.Booking.PickupDate.ToString("yyyy-MM-dd")</span>
+                                    <span>إرجاع: @Model.Booking.ReturnDate.ToString("yyyy-MM-dd")</span>
+                                </div>
+                            </div>
                         </div>
-                    </td>
-                    <td style="text-align:left; padding:10px; vertical-align:top;">
-                        @item.RentalPrice.ToString("N0")
                     </td>
                 </tr>
-            }
+
+                @foreach (var item in Model.Booking.BookingItems)
+                {
+                    <tr class="item-row">
+                        <td>
+                            <div style="font-weight:700; font-size:15px; margin-bottom:4px;">
+                                @item.ProductItem.ProductDefinition?.Name
+                                @if (!string.IsNullOrEmpty(item.ProductItem.Name))
+                                {<span> - @item.ProductItem.Name</span>}
+                            </div>
+                            <div>
+                                <span class="item-tag">كود: @(item.ProductItem.Barcode ?? "-")</span>
+                                <span class="item-tag">مقاس: @item.ProductItem.Size</span>
+                                @if (!string.IsNullOrEmpty(item.ProductItem.Color))
+                                {<span class="item-tag">لون: @item.ProductItem.Color</span>}
+                            </div>
+                        </td>
+                        <td>
+                            @item.RentalPrice.ToString("N0") <small>ج.م</small>
+                        </td>
+                    </tr>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.Booking.Notes))
+                {
+                    <tr>
+                        <td colspan="2" style="padding:15px; background:#fffcf5; border-right:3px solid var(--primary-gold); border-radius:4px; font-size:13px; color:#555;">
+                            <strong>ملاحظات:</strong> @Model.Booking.Notes
+                        </td>
+                    </tr>
+                }
+            </tbody>
+
+            <tfoot>
+                <tr>
+                    <td colspan="2" style="padding:0; border:none;">
+                        <div class="footer-wrapper">
+                            <div class="d-flex justify-content-between align-items-start">
+
+                                <div style="width: 55%;">
+                                    <h6 style="font-size:12px; font-weight:700;">الشروط والأحكام:</h6>
+                                    <ul style="font-size:11px; color:#666; padding-right:15px; line-height:1.6;">
+                                        <li>التأمين يسترد بالكامل في حالة سلامة القطعة.</li>
+                                        <li>يخصم قيمة التلفيات من التأمين حسب التقدير.</li>
+                                        <li>إلغاء الحجز: يسترد العربون خلال 48 ساعة فقط.</li>
+                                        <li>بعد 48 ساعة: يخصم 50% أو تأجيل لمدة سنة.</li>
+                                    </ul>
+                                </div>
+
+                                <div class="financial-summary">
+                                    <div class="fin-row"><span>الإجمالي:</span> <span>@Model.Booking.TotalAmount.ToString("N0")</span></div>
+                                    <div class="fin-row"><span>المدفوع:</span> <span>@Model.Booking.PaidAmount.ToString("N0")</span></div>
+                                    <div class="fin-row total"><span>المتبقي:</span> <span>@Model.RemainingRental.ToString("N0") ج.م</span></div>
+                                    <div class="mt-2 text-center pt-2 border-top border-dashed text-danger fw-bold" style="font-size:13px;">
+                                        تأمين: @Model.Booking.InsuranceAmount.ToString("N0") ج.م
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="text-center mt-4 text-muted small" style="font-family:'Playfair Display'">
+                                Thank you for choosing @(Model.Booking.Branch?.CommercialName ?? "Us")
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tfoot>
         </table>
-
-        @if (!string.IsNullOrEmpty(Model.Booking.Notes))
-        {
-            <div class="notes-box">
-                <strong><i class="fa fa-scissors"></i> ملاحظات المقاسات / تعديلات:</strong>
-                <p style="white-space: pre-wrap; margin:5px 0 0 0;">@Model.Booking.Notes</p>
-            </div>
-        }
-
-        <div style="margin-top:30px; display:flex; justify-content:flex-end;">
-            <div style="width:250px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                    <span>إجمالي الإيجار:</span> <span>@Model.Booking.TotalAmount.ToString("N0")</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                    <span>المدفوع:</span> <span>@Model.Booking.PaidAmount.ToString("N0")</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-top:2px solid #000; padding-top:5px; font-weight:bold;">
-                    <span>المتبقي (إيجار):</span> <span>@Model.RemainingRental.ToString("N0") ج.م</span>
-                </div>
-
-                <div style="background:#f8f9fa; padding:10px; border:1px solid #ddd; margin-top:10px;">
-                    <div style="display:flex; justify-content:space-between; color:#d9534f; font-weight:bold;">
-                        <span>مبلغ التأمين:</span> <span>@Model.Booking.InsuranceAmount.ToString("N0") ج.م</span>
-                    </div>
-                    <small style="display:block; text-align:center; color:#777; margin-top:5px;">(يسترد عند الإرجاع)</small>
-                </div>
-            </div>
-        </div>
-
-        <div style="margin-top:auto; border-top:2px solid #eee; padding-top:15px;">
-            <h6 style="font-weight:bold; margin-bottom:8px; font-size:14px;">الشروط والأحكام:</h6>
-            <ul style="font-size:12px; color:#555; padding-right:20px; margin-bottom:0; line-height:1.7;">
-                <li>التأمين يسترد بالكامل في حالة سلامة القطعة.</li>
-                <li>في حالة وجود أي تلفيات يتم تقديرها وخصمها على العميل.</li>
-                <li>في حالة إلغاء الحجز يتم استرجاع العربون خلال 48 ساعة من تاريخ الحجز.</li>
-                <li>في حالة إلغاء الحجز بعد 48 ساعة من الحجز يتم خصم 50% من قيمة العربون أو تأجيل مفتوح لمدة سنة.</li>
-            </ul>
-        </div>
     </div>
 
     <div class="modal fade" id="paymentModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">دفع متبقي الإيجار</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white"><h5 class="modal-title fs-6">دفع متبقي</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
                 <form method="post" asp-page-handler="AddPayment">
                     <div class="modal-body">
                         <input type="hidden" name="id" value="@Model.Booking.Id" />
-                        <label>المبلغ:</label>
-                        <input type="number" name="paymentAmount" class="form-control" required />
+                        <label>المبلغ:</label> <input type="number" name="paymentAmount" class="form-control" required />
                     </div>
-                    <div class="modal-footer"><button class="btn btn-primary">حفظ</button></div>
+                    <div class="modal-footer"><button class="btn btn-primary w-100">حفظ</button></div>
                 </form>
             </div>
         </div>
     </div>
-
     <div class="modal fade" id="returnModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title">إرجاع الفستان وتسوية التأمين</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-info text-white"><h5 class="modal-title fs-6">إرجاع وتسوية</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
                 <form method="post" asp-page-handler="Return">
                     <div class="modal-body">
                         <input type="hidden" name="id" value="@Model.Booking.Id" />
-                        <div class="alert alert-secondary text-center">
-                            قيمة التأمين المحفوظة: <br>
-                            <strong class="fs-4">@Model.Booking.InsuranceAmount.ToString("N0") ج.م</strong>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">هل يوجد تلفيات؟ (خصم من التأمين)</label>
-                            <input type="number" name="deductionAmount" class="form-control" value="0" min="0" max="@Model.Booking.InsuranceAmount" />
-                            <div class="form-text">أدخل القيمة التي سيتم خصمها من العميل (إيراد للأتيليه). اتركها 0 إذا كان الإرجاع سليماً.</div>
-                        </div>
+                        <div class="alert alert-light border text-center"><strong class="fs-5">تأمين: @Model.Booking.InsuranceAmount.ToString("N0")</strong></div>
+                        <label class="text-danger fw-bold">خصم تلفيات:</label> <input type="number" name="deductionAmount" class="form-control" value="0" />
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                        <button type="submit" class="btn btn-primary">تأكيد الإرجاع وإنهاء الحجز</button>
-                    </div>
+                    <div class="modal-footer"><button class="btn btn-light" data-bs-dismiss="modal">إلغاء</button><button type="submit" class="btn btn-primary">تأكيد</button></div>
                 </form>
             </div>
         </div>

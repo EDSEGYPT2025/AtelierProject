@@ -24,7 +24,7 @@ namespace AtelierProject.Pages.Users
 
         public class InputModel
         {
-            public string Id { get; set; } // معرف المستخدم (مخفي)
+            public string Id { get; set; }
 
             [Required(ErrorMessage = "الاسم الكامل مطلوب")]
             [Display(Name = "اسم الموظف")]
@@ -41,7 +41,6 @@ namespace AtelierProject.Pages.Users
             [Display(Name = "حالة الحساب")]
             public bool IsActive { get; set; }
 
-            // الصلاحيات
             [Display(Name = "صلاحية قسم الرجال")]
             public bool CanAccessMen { get; set; }
 
@@ -59,14 +58,16 @@ namespace AtelierProject.Pages.Users
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            // ملء النموذج بالبيانات الحالية
+            // تحديد حالة الحساب
+            bool isActiveAccount = user.LockoutEnd == null || user.LockoutEnd <= DateTimeOffset.Now;
+
             Input = new InputModel
             {
                 Id = user.Id,
                 FullName = user.FullName,
                 Email = user.Email,
                 BranchId = user.BranchId,
-                IsActive = user.IsActive,
+                IsActive = isActiveAccount,
                 CanAccessMen = user.CanAccessMenSection,
                 CanAccessWomen = user.CanAccessWomenSection,
                 CanAccessBeauty = user.CanAccessBeautySection
@@ -87,18 +88,34 @@ namespace AtelierProject.Pages.Users
             var user = await _userManager.FindByIdAsync(Input.Id);
             if (user == null) return NotFound();
 
-            // تحديث البيانات
+            // 1. تحديث البيانات الأساسية
             user.FullName = Input.FullName;
             user.Email = Input.Email;
-            user.UserName = Input.Email; // تحديث اسم المستخدم ليطابق الإيميل
+            user.UserName = Input.Email;
             user.BranchId = Input.BranchId;
-            user.IsActive = Input.IsActive;
 
-            // تحديث الصلاحيات
+            // 2. تحديث الصلاحيات
             user.CanAccessMenSection = Input.CanAccessMen;
             user.CanAccessWomenSection = Input.CanAccessWomen;
             user.CanAccessBeautySection = Input.CanAccessBeauty;
 
+            // 3. ✅ تحديث حالة القفل + الإيقاف اللحظي (مدمج)
+            if (Input.IsActive)
+            {
+                // تفعيل: إزالة تاريخ القفل
+                user.LockoutEnd = null;
+            }
+            else
+            {
+                // إيقاف:
+                user.LockoutEnabled = true; // تفعيل ميزة القفل لهذا المستخدم
+                user.LockoutEnd = DateTimeOffset.MaxValue; // قفل للأبد
+
+                // 🔥 السر هنا: تغيير البصمة يدوياً ليتم حفظها مع UpdateAsync
+                user.SecurityStamp = Guid.NewGuid().ToString();
+            }
+
+            // 4. حفظ كل التغييرات (شاملة البصمة) في خطوة واحدة
             var result = await _userManager.UpdateAsync(user);
 
             if (result.Succeeded)

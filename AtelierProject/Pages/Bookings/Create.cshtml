@@ -1,35 +1,183 @@
 ﻿@page
 @model AtelierProject.Pages.Bookings.CreateModel
 
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow-lg border-0 rounded-3">
-                <div class="card-header bg-primary text-white p-4 rounded-top-3">
-                    <h3 class="mb-0 card-title"><i class="fa fa-calendar-plus"></i> إنشاء حجز جديد</h3>
-                </div>
-                <div class="card-body p-4">
-                    <form method="post">
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger shadow-sm" role="alert"></div>
+@{
+    ViewData["Title"] = "حجز جديد";
+}
 
-                        <h5 class="text-muted mb-3 border-bottom pb-2">البيانات الأساسية</h5>
-                        <div class="row g-3 mb-4">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --royal-gold: #c5a059;
+        --royal-gold-dark: #b08d4b;
+        --royal-black: #1a1a1a;
+        --royal-grey: #f9f9f9;
+        --text-dark: #333;
+    }
+
+    body {
+        background-color: #f4f4f4;
+    }
+
+    /* كارت التصميم الرئيسي */
+    .royal-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        background: #fff;
+        border-top: 5px solid var(--royal-gold);
+    }
+
+    /* الهيدر */
+    .royal-header {
+        background-color: var(--royal-black);
+        padding: 25px;
+        text-align: center;
+        position: relative;
+    }
+
+        .royal-header h3 {
+            color: var(--royal-gold);
+            font-family: 'Playfair Display', serif;
+            margin: 0;
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+        }
+
+        .royal-header i {
+            margin-left: 10px;
+            color: #fff;
+        }
+
+    /* عناوين الأقسام */
+    .section-title {
+        font-family: 'Cairo', sans-serif;
+        color: var(--royal-black);
+        font-weight: 700;
+        font-size: 1.1rem;
+        position: relative;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        margin-top: 10px;
+        border-bottom: 1px solid #eee;
+    }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            right: 0;
+            width: 60px;
+            height: 3px;
+            background-color: var(--royal-gold);
+        }
+
+    /* حقول الإدخال */
+    .form-label {
+        color: #555;
+        font-size: 0.9rem;
+    }
+
+    .form-control, .form-select, .input-group-text {
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        padding: 12px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--royal-gold);
+            box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.15);
+            background-color: #fffcf5; /* لون كريمي فاتح جداً عند التركيز */
+        }
+
+    .input-group-text {
+        background-color: var(--royal-black);
+        color: var(--royal-gold);
+        border: 1px solid var(--royal-black);
+        font-weight: bold;
+    }
+
+    /* الأزرار */
+    .btn-royal-save {
+        background: linear-gradient(135deg, var(--royal-gold), var(--royal-gold-dark));
+        color: #fff;
+        border: none;
+        padding: 12px 40px;
+        font-weight: bold;
+        border-radius: 8px;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+        .btn-royal-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(197, 160, 89, 0.4);
+            color: #fff;
+        }
+
+    .btn-royal-cancel {
+        background-color: #fff;
+        color: #555;
+        border: 1px solid #ddd;
+        padding: 12px 30px;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+        .btn-royal-cancel:hover {
+            background-color: #f8f8f8;
+            color: #000;
+            border-color: #bbb;
+        }
+
+    /* تعديل Select2 ليناسب الثيم */
+    .select2-container--bootstrap-5 .select2-selection {
+        border-color: #e0e0e0 !important;
+        border-radius: 8px !important;
+        padding: 8px !important; /* زيادة المساحة */
+        height: auto !important;
+    }
+
+    .select2-container--bootstrap-5.select2-container--focus .select2-selection {
+        border-color: var(--royal-gold) !important;
+        box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.15) !important;
+    }
+</style>
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="card royal-card">
+
+                <div class="card-header royal-header">
+                    <h3 class="mb-0"><i class="fa-solid fa-crown"></i> إنشاء حجز جديد</h3>
+                </div>
+
+                <div class="card-body p-5">
+                    <form method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger shadow-sm border-0 rounded-3 mb-4" role="alert"></div>
+
+                        <h5 class="section-title"><i class="fa-regular fa-id-card ms-2 text-warning"></i> البيانات الأساسية</h5>
+                        <div class="row g-4 mb-4">
                             <div class="col-md-12">
                                 <label asp-for="Booking.ClientId" class="form-label fw-bold">العميل</label>
-                                <select asp-for="Booking.ClientId" id="clientSelect" class="form-select form-select-lg" asp-items="ViewBag.ClientId">
+                                <select asp-for="Booking.ClientId" id="clientSelect" class="form-select" asp-items="ViewBag.ClientId">
                                     <option value="">-- اختر العميل --</option>
                                 </select>
                             </div>
                             <div class="col-md-12">
-                                <label for="SelectedItemId" class="form-label fw-bold">القطعة (ابحث بالكود أو الاسم)</label>
-                                <select asp-for="SelectedItemId" id="productSelect" class="form-select form-select-lg" asp-items="ViewBag.ProductItemId">
+                                <label asp-for="SelectedItemId" class="form-label fw-bold">القطعة (ابحث بالكود أو الاسم)</label>
+                                <select asp-for="SelectedItemId" id="productSelect" class="form-select" asp-items="ViewBag.ProductItemId">
                                     <option value="">-- ابحث عن الموديل --</option>
                                 </select>
                             </div>
                         </div>
 
-                        <h5 class="text-muted mb-3 border-bottom pb-2 mt-4">الفترة</h5>
-                        <div class="row g-3 mb-4">
+                        <h5 class="section-title"><i class="fa-regular fa-calendar-days ms-2 text-warning"></i> فترة الحجز</h5>
+                        <div class="row g-4 mb-4">
                             <div class="col-md-6">
                                 <label asp-for="Booking.PickupDate" class="form-label fw-bold">تاريخ الاستلام</label>
                                 <input asp-for="Booking.PickupDate" class="form-control" type="date" />
@@ -40,41 +188,45 @@
                             </div>
                         </div>
 
-                        <h5 class="text-muted mb-3 border-bottom pb-2 mt-4">الماليات والتأمين</h5>
-                        <div class="row g-3 mb-4">
+                        <h5 class="section-title"><i class="fa-solid fa-coins ms-2 text-warning"></i> الماليات والتأمين</h5>
+                        <div class="row g-4 mb-4">
                             <div class="col-md-4">
                                 <label asp-for="Booking.TotalAmount" class="form-label fw-bold">سعر الإيجار</label>
                                 <div class="input-group">
-                                    <input asp-for="Booking.TotalAmount" class="form-control" placeholder="0.00" />
+                                    <input asp-for="Booking.TotalAmount" class="form-control fw-bold text-dark" placeholder="0.00" />
                                     <span class="input-group-text">ج.م</span>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <label asp-for="Booking.PaidAmount" class="form-label fw-bold">العربون المدفوع</label>
                                 <div class="input-group">
-                                    <input asp-for="Booking.PaidAmount" class="form-control" placeholder="0.00" />
+                                    <input asp-for="Booking.PaidAmount" class="form-control fw-bold text-success" placeholder="0.00" />
                                     <span class="input-group-text">ج.م</span>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <label asp-for="Booking.InsuranceAmount" class="form-label fw-bold text-danger">مبلغ التأمين</label>
                                 <div class="input-group">
-                                    <input asp-for="Booking.InsuranceAmount" class="form-control" placeholder="0.00" />
+                                    <input asp-for="Booking.InsuranceAmount" class="form-control fw-bold text-danger" placeholder="0.00" />
                                     <span class="input-group-text">ج.م</span>
                                 </div>
-                                <div class="form-text text-muted">يسترد عند الإرجاع</div>
+                                <div class="form-text small mt-1"><i class="fa-solid fa-circle-info ms-1"></i> يسترد عند الإرجاع</div>
                             </div>
                         </div>
 
-                        <h5 class="text-muted mb-3 border-bottom pb-2 mt-4">ملاحظات الخياطة</h5>
-                        <div class="mb-4">
+                        <h5 class="section-title"><i class="fa-solid fa-scissors ms-2 text-warning"></i> ملاحظات الخياطة</h5>
+                        <div class="mb-5">
                             <label asp-for="Booking.Notes" class="form-label fw-bold">تعديلات المقاسات / ملاحظات أخرى</label>
-                            <textarea asp-for="Booking.Notes" class="form-control" rows="3" placeholder="مثال: تضييق الوسط 2 سم، تقصير الذيل..."></textarea>
+                            <textarea asp-for="Booking.Notes" class="form-control" rows="3" placeholder="اكتب هنا تفاصيل التعديلات المطلوبة..."></textarea>
                         </div>
 
-                        <div class="d-flex justify-content-between mt-5 pt-3 border-top">
-                            <a asp-page="Index" class="btn btn-secondary px-4">إلغاء</a>
-                            <button type="submit" class="btn btn-success btn-lg px-5">حفظ الحجز</button>
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a asp-page="Index" class="btn btn-royal-cancel">
+                                <i class="fa-solid fa-arrow-right ms-1"></i> إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-royal-save shadow-sm">
+                                <i class="fa-solid fa-check ms-1"></i> تأكيد وحفظ الحجز
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -91,23 +243,23 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             // تفعيل البحث لقائمة المنتجات
             $('#productSelect').select2({
                 theme: 'bootstrap-5',
                 placeholder: '-- ابحث بكود القطعة أو الاسم --',
                 width: '100%',
                 language: {
-                    noResults: function() { return "لا توجد نتائج مطابقة"; }
+                    noResults: function () { return "لا توجد نتائج مطابقة"; }
                 }
             });
 
-            // تفعيل البحث لقائمة العملاء (اختياري)
+            // تفعيل البحث لقائمة العملاء
             $('#clientSelect').select2({
                 theme: 'bootstrap-5',
                 placeholder: '-- ابحث عن العميل --',
                 width: '100%',
-                language: { noResults: function() { return "عميل غير موجود"; } }
+                language: { noResults: function () { return "عميل غير موجود"; } }
             });
         });
     </script>

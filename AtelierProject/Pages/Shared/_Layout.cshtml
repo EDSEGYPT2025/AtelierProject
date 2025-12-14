@@ -258,31 +258,33 @@
                         <i class="fa-solid fa-users"></i> قاعدة العملاء
                     </a>
 
-                    @* --- ✅ قسم المصروفات الجديد --- *@
+                    @* --- قسم المصروفات --- *@
                     <a href="#menuExpenses" data-bs-toggle="collapse" class="list-group-item list-group-item-action">
                         <i class="fa-solid fa-wallet"></i> المصروفات
                         <i class="fa-solid fa-chevron-down arrow-icon"></i>
                     </a>
                     <div class="collapse" id="menuExpenses">
-                        @* صفحة التسجيل (سننشئها تالياً) *@
-                        @* <a asp-page="/Expenses/Create" class="list-group-item list-group-item-action submenu-link text-warning">
-                                <i class="fa-solid fa-plus fs-6 ms-1"></i> تسجيل مصروف
-                            </a> *@
                         <a asp-page="/Expenses/Index" class="list-group-item list-group-item-action submenu-link">سجل المصروفات</a>
                         <a asp-page="/Expenses/Categories/Index" class="list-group-item list-group-item-action submenu-link">بنود المصروفات</a>
                     </div>
-                    @* ----------------------------- *@
 
+                    @* --- ✅ قسم التقارير المالية (تم التحديث) --- *@
                     <a href="#menuReports" data-bs-toggle="collapse" class="list-group-item list-group-item-action">
                         <i class="fa-solid fa-chart-pie"></i> التقارير المالية
                         <i class="fa-solid fa-chevron-down arrow-icon"></i>
                     </a>
                     <div class="collapse" id="menuReports">
-                        <a asp-page="/Reports/Daily" class="list-group-item list-group-item-action submenu-link">اليومية</a>
-                        <a asp-page="/Reports/Monthly" class="list-group-item list-group-item-action submenu-link">الشهرية</a>
-                    </div>
 
-                    @* --- الإدارة --- *@
+                        <a asp-page="/Reports/GeneralReport" class="list-group-item list-group-item-action submenu-link text-warning fw-bold">
+                            <i class="fa-solid fa-star me-1"></i> التقرير الشامل
+                        </a>
+
+                        <a asp-page="/Reports/Daily" class="list-group-item list-group-item-action submenu-link">اليومية (قديم)</a>
+                        <a asp-page="/Reports/Monthly" class="list-group-item list-group-item-action submenu-link">الشهرية (قديم)</a>
+                    </div>
+                    @* ---------------------------------------- *@
+
+                    @* --- الإدارة (للمدير العام فقط) --- *@
                     @if (currentUser.BranchId == null)
                     {
                         <div class="border-top border-secondary mx-3 my-2"></div>
@@ -344,6 +346,14 @@
                                     <ul class="dropdown-menu dropdown-menu-end border-0 shadow mt-2" aria-labelledby="navbarDropdown">
                                         <li><h6 class="dropdown-header text-center">@currentUser.Email</h6></li>
                                         <li><hr class="dropdown-divider"></li>
+
+                                        <li>
+                                            <a asp-page="/Account/ChangePassword" class="dropdown-item text-dark">
+                                                <i class="fa-solid fa-key me-2 text-warning"></i> تغيير كلمة المرور
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+
                                         <li>
                                             <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
                                                 <button type="submit" class="dropdown-item text-danger fw-bold">
