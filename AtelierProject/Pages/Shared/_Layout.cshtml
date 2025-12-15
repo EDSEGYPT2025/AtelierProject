@@ -60,6 +60,8 @@
             color: #fff;
             transition: all 0.3s;
             z-index: 1000;
+            display: flex;
+            flex-direction: column; /* لضمان دفع زر الدعم للأسفل */
         }
 
         #wrapper.toggled #sidebar-wrapper {
@@ -217,7 +219,7 @@
                     <i class="fa-solid fa-gem me-2 text-warning"></i> أتيليه برو
                 </div>
 
-                <div class="list-group list-group-flush my-3">
+                <div class="list-group list-group-flush my-3 flex-grow-1">
                     <a asp-page="/Index" class="list-group-item list-group-item-action">
                         <i class="fa-solid fa-gauge"></i> لوحة التحكم
                     </a>
@@ -268,21 +270,18 @@
                         <a asp-page="/Expenses/Categories/Index" class="list-group-item list-group-item-action submenu-link">بنود المصروفات</a>
                     </div>
 
-                    @* --- ✅ قسم التقارير المالية (تم التحديث) --- *@
+                    @* --- قسم التقارير المالية --- *@
                     <a href="#menuReports" data-bs-toggle="collapse" class="list-group-item list-group-item-action">
                         <i class="fa-solid fa-chart-pie"></i> التقارير المالية
                         <i class="fa-solid fa-chevron-down arrow-icon"></i>
                     </a>
                     <div class="collapse" id="menuReports">
-
                         <a asp-page="/Reports/GeneralReport" class="list-group-item list-group-item-action submenu-link text-warning fw-bold">
                             <i class="fa-solid fa-star me-1"></i> التقرير الشامل
                         </a>
-
                         <a asp-page="/Reports/Daily" class="list-group-item list-group-item-action submenu-link">اليومية (قديم)</a>
                         <a asp-page="/Reports/Monthly" class="list-group-item list-group-item-action submenu-link">الشهرية (قديم)</a>
                     </div>
-                    @* ---------------------------------------- *@
 
                     @* --- الإدارة (للمدير العام فقط) --- *@
                     @if (currentUser.BranchId == null)
@@ -295,6 +294,13 @@
                             <i class="fa-solid fa-user-shield"></i> إدارة المستخدمين
                         </a>
                     }
+                </div>
+
+                <div class="mt-auto border-top border-secondary pt-3 px-3 pb-3">
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#supportModal" class="btn btn-outline-warning w-100 fw-bold d-flex align-items-center justify-content-center gap-2">
+                        <i class="fa-solid fa-headset fa-lg"></i>
+                        <span>الدعم الفني</span>
+                    </a>
                 </div>
             </div>
         }
@@ -379,6 +385,91 @@
 
             <div class="container-fluid">
                 @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="supportModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-top: 5px solid #c5a059 !important;">
+
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold">
+                        <i class="fa-solid fa-life-ring text-warning me-2"></i> مركز المساعدة والدعم
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body p-4 text-center">
+                    <p class="text-muted mb-4">نحن هنا لمساعدتك على مدار الساعة لضمان سير عملك بكل كفاءة.</p>
+
+                    <div class="d-grid gap-3">
+
+                        <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between bg-light">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="fa-solid fa-phone"></i>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">الدعم الفني (1)</small>
+                                    <span class="fw-bold" dir="ltr">01010475455</span>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="tel:01010475455" class="btn btn-sm btn-outline-primary"><i class="fa fa-phone"></i></a>
+                                <a href="https://wa.me/201010475455" target="_blank" class="btn btn-sm btn-success"><i class="fa-brands fa-whatsapp"></i></a>
+                            </div>
+                        </div>
+
+                        <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between bg-light">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="fa-solid fa-mobile-screen"></i>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">الدعم الفني (2)</small>
+                                    <span class="fw-bold" dir="ltr">01111292878</span>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="tel:01111292878" class="btn btn-sm btn-outline-primary"><i class="fa fa-phone"></i></a>
+                                <a href="https://wa.me/201111292878" target="_blank" class="btn btn-sm btn-success"><i class="fa-brands fa-whatsapp"></i></a>
+                            </div>
+                        </div>
+
+                        <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between bg-light">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="fa-solid fa-envelope"></i>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">البريد الإلكتروني</small>
+                                    <span class="fw-bold" style="font-size: 0.9rem;">edsegypt@outlook.com</span>
+                                </div>
+                            </div>
+                            <a href="mailto:edsegypt@outlook.com" class="btn btn-sm btn-outline-danger"><i class="fa fa-paper-plane"></i></a>
+                        </div>
+
+                        <div class="mt-2 pt-3 border-top">
+                            <small class="text-muted mb-2 d-block">تحميل برامج المساعدة عن بعد:</small>
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="https://anydesk.com/en/downloads" target="_blank" class="btn btn-sm btn-light border shadow-sm text-dark text-decoration-none">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/AnyDesk_logo.png" width="16" alt="AnyDesk"> AnyDesk
+                                </a>
+                                <a href="https://www.teamviewer.com/en/download/" target="_blank" class="btn btn-sm btn-light border shadow-sm text-dark text-decoration-none">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/58/TeamViewer_Logo_Icon_Only.png" width="16" alt="TeamViewer"> TeamViewer
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer justify-content-center border-0 bg-light">
+                    <small class="text-muted">
+                        <i class="fa-solid fa-clock me-1"></i> مواعيد العمل: يومياً من 10 ص إلى 10 م
+                    </small>
+                </div>
             </div>
         </div>
     </div>

@@ -155,7 +155,7 @@ namespace AtelierProject.Data.Migrations
 
                     b.HasIndex("ClientId");
 
-                    b.ToTable("Bookings");
+                    b.ToTable("Bookings", (string)null);
                 });
 
             modelBuilder.Entity("AtelierProject.Models.BookingItem", b =>
@@ -181,7 +181,7 @@ namespace AtelierProject.Data.Migrations
 
                     b.HasIndex("ProductItemId");
 
-                    b.ToTable("BookingItems");
+                    b.ToTable("BookingItems", (string)null);
                 });
 
             modelBuilder.Entity("AtelierProject.Models.BookingRentalItem", b =>
@@ -218,7 +218,7 @@ namespace AtelierProject.Data.Migrations
 
                     b.HasIndex("ProductItemId");
 
-                    b.ToTable("BookingRentalItems");
+                    b.ToTable("BookingRentalItems", (string)null);
                 });
 
             modelBuilder.Entity("AtelierProject.Models.BookingServiceItem", b =>
@@ -247,7 +247,7 @@ namespace AtelierProject.Data.Migrations
 
                     b.HasIndex("ServiceId");
 
-                    b.ToTable("BookingServiceItems");
+                    b.ToTable("BookingServiceItems", (string)null);
                 });
 
             modelBuilder.Entity("AtelierProject.Models.Branch", b =>
@@ -282,7 +282,7 @@ namespace AtelierProject.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Branches");
+                    b.ToTable("Branches", (string)null);
                 });
 
             modelBuilder.Entity("AtelierProject.Models.Client", b =>
@@ -318,7 +318,7 @@ namespace AtelierProject.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Clients");
+                    b.ToTable("Clients", (string)null);
                 });
 
             modelBuilder.Entity("AtelierProject.Models.Expense", b =>
@@ -355,7 +355,7 @@ namespace AtelierProject.Data.Migrations
 
                     b.HasIndex("ExpenseCategoryId");
 
-                    b.ToTable("Expenses");
+                    b.ToTable("Expenses", (string)null);
                 });
 
             modelBuilder.Entity("AtelierProject.Models.ExpenseCategory", b =>
@@ -377,7 +377,7 @@ namespace AtelierProject.Data.Migrations
 
                     b.HasIndex("BranchId");
 
-                    b.ToTable("ExpenseCategories");
+                    b.ToTable("ExpenseCategories", (string)null);
                 });
 
             modelBuilder.Entity("AtelierProject.Models.ProductDefinition", b =>
@@ -409,7 +409,7 @@ namespace AtelierProject.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ProductDefinitions");
+                    b.ToTable("ProductDefinitions", (string)null);
                 });
 
             modelBuilder.Entity("AtelierProject.Models.ProductItem", b =>
@@ -459,7 +459,7 @@ namespace AtelierProject.Data.Migrations
 
                     b.HasIndex("ProductDefinitionId");
 
-                    b.ToTable("ProductItems");
+                    b.ToTable("ProductItems", (string)null);
                 });
 
             modelBuilder.Entity("AtelierProject.Models.SalonAppointment", b =>
@@ -497,7 +497,7 @@ namespace AtelierProject.Data.Migrations
 
                     b.HasIndex("ClientId");
 
-                    b.ToTable("SalonAppointments");
+                    b.ToTable("SalonAppointments", (string)null);
                 });
 
             modelBuilder.Entity("AtelierProject.Models.SalonAppointmentItem", b =>
@@ -523,7 +523,7 @@ namespace AtelierProject.Data.Migrations
 
                     b.HasIndex("SalonServiceId");
 
-                    b.ToTable("SalonAppointmentItems");
+                    b.ToTable("SalonAppointmentItems", (string)null);
                 });
 
             modelBuilder.Entity("AtelierProject.Models.SalonService", b =>
@@ -554,7 +554,7 @@ namespace AtelierProject.Data.Migrations
 
                     b.HasIndex("BranchId");
 
-                    b.ToTable("SalonServices");
+                    b.ToTable("SalonServices", (string)null);
                 });
 
             modelBuilder.Entity("AtelierProject.Models.Service", b =>
@@ -577,7 +577,7 @@ namespace AtelierProject.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Services");
+                    b.ToTable("Services", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
