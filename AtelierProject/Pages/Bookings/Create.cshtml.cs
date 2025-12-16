@@ -22,8 +22,9 @@ namespace AtelierProject.Pages.Bookings
         [BindProperty]
         public Booking Booking { get; set; } = default!;
 
+        // ✅ التعديل 1: تحويل المتغير لقائمة لاستقبال أكثر من قطعة
         [BindProperty]
-        public int SelectedItemId { get; set; }
+        public List<int> SelectedItemIds { get; set; } = new List<int>();
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -51,24 +52,42 @@ namespace AtelierProject.Pages.Bookings
                 return Page();
             }
 
-            bool isBooked = await _context.BookingItems
-                .Include(bi => bi.Booking)
-                .AnyAsync(bi =>
-                    bi.ProductItemId == SelectedItemId &&
-                    bi.Booking.Status != BookingStatus.Cancelled &&
-                    bi.Booking.Status != BookingStatus.Returned &&
-                    (
-                        (Booking.PickupDate >= bi.Booking.PickupDate && Booking.PickupDate < bi.Booking.ReturnDate) ||
-                        (Booking.ReturnDate > bi.Booking.PickupDate && Booking.ReturnDate <= bi.Booking.ReturnDate) ||
-                        (Booking.PickupDate <= bi.Booking.PickupDate && Booking.ReturnDate >= bi.Booking.ReturnDate)
-                    )
-                );
-
-            if (isBooked)
+            // ✅ التعديل 2: التحقق من اختيار قطعة واحدة على الأقل
+            if (SelectedItemIds == null || !SelectedItemIds.Any())
             {
-                ModelState.AddModelError(string.Empty, "عذراً، القطعة المختارة محجوزة بالفعل في هذه الفترة لعميل آخر.");
+                ModelState.AddModelError(string.Empty, "يجب اختيار قطعة واحدة على الأقل لإتمام الحجز.");
                 await LoadSelectListsAsync();
                 return Page();
+            }
+
+            // ✅ التعديل 3: التحقق من توفر جميع القطع المختارة
+            foreach (var itemId in SelectedItemIds)
+            {
+                bool isBooked = await _context.BookingItems
+                    .Include(bi => bi.Booking)
+                    .AnyAsync(bi =>
+                        bi.ProductItemId == itemId &&
+                        bi.Booking.Status != BookingStatus.Cancelled &&
+                        bi.Booking.Status != BookingStatus.Returned &&
+                        (
+                            (Booking.PickupDate >= bi.Booking.PickupDate && Booking.PickupDate < bi.Booking.ReturnDate) ||
+                            (Booking.ReturnDate > bi.Booking.PickupDate && Booking.ReturnDate <= bi.Booking.ReturnDate) ||
+                            (Booking.PickupDate <= bi.Booking.PickupDate && Booking.ReturnDate >= bi.Booking.ReturnDate)
+                        )
+                    );
+
+                if (isBooked)
+                {
+                    // جلب اسم القطعة المحجوزة لعرضه في الخطأ
+                    var itemName = _context.ProductItems.Include(p => p.ProductDefinition)
+                                    .Where(p => p.Id == itemId)
+                                    .Select(p => p.ProductDefinition.Name + " (" + p.Barcode + ")")
+                                    .FirstOrDefault();
+
+                    ModelState.AddModelError(string.Empty, $"عذراً، القطعة '{itemName}' محجوزة بالفعل في هذه الفترة.");
+                    await LoadSelectListsAsync();
+                    return Page();
+                }
             }
 
             Booking.BranchId = currentUser.BranchId;
@@ -79,12 +98,18 @@ namespace AtelierProject.Pages.Bookings
                 Booking.BookingItems = new List<BookingItem>();
             }
 
-            var bookingItem = new BookingItem
+            // ✅ التعديل 4: إضافة جميع القطع المختارة للحجز
+            foreach (var itemId in SelectedItemIds)
             {
-                ProductItemId = SelectedItemId,
-                RentalPrice = Booking.TotalAmount
-            };
-            Booking.BookingItems.Add(bookingItem);
+                var bookingItem = new BookingItem
+                {
+                    ProductItemId = itemId,
+                    // بما أن السعر الإجمالي مسجل في Booking.TotalAmount
+                    // يمكننا وضع 0 هنا أو توزيع السعر لاحقاً إذا أردت
+                    RentalPrice = 0
+                };
+                Booking.BookingItems.Add(bookingItem);
+            }
 
             _context.Bookings.Add(Booking);
             await _context.SaveChangesAsync();
@@ -123,12 +148,11 @@ namespace AtelierProject.Pages.Bookings
             .Select(p => new
             {
                 Id = p.Id,
-                // --- التعديل هنا: تحسين تنسيق النص للبحث ---
                 DisplayText = $"[{(string.IsNullOrEmpty(p.Barcode) ? "بدون كود" : p.Barcode)}] " +
                               $"{(string.IsNullOrEmpty(p.Name) ? p.ProductDefinition.Name : p.ProductDefinition.Name + " (" + p.Name + ")")} " +
                               $"- {p.Size}"
             })
-            .OrderBy(x => x.DisplayText) // ترتيب أبجدي ليسهل العثور عليها
+            .OrderBy(x => x.DisplayText)
             .ToList();
 
             ViewData["ProductItemId"] = new SelectList(filteredItems, "Id", "DisplayText");

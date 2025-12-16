@@ -20,7 +20,6 @@
         background-color: #f4f4f4;
     }
 
-    /* كارت التصميم الرئيسي */
     .royal-card {
         border: none;
         border-radius: 12px;
@@ -30,7 +29,6 @@
         border-top: 5px solid var(--royal-gold);
     }
 
-    /* الهيدر */
     .royal-header {
         background-color: var(--royal-black);
         padding: 25px;
@@ -46,12 +44,6 @@
             letter-spacing: 1px;
         }
 
-        .royal-header i {
-            margin-left: 10px;
-            color: #fff;
-        }
-
-    /* عناوين الأقسام */
     .section-title {
         font-family: 'Cairo', sans-serif;
         color: var(--royal-black);
@@ -74,12 +66,6 @@
             background-color: var(--royal-gold);
         }
 
-    /* حقول الإدخال */
-    .form-label {
-        color: #555;
-        font-size: 0.9rem;
-    }
-
     .form-control, .form-select, .input-group-text {
         border-radius: 8px;
         border: 1px solid #e0e0e0;
@@ -91,7 +77,7 @@
         .form-control:focus, .form-select:focus {
             border-color: var(--royal-gold);
             box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.15);
-            background-color: #fffcf5; /* لون كريمي فاتح جداً عند التركيز */
+            background-color: #fffcf5;
         }
 
     .input-group-text {
@@ -101,7 +87,6 @@
         font-weight: bold;
     }
 
-    /* الأزرار */
     .btn-royal-save {
         background: linear-gradient(135deg, var(--royal-gold), var(--royal-gold-dark));
         color: #fff;
@@ -133,17 +118,10 @@
             border-color: #bbb;
         }
 
-    /* تعديل Select2 ليناسب الثيم */
-    .select2-container--bootstrap-5 .select2-selection {
-        border-color: #e0e0e0 !important;
-        border-radius: 8px !important;
-        padding: 8px !important; /* زيادة المساحة */
-        height: auto !important;
-    }
-
-    .select2-container--bootstrap-5.select2-container--focus .select2-selection {
-        border-color: var(--royal-gold) !important;
-        box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.15) !important;
+    /* تنسيقات الجدول المضاف */
+    .table-selected-items thead {
+        background-color: var(--royal-black);
+        color: var(--royal-gold);
     }
 </style>
 
@@ -167,14 +145,42 @@
                                 <select asp-for="Booking.ClientId" id="clientSelect" class="form-select" asp-items="ViewBag.ClientId">
                                     <option value="">-- اختر العميل --</option>
                                 </select>
-                            </div>
-                            <div class="col-md-12">
-                                <label asp-for="SelectedItemId" class="form-label fw-bold">القطعة (ابحث بالكود أو الاسم)</label>
-                                <select asp-for="SelectedItemId" id="productSelect" class="form-select" asp-items="ViewBag.ProductItemId">
-                                    <option value="">-- ابحث عن الموديل --</option>
-                                </select>
+                                <span asp-validation-for="Booking.ClientId" class="text-danger"></span>
                             </div>
                         </div>
+
+                        <h5 class="section-title"><i class="fa-solid fa-shirt ms-2 text-warning"></i> اختيار الموديلات</h5>
+                        <div class="row g-3 mb-3 bg-light p-3 rounded align-items-end mx-0">
+                            <div class="col-md-9">
+                                <label class="form-label fw-bold">القطعة (ابحث بالكود أو الاسم)</label>
+                                <select id="productSelect" class="form-select" asp-items="ViewBag.ProductItemId">
+                                    <option value="">-- ابحث واختر الموديل --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" id="btnAddItem" class="btn btn-dark w-100 fw-bold" style="background-color: var(--royal-black);">
+                                    <i class="fa-solid fa-plus"></i> إضافة للسلة
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive mb-4">
+                            <table class="table table-bordered table-striped text-center table-selected-items">
+                                <thead>
+                                    <tr>
+                                        <th>اسم الموديل / الكود</th>
+                                        <th style="width: 100px;">إجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemsTableBody">
+                                    <tr id="noItemsRow">
+                                        <td colspan="2" class="text-muted small py-3">لم يتم اختيار أي قطع بعد..</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div id="hiddenInputsContainer"></div>
 
                         <h5 class="section-title"><i class="fa-regular fa-calendar-days ms-2 text-warning"></i> فترة الحجز</h5>
                         <div class="row g-4 mb-4">
@@ -191,7 +197,7 @@
                         <h5 class="section-title"><i class="fa-solid fa-coins ms-2 text-warning"></i> الماليات والتأمين</h5>
                         <div class="row g-4 mb-4">
                             <div class="col-md-4">
-                                <label asp-for="Booking.TotalAmount" class="form-label fw-bold">سعر الإيجار</label>
+                                <label asp-for="Booking.TotalAmount" class="form-label fw-bold">إجمالي السعر</label>
                                 <div class="input-group">
                                     <input asp-for="Booking.TotalAmount" class="form-control fw-bold text-dark" placeholder="0.00" />
                                     <span class="input-group-text">ج.م</span>
@@ -244,22 +250,74 @@
 
     <script>
         $(document).ready(function () {
-            // تفعيل البحث لقائمة المنتجات
+            // تفعيل Select2
             $('#productSelect').select2({
                 theme: 'bootstrap-5',
                 placeholder: '-- ابحث بكود القطعة أو الاسم --',
                 width: '100%',
-                language: {
-                    noResults: function () { return "لا توجد نتائج مطابقة"; }
-                }
+                language: { noResults: function () { return "لا توجد نتائج مطابقة"; } }
             });
 
-            // تفعيل البحث لقائمة العملاء
             $('#clientSelect').select2({
                 theme: 'bootstrap-5',
                 placeholder: '-- ابحث عن العميل --',
                 width: '100%',
                 language: { noResults: function () { return "عميل غير موجود"; } }
+            });
+
+            // ✅ كود إضافة وحذف العناصر
+            $('#btnAddItem').click(function () {
+                var itemId = $('#productSelect').val();
+                var itemName = $('#productSelect option:selected').text();
+
+                // التحقق من الاختيار
+                if (!itemId) {
+                    alert('الرجاء اختيار قطعة من القائمة أولاً');
+                    return;
+                }
+
+                // التحقق من التكرار
+                if ($('#hiddenInputsContainer input[value="' + itemId + '"]').length > 0) {
+                    alert('هذه القطعة مضافة بالفعل للقائمة');
+                    return;
+                }
+
+                // إزالة صف "لا يوجد عناصر"
+                $('#noItemsRow').remove();
+
+                // إضافة الصف للجدول
+                var newRow = `
+                        <tr data-id="${itemId}">
+                            <td class="fw-bold text-start align-middle">${itemName}</td>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm btn-remove-item rounded-circle" title="حذف">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                $('#itemsTableBody').append(newRow);
+
+                // إضافة حقل مخفي يرسل الـ ID للسيرفر
+                var hiddenInput = `<input type="hidden" name="SelectedItemIds" value="${itemId}" />`;
+                $('#hiddenInputsContainer').append(hiddenInput);
+
+                // إعادة تعيين القائمة
+                $('#productSelect').val('').trigger('change');
+            });
+
+            // حذف عنصر
+            $(document).on('click', '.btn-remove-item', function () {
+                var row = $(this).closest('tr');
+                var id = row.data('id');
+
+                row.remove();
+                $('#hiddenInputsContainer input[value="' + id + '"]').remove();
+
+                // إذا فرغت القائمة، أعد صف "لا يوجد عناصر"
+                if ($('#itemsTableBody tr').length === 0) {
+                    $('#itemsTableBody').html('<tr id="noItemsRow"><td colspan="2" class="text-muted small py-3">لم يتم اختيار أي قطع بعد..</td></tr>');
+                }
             });
         });
     </script>
