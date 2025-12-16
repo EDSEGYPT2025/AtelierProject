@@ -6,15 +6,12 @@
     Layout = null;
     ViewData["Title"] = $"فاتورة #{Model.Booking.Id}";
 
-    // تجهيز البيانات (نفس المنطق)
     string clientName = Model.Booking.Client?.Name ?? "عميلنا العزيز";
     string originalPhone = Model.Booking.Client?.Phone ?? "";
     string cleanPhone = new string(originalPhone.Where(char.IsDigit).ToArray());
     if (cleanPhone.StartsWith("0")) cleanPhone = "20" + cleanPhone.Substring(1);
 
     string atelierName = !string.IsNullOrEmpty(Model.Booking.Branch?.CommercialName) ? Model.Booking.Branch.CommercialName : (Model.Booking.Branch?.Name ?? "ATELIER PRO");
-    string atelierAddress = Model.Booking.Branch?.Address ?? "العنوان غير محدد";
-    string atelierPhone = Model.Booking.Branch?.Phone ?? "";
 
     var sb = new System.Text.StringBuilder();
     sb.AppendLine($"مرحباً بك أستاذ/ة {clientName}");
@@ -52,27 +49,23 @@
             color: var(--primary-dark);
         }
 
-        /* --- إعدادات الصفحة A4 --- */
         .invoice-page {
             background: white;
-            width: 210mm; /* عرض A4 */
-            min-height: 297mm; /* طول A4 */
+            width: 210mm;
+            min-height: 297mm;
             margin: 0 auto;
-            padding: 10mm 15mm; /* هوامش الصفحة */
+            padding: 10mm 15mm;
             position: relative;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             border-top: 5px solid var(--primary-gold);
         }
 
-        /* --- هيكل الجدول الرئيسي للطباعة --- */
-        /* هذا الجدول يحتوي الفاتورة بالكامل لضمان تكرار الهيدر */
         .main-print-table {
             width: 100%;
             border-collapse: separate;
-            border-spacing: 0 10px; /* المسافة بين الكروت */
+            border-spacing: 0 10px;
         }
 
-        /* --- تصميم الهيدر (يتكرر في كل صفحة) --- */
         .header-content {
             padding-bottom: 20px;
             margin-bottom: 20px;
@@ -110,7 +103,6 @@
             width: auto;
         }
 
-        /* --- تنسيق عناوين الجدول (تتكرر في كل صفحة) --- */
         .column-headers th {
             color: #888;
             font-size: 12px;
@@ -119,7 +111,6 @@
             border-bottom: 1px solid #ddd;
         }
 
-        /* --- تنسيق صفوف الأصناف (ستايل الكروت المودرن) --- */
         .item-row td {
             background-color: #fff;
             padding: 15px 20px;
@@ -128,7 +119,6 @@
             vertical-align: middle;
         }
 
-            /* تدوير الحواف للكروت */
             .item-row td:first-child {
                 border-top-right-radius: 10px;
                 border-bottom-right-radius: 10px;
@@ -144,7 +134,6 @@
                 color: var(--primary-dark);
             }
 
-        /* --- شبكة معلومات العميل (تظهر مرة واحدة في البداية) --- */
         .info-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -175,7 +164,6 @@
             color: #666;
         }
 
-        /* --- الفوتر والملخص --- */
         .footer-wrapper {
             padding-top: 20px;
             border-top: 2px solid #eee;
@@ -188,7 +176,7 @@
             padding: 20px;
             border-radius: 8px;
             width: 300px;
-            margin-right: auto; /* محاذاة لليسار */
+            margin-right: auto;
         }
 
         .fin-row {
@@ -206,7 +194,6 @@
                 font-weight: 700;
             }
 
-        /* --- إعدادات الطباعة الدقيقة --- */
         @@media print {
             .no-print {
                 display: none !important;
@@ -225,7 +212,7 @@
                 box-shadow: none;
                 padding: 0;
             }
-            /* 🛑 السحر هنا: تكرار الهيدر في كل صفحة */
+
             thead {
                 display: table-header-group;
             }
@@ -233,11 +220,11 @@
             tfoot {
                 display: table-footer-group;
             }
-            /* منع قص السطور في المنتصف */
+
             tr {
                 page-break-inside: avoid;
             }
-            /* فرض الخلفيات */
+
             .info-grid, .financial-summary, .item-row td {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
@@ -246,7 +233,7 @@
 
         @@page {
             size: A4;
-            margin: 10mm; /* هوامش الطابعة */
+            margin: 10mm;
         }
     </style>
 </head>
@@ -305,7 +292,7 @@
                     </th>
                 </tr>
                 <tr class="column-headers">
-                    <th style="text-align:right;">تفاصيل الصنف / الخدمة</th>
+                    <th style="text-align:right;">تفاصيل الأصناف المحجوزة</th>
                     <th style="text-align:left;">السعر</th>
                 </tr>
             </thead>
@@ -331,25 +318,34 @@
                     </td>
                 </tr>
 
-                @foreach (var item in Model.Booking.BookingItems)
+                @if (Model.Booking.BookingItems != null && Model.Booking.BookingItems.Any())
                 {
-                    <tr class="item-row">
-                        <td>
-                            <div style="font-weight:700; font-size:15px; margin-bottom:4px;">
-                                @item.ProductItem.ProductDefinition?.Name
-                                @if (!string.IsNullOrEmpty(item.ProductItem.Name))
-                                {<span> - @item.ProductItem.Name</span>}
-                            </div>
-                            <div>
-                                <span class="item-tag">كود: @(item.ProductItem.Barcode ?? "-")</span>
-                                <span class="item-tag">مقاس: @item.ProductItem.Size</span>
-                                @if (!string.IsNullOrEmpty(item.ProductItem.Color))
-                                {<span class="item-tag">لون: @item.ProductItem.Color</span>}
-                            </div>
-                        </td>
-                        <td>
-                            @item.RentalPrice.ToString("N0") <small>ج.م</small>
-                        </td>
+                    foreach (var item in Model.Booking.BookingItems)
+                    {
+                        <tr class="item-row">
+                            <td>
+                                <div style="font-weight:700; font-size:15px; margin-bottom:4px;">
+                                    @item.ProductItem.ProductDefinition?.Name
+                                    @if (!string.IsNullOrEmpty(item.ProductItem.Name))
+                                    {<span> - @item.ProductItem.Name</span>}
+                                </div>
+                                <div>
+                                    <span class="item-tag">كود: @(item.ProductItem.Barcode ?? "-")</span>
+                                    <span class="item-tag">مقاس: @item.ProductItem.Size</span>
+                                    @if (!string.IsNullOrEmpty(item.ProductItem.Color))
+                                    {<span class="item-tag">لون: @item.ProductItem.Color</span>}
+                                </div>
+                            </td>
+                            <td>
+                                @(item.RentalPrice > 0 ? item.RentalPrice.ToString("N0") + " ج.م" : "-")
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="2" class="text-center text-muted py-3">لا توجد قطع مسجلة.</td>
                     </tr>
                 }
 

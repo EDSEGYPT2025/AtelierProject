@@ -16,7 +16,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// --- 1. تعديل خدمة Identity لدعم الأدوار (Roles) ---
+// --- إعدادات الهوية ---
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
@@ -24,16 +24,13 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// ✅✅✅ هذا هو الجزء الجديد والمهم جداً للإيقاف اللحظي ✅✅✅
+// --- إعدادات الأمان (الإيقاف اللحظي) ---
 builder.Services.Configure<SecurityStampValidatorOptions>(options =>
 {
-    // جعل الفاصل الزمني صفر يجبر النظام على التحقق من "بصمة الأمان" مع كل طلب
-    // بمجرد تغيير البصمة في صفحة التعديل، سيتم طرد المستخدم فوراً
     options.ValidationInterval = TimeSpan.Zero;
 });
-// -------------------------------------------------------------
 
-// --- 2. إعدادات الكوكيز ---
+// --- إعدادات الكوكيز ---
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
@@ -45,7 +42,7 @@ builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
-// ---------------- بداية كود العملة ----------------
+// ---------------- إعدادات العملة واللغة ----------------
 var defaultCulture = new CultureInfo("ar-EG");
 defaultCulture.NumberFormat.CurrencySymbol = "ج.م";
 
@@ -57,7 +54,7 @@ var localizationOptions = new RequestLocalizationOptions
 };
 
 app.UseRequestLocalization(localizationOptions);
-// ---------------- نهاية كود العملة ----------------
+// -------------------------------------------------------
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -71,24 +68,34 @@ else
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles(); // ✅ (تعديل بسيط: UseStaticFiles أفضل من MapStaticAssets في بعض نسخ السيرفرات، كلاهما يعمل)
+
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
-app.MapRazorPages()
-   .WithStaticAssets();
+app.MapRazorPages();
 
-// ---------------- بداية كود إنشاء الأدمن التلقائي ----------------
+// ==============================================================================
+// ✅✅✅ منطقة التشغيل التلقائي (Migration + Admin Seeding) ✅✅✅
+// ==============================================================================
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
+        // 1. جلب الخدمات اللازمة
+        var context = services.GetRequiredService<ApplicationDbContext>();
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+
+        // 2. 🔥 أهم سطر للنشر: تطبيق التحديثات وإنشاء الجداول تلقائياً 🔥
+        // هذا السطر سينشئ قاعدة البيانات والجداول إذا لم تكن موجودة على السيرفر
+        context.Database.Migrate();
+
+        // 3. إنشاء مستخدم الأدمن الافتراضي
         string email = "admin@admin.com";
-        string password = "Oe@123456";
+        string password = "Oe@123456"; // ⚠️ يفضل تغيير الباسورد فور الدخول
 
         var user = await userManager.FindByEmailAsync(email);
         if (user == null)
@@ -98,24 +105,29 @@ using (var scope = app.Services.CreateScope())
                 UserName = email,
                 Email = email,
                 EmailConfirmed = true,
-                FullName = "مدير النظام"
+                FullName = "مدير النظام",
+                BranchId = null // مدير عام
             };
 
             var result = await userManager.CreateAsync(user, password);
+
+            // (اختياري) طباعة أخطاء إنشاء المستخدم في الـ Console للمراجعة
             if (!result.Succeeded)
             {
                 foreach (var error in result.Errors)
                 {
-                    Console.WriteLine($">>> Error creating user: {error.Description}");
+                    Console.WriteLine($">>> Error creating User: {error.Description}");
                 }
             }
         }
     }
     catch (Exception ex)
     {
-        Console.WriteLine($">>> Error seeding database: {ex.Message}");
+        // تسجيل الأخطاء في حال فشل الاتصال بقاعدة البيانات
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, ">>> حدث خطأ أثناء تهيئة قاعدة البيانات (Migrations/Seeding).");
     }
 }
-// ---------------- نهاية كود إنشاء الأدمن التلقائي ----------------
+// ==============================================================================
 
 app.Run();
