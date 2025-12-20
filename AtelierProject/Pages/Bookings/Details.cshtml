@@ -6,6 +6,7 @@
     Layout = null;
     ViewData["Title"] = $"فاتورة #{Model.Booking.Id}";
 
+    // تجهيز البيانات
     string clientName = Model.Booking.Client?.Name ?? "عميلنا العزيز";
     string originalPhone = Model.Booking.Client?.Phone ?? "";
     string cleanPhone = new string(originalPhone.Where(char.IsDigit).ToArray());
@@ -261,11 +262,17 @@
                 {
                     <button class="btn btn-primary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#paymentModal"><i class="fa fa-money-bill"></i> دفع</button>
                 }
+
                 @if (!string.IsNullOrEmpty(originalPhone))
                 {
                     <a href="@waLink" target="_blank" class="btn btn-success btn-sm px-3"><i class="fa-brands fa-whatsapp"></i> واتساب</a>
                 }
-                <button onclick="window.print()" class="btn btn-dark btn-sm px-4"><i class="fa fa-print"></i> طباعة</button>
+
+                <a href="/Bookings/Contract/@Model.Booking.Id" target="_blank" class="btn btn-secondary btn-sm px-3">
+                    <i class="fa-solid fa-file-contract"></i> طباعة العقد
+                </a>
+
+                <button onclick="window.print()" class="btn btn-dark btn-sm px-4"><i class="fa fa-print"></i> طباعة الفاتورة</button>
             </div>
         </div>
     </div>

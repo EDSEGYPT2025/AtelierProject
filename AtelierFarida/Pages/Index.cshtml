@@ -1,0 +1,246 @@
+﻿@page
+@model IndexModel
+@{
+    Layout = null; // صفحة مستقلة بذاتها
+}
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AtelierFarida | أناقة تُفصَّل خصيصًا لكِ</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        :root {
+            --luxury-gold: #D4AF37;
+            --dark-gold: #B8860B;
+            --luxury-black: #0A0A0A;
+            --soft-white: #F8F9FA;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--luxury-black);
+            color: var(--soft-white);
+            overflow-x: hidden;
+        }
+
+        .playfair {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* --- Hero Section --- */
+        .hero-section {
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1539109132304-3915502adcc1?q=80&w=1920') center/cover no-repeat;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border-bottom: 3px solid var(--luxury-gold);
+        }
+
+        .brand-name {
+            font-size: clamp(3rem, 8vw, 6rem);
+            color: var(--luxury-gold);
+            letter-spacing: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .btn-gold {
+            background-color: var(--luxury-gold);
+            color: var(--luxury-black);
+            padding: 12px 35px;
+            font-weight: bold;
+            border-radius: 0;
+            transition: all 0.3s ease;
+            border: 2px solid var(--luxury-gold);
+        }
+
+            .btn-gold:hover {
+                background-color: transparent;
+                color: var(--luxury-gold);
+                border-color: var(--luxury-gold);
+            }
+
+        /* --- Section Titles --- */
+        .section-title {
+            position: relative;
+            padding-bottom: 15px;
+            margin-bottom: 50px;
+            font-weight: 700;
+            color: var(--luxury-gold);
+        }
+
+            .section-title::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                right: 50%;
+                transform: translateX(50%);
+                width: 80px;
+                height: 2px;
+                background-color: var(--luxury-gold);
+            }
+
+        /* --- About Section --- */
+        .about-section {
+            padding: 100px 0;
+            background-color: #111;
+        }
+
+        /* --- Branch Cards --- */
+        .branch-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 30px;
+            transition: transform 0.4s ease, border-color 0.4s ease;
+            height: 100%;
+        }
+
+            .branch-card:hover {
+                transform: translateY(-10px);
+                border-color: var(--luxury-gold);
+            }
+
+        .branch-icon-box {
+            font-size: 1.5rem;
+            color: var(--luxury-gold);
+            margin-bottom: 15px;
+        }
+
+        .contact-link {
+            text-decoration: none;
+            color: var(--soft-white);
+            display: block;
+            margin-bottom: 10px;
+            transition: color 0.3s;
+        }
+
+            .contact-link:hover {
+                color: var(--luxury-gold);
+            }
+
+        /* --- Social Icons --- */
+        .social-btn {
+            width: 50px;
+            height: 50px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--luxury-gold);
+            color: var(--luxury-gold);
+            margin: 0 10px;
+            border-radius: 50%;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+
+            .social-btn:hover {
+                background: var(--luxury-gold);
+                color: var(--luxury-black);
+            }
+
+        /* --- Footer --- */
+        footer {
+            padding: 50px 0;
+            border-top: 1px solid #222;
+        }
+    </style>
+</head>
+<body>
+
+    <section class="hero-section">
+        <div class="container" data-aos="fade-up">
+            <h1 class="brand-name playfair">Atelier Farida</h1>
+            <p class="lead mb-4 fs-3 fw-light">أناقة تُفصَّل خصيصًا لكِ</p>
+            <a href="#branches" class="btn btn-gold btn-lg text-uppercase">تواصل معنا الآن</a>
+        </div>
+    </section>
+
+    <section class="about-section text-center">
+        <div class="container">
+            <h2 class="section-title">فلسفة الأناقة</h2>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <p class="fs-5 lh-lg text-secondary">
+                        في <span class="text-white fw-bold">AtelierFarida</span>، نؤمن أن كل امرأة تستحق قطعة فنية تعكس شخصيتها الفريدة.
+                        نجمع بين مهارة التفصيل اليدوي وأرقى صيحات الموضة العالمية لنقدم لكِ تصاميم تحبس الأنفاس.
+                        خبرتنا الممتدة لسنوات في "الهوت كوتور" تجعلنا الخيار الأول لكل باحثة عن التميز.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5 text-center bg-black">
+        <div class="container">
+            <h4 class="mb-4 fw-light text-uppercase" style="letter-spacing: 2px;">تابعونا عبر</h4>
+            <a href="#" class="social-btn"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="social-btn"><i class="fab fa-tiktok"></i></a>
+            <a href="#" class="social-btn"><i class="fab fa-instagram"></i></a>
+        </div>
+    </section>
+
+    <section id="branches" class="py-5 about-section">
+        <div class="container">
+            <h2 class="section-title text-center">فروعنا</h2>
+            <div class="row g-4">
+                @foreach (var branch in Model.Branches)
+                {
+                    <div class="col-lg-4 col-md-6">
+                        <div class="branch-card text-center">
+                            <h3 class="h4 mb-4 text-white">@branch.Name</h3>
+                            <div class="branch-icon-box">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <p class="text-secondary mb-4">@branch.Address</p>
+
+                            <hr class="border-secondary opacity-25">
+
+                            <div class="mt-4">
+                                <a href="tel:@branch.Phone" class="contact-link">
+                                    <i class="fas fa-phone-alt me-2 text-gold"></i> @branch.Phone
+                                </a>
+                                <a href="https://wa.me/@branch.WhatsApp" class="contact-link">
+                                    <i class="fab fa-whatsapp me-2 text-success"></i> واتساب
+                                </a>
+                                <a href="sms:@branch.Phone" class="contact-link">
+                                    <i class="fas fa-comment-dots me-2 text-info"></i> رسائل نصية
+                                </a>
+                                <a href="@branch.LocationUrl" class="btn btn-outline-warning btn-sm mt-3 w-100">
+                                    <i class="fas fa-directions me-1"></i> عرض الموقع
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5 text-center" style="background: linear-gradient(45deg, #000, #111);">
+        <div class="container">
+            <h2 class="mb-4">هل أنتِ مستعدة لتكوني أيقونة الجمال القادمة؟</h2>
+            <p class="mb-5 text-secondary">احجزي موعدك الآن للاستشارة وتصميم فستان أحلامك</p>
+            <a href="https://wa.me/20123456789" class="btn btn-gold btn-lg">
+                <i class="fab fa-whatsapp me-2"></i> تواصل فوري عبر واتساب
+            </a>
+        </div>
+    </section>
+
+    <footer class="text-center bg-black">
+        <div class="container">
+            <h2 class="playfair text-gold mb-3">AtelierFarida</h2>
+            <p class="text-secondary small">© @DateTime.Now.Year جميع الحقوق محفوظة لـ أتيليه فريدة. صُنع بكل حب للأناقة.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
