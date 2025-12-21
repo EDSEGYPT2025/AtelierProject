@@ -1,10 +1,19 @@
-﻿namespace AtelierProject.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace AtelierProject.Models
 {
     public enum TransactionType
     {
-        Income = 1,        // إيراد (إيجار، خدمات صالون)
-        Expense = 2,       // مصروف (خارج من الخزنة)
-        InsuranceIn = 3,   // استلام تأمين (أمانات داخلة)
-        InsuranceOut = 4   // رد تأمين (أمانات خارجة)
+        [Display(Name = "إيراد")]
+        Income = 1,
+
+        [Display(Name = "مصروف")]
+        Expense = 2,
+
+        [Display(Name = "استلام تأمين (عهدة)")]
+        InsuranceIn = 3,
+
+        [Display(Name = "رد تأمين")]
+        InsuranceOut = 4
     }
 }
