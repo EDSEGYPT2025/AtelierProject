@@ -29,6 +29,8 @@ namespace AtelierProject.Data
         public DbSet<ExpenseCategory> ExpenseCategories { get; set; }
         public DbSet<Expense> Expenses { get; set; }
 
+        public DbSet<SafeTransaction> SafeTransactions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

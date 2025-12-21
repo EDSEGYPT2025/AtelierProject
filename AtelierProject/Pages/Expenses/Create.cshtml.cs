@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore; // هام للـ ToListAsync
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using AtelierProject.Data;
@@ -32,7 +32,7 @@ namespace AtelierProject.Pages.Expenses
             // 1. تحديد تاريخ اليوم كقيمة افتراضية
             Expense = new Expense { ExpenseDate = DateTime.Now };
 
-            // 2. تحميل قائمة البنود (الخاصة بفرع المستخدم فقط)
+            // 2. تحميل قائمة بنود المصروفات (الخاصة بفرع المستخدم فقط)
             var categoriesQuery = _context.ExpenseCategories.AsQueryable();
 
             if (user.BranchId != null)
@@ -72,8 +72,31 @@ namespace AtelierProject.Pages.Expenses
             Expense.BranchId = user.BranchId;       // ربط بالفرع
             Expense.CreatedByUserId = user.Id;      // ربط بالموظف (Audit)
 
+            // حفظ المصروف أولاً
             _context.Expenses.Add(Expense);
             await _context.SaveChangesAsync();
+
+            // ============================================================
+            // ✅ إضافة جديدة: تسجيل المصروف في خزنة القسم المختص
+            // ============================================================
+            // إذا لم يحدد المستخدم قسماً (null)، نعتبره مصروفاً من الخزنة الرئيسية (الحريمي مثلاً)
+            var targetDepartment = Expense.Department ?? DepartmentType.Women;
+
+            var transaction = new SafeTransaction
+            {
+                Amount = Expense.Amount,
+                Type = TransactionType.Expense, // نوع الحركة: مصروف
+                Department = targetDepartment,  // الخزنة التي سيخرج منها المال
+                BranchId = Expense.BranchId ?? 1,
+                TransactionDate = Expense.ExpenseDate, // نفس تاريخ المصروف
+                Description = $"مصروف: {Expense.Description ?? "بدون وصف"}",
+                ReferenceId = Expense.Id.ToString(), // ربط برقم المصروف
+                CreatedByUserId = user.Id
+            };
+
+            _context.SafeTransactions.Add(transaction);
+            await _context.SaveChangesAsync();
+            // ============================================================
 
             return RedirectToPage("./Index");
         }

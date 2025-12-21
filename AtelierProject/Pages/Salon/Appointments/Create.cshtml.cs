@@ -31,8 +31,7 @@ namespace AtelierProject.Pages.Salon.Appointments
 
         public async Task<IActionResult> OnGetAsync()
         {
-            // 👇 1. تعديل استعلام العملاء ليشمل الاسم ورقم الهاتف
-            // سيظهر في القائمة: "منى أحمد - 01012345678"
+            // 👇 1. استعلام العملاء ليشمل الاسم ورقم الهاتف
             var clients = await _context.Clients
                 .Select(c => new {
                     c.Id,
@@ -41,7 +40,6 @@ namespace AtelierProject.Pages.Salon.Appointments
                 .ToListAsync();
 
             ViewData["ClientId"] = new SelectList(clients, "Id", "DisplayText");
-            // -------------------------------------------------------------
 
             AvailableServices = await _context.SalonServices.ToListAsync();
 
@@ -70,7 +68,6 @@ namespace AtelierProject.Pages.Salon.Appointments
 
             if (!ModelState.IsValid)
             {
-                // 👇 2. نفس التعديل هنا عند إعادة التحميل (في حالة حدوث خطأ)
                 var clients = await _context.Clients
                     .Select(c => new {
                         c.Id,
@@ -79,8 +76,6 @@ namespace AtelierProject.Pages.Salon.Appointments
                     .ToListAsync();
 
                 ViewData["ClientId"] = new SelectList(clients, "Id", "DisplayText");
-                // -------------------------------------------------------------
-
                 AvailableServices = await _context.SalonServices.ToListAsync();
                 return Page();
             }
@@ -113,7 +108,30 @@ namespace AtelierProject.Pages.Salon.Appointments
                 _context.SalonAppointmentItems.Add(item);
             }
 
+            // حفظ الحجز أولاً للحصول على الـ ID
             await _context.SaveChangesAsync();
+
+            // ============================================================
+            // ✅ الإضافة الجديدة: تسجيل العربون في خزنة الكوافير
+            // ============================================================
+            if (Appointment.PaidAmount > 0)
+            {
+                var transaction = new SafeTransaction
+                {
+                    Amount = Appointment.PaidAmount,
+                    Type = TransactionType.Income,           // نوع الحركة: إيراد
+                    Department = DepartmentType.BeautySalon, // القسم: كوافير
+                    BranchId = Appointment.BranchId ?? 1,
+                    TransactionDate = DateTime.Now,
+                    Description = $"عربون حجز صالون رقم {Appointment.Id}",
+                    ReferenceId = Appointment.Id.ToString(),
+                    CreatedByUserId = currentUser?.Id
+                };
+
+                _context.SafeTransactions.Add(transaction);
+                await _context.SaveChangesAsync();
+            }
+            // ============================================================
 
             return RedirectToPage("./Index");
         }

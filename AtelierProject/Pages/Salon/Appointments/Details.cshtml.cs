@@ -64,14 +64,35 @@ namespace AtelierProject.Pages.Salon.Appointments
 
             if (amount > 0)
             {
-                // يمكن السماح بدفع أكثر من المتبقي (إكرامية) أو تقييده
+                // تحديث المدفوع في الحجز
                 appt.PaidAmount += amount;
+
+                // ============================================================
+                // ✅ الإضافة الجديدة: تسجيل الدفعة في خزنة الكوافير
+                // ============================================================
+                var currentUser = await _userManager.GetUserAsync(User);
+
+                var transaction = new SafeTransaction
+                {
+                    Amount = amount,
+                    Type = TransactionType.Income,           // نوع الحركة: إيراد
+                    Department = DepartmentType.BeautySalon, // القسم: كوافير
+                    BranchId = appt.BranchId ?? 1,
+                    TransactionDate = DateTime.Now,
+                    Description = $"دفعة لحجز صالون رقم {appt.Id}",
+                    ReferenceId = appt.Id.ToString(),
+                    CreatedByUserId = currentUser?.Id
+                };
+
+                _context.SafeTransactions.Add(transaction);
+                // ============================================================
+
                 await _context.SaveChangesAsync();
             }
             return RedirectToPage(new { id = id });
         }
 
-        // 2. إلغاء الموعد (مهم جداً إضافتها)
+        // 2. إلغاء الموعد
         public async Task<IActionResult> OnPostCancelAsync(int id)
         {
             var appt = await _context.SalonAppointments.FindAsync(id);

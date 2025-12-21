@@ -1,0 +1,16 @@
+﻿@page
+@model AtelierProject.Pages.Account.AccessDeniedModel
+@{
+    ViewData["Title"] = "غير مصرح";
+}
+
+<div class="container py-5 text-center">
+    <div class="card shadow-sm border-danger p-5">
+        <h1 class="text-danger display-1"><i class="fa-solid fa-ban"></i></h1>
+        <h2 class="fw-bold text-danger">عذراً، غير مصرح لك بالدخول</h2>
+        <p class="lead text-muted">ليس لديك الصلاحيات الكافية لعرض هذه الصفحة.</p>
+        <div class="mt-4">
+            <a asp-page="/Index" class="btn btn-primary px-4">العودة للرئيسية</a>
+        </div>
+    </div>
+</div>

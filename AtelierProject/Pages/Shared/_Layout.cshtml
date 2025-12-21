@@ -276,11 +276,15 @@
                         <i class="fa-solid fa-chevron-down arrow-icon"></i>
                     </a>
                     <div class="collapse" id="menuReports">
-                        <a asp-page="/Reports/GeneralReport" class="list-group-item list-group-item-action submenu-link text-warning fw-bold">
-                            <i class="fa-solid fa-star me-1"></i> التقرير الشامل
+
+                        <a asp-page="/Reports/Safe" class="list-group-item list-group-item-action submenu-link text-info fw-bold">
+                            <i class="fa-solid fa-vault me-1"></i> حركة الخزينة
                         </a>
-                        <a asp-page="/Reports/Daily" class="list-group-item list-group-item-action submenu-link">اليومية (قديم)</a>
-                        <a asp-page="/Reports/Monthly" class="list-group-item list-group-item-action submenu-link">الشهرية (قديم)</a>
+                        @*<a asp-page="/Reports/GeneralReport" class="list-group-item list-group-item-action submenu-link text-warning fw-bold">
+                            <i class="fa-solid fa-star me-1"></i> التقرير الشامل
+                        </a>*@
+                        @*<a asp-page="/Reports/Daily" class="list-group-item list-group-item-action submenu-link">اليومية (قديم)</a>*@
+                        @*<a asp-page="/Reports/Monthly" class="list-group-item list-group-item-action submenu-link">الشهرية (قديم)</a>*@
                     </div>
 
                     @* --- الإدارة (للمدير العام فقط) --- *@

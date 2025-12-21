@@ -1,5 +1,6 @@
 ﻿@page
 @model AtelierProject.Pages.Expenses.CreateModel
+@using AtelierProject.Models
 @{
     ViewData["Title"] = "تسجيل مصروف جديد";
 }
@@ -21,7 +22,20 @@
                                 <input asp-for="Expense.ExpenseDate" class="form-control" type="date" />
                                 <span asp-validation-for="Expense.ExpenseDate" class="text-danger"></span>
                             </div>
+
                             <div class="col-md-6">
+                                <label asp-for="Expense.Department" class="form-label fw-bold">الخزنة (القسم)</label>
+                                <select asp-for="Expense.Department" class="form-select"
+                                        asp-items="Html.GetEnumSelectList<DepartmentType>()">
+                                    <option value="">-- عام / الرئيسي (حريمي) --</option>
+                                </select>
+                                <small class="text-muted">حدد الخزنة التي سيخصم منها المبلغ</small>
+                                <span asp-validation-for="Expense.Department" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
                                 <label asp-for="Expense.ExpenseCategoryId" class="form-label fw-bold">نوع المصروف</label>
                                 <div class="input-group">
                                     <select asp-for="Expense.ExpenseCategoryId" class="form-select" asp-items="ViewBag.ExpenseCategoryId">

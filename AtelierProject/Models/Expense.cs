@@ -32,5 +32,8 @@ namespace AtelierProject.Models
         // 🕵️ Audit: من قام بتسجيل المصروف؟
         public string? CreatedByUserId { get; set; }
         public ApplicationUser? CreatedByUser { get; set; }
+
+        [Display(Name = "القسم التابع له المصروف")]
+        public DepartmentType? Department { get; set; } // إذا كان null يعتبر مصروفاً عاماً للفرع
     }
 }
