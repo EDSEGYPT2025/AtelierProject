@@ -6,21 +6,85 @@
     Layout = null;
     ViewData["Title"] = $"فاتورة #{Model.Booking.Id}";
 
-    // تجهيز البيانات
+    // --- 1. تجهيز البيانات ---
     string clientName = Model.Booking.Client?.Name ?? "عميلنا العزيز";
+
+    // تنظيف رقم الهاتف
     string originalPhone = Model.Booking.Client?.Phone ?? "";
     string cleanPhone = new string(originalPhone.Where(char.IsDigit).ToArray());
     if (cleanPhone.StartsWith("0")) cleanPhone = "20" + cleanPhone.Substring(1);
 
-    string atelierName = !string.IsNullOrEmpty(Model.Booking.Branch?.CommercialName) ? Model.Booking.Branch.CommercialName : (Model.Booking.Branch?.Name ?? "ATELIER PRO");
+    // اسم الفرع أو الأتيليه
+    string atelierName = !string.IsNullOrEmpty(Model.Booking.Branch?.CommercialName)
+                         ? Model.Booking.Branch.CommercialName
+                         : (Model.Booking.Branch?.Name ?? "ATELIER PRO");
 
+    // --- 2. بناء رسالة الواتساب ---
     var sb = new System.Text.StringBuilder();
-    sb.AppendLine($"مرحباً بك أستاذ/ة {clientName}");
-    sb.AppendLine($"نشكر ثقتكم الغالية واختياركم *{atelierName}*");
-    sb.AppendLine();
-    sb.AppendLine($"رقم الحجز: *#{Model.Booking.Id}*");
-    sb.AppendLine($"المبلغ المتبقي: *{Model.RemainingRental:N0} ج.م*");
 
+    // -- رسالة ترحيبية ودودة --
+    sb.AppendLine($"أهلاً بك أستاذ/ة *{clientName}* 🌹");
+    sb.AppendLine($"اهلا بكم في *{atelierName}*، ونتمنى لك مناسبة سعيدة!");
+    sb.AppendLine(); // سطر فارغ
+
+    // -- تفاصيل الفاتورة --
+    sb.AppendLine($"📄 *تفاصيل الفاتورة رقم: #{Model.Booking.Id}*");
+    sb.AppendLine($"🗓 تاريخ الاستلام: {Model.Booking.PickupDate:yyyy-MM-dd}");
+    sb.AppendLine($"🗓 تاريخ الإرجاع: {Model.Booking.ReturnDate:yyyy-MM-dd}");
+    sb.AppendLine("━━━━━━━━━━━━");
+
+    // -- الأصناف --
+    if (Model.Booking.BookingItems != null && Model.Booking.BookingItems.Any())
+    {
+        sb.AppendLine("*القطع المختارة:* 👗");
+        foreach (var item in Model.Booking.BookingItems)
+        {
+            var pName = item.ProductItem.ProductDefinition?.Name ?? "منتج";
+            var color = !string.IsNullOrEmpty(item.ProductItem.Color) ? item.ProductItem.Color : "";
+            var size = !string.IsNullOrEmpty(item.ProductItem.Size) ? item.ProductItem.Size : "";
+
+            // تنسيق السطر: اسم المنتج (لون - مقاس)
+            sb.AppendLine($"🔹 {pName} ({color} - {size})");
+        }
+        sb.AppendLine("━━━━━━━━━━━━");
+    }
+
+    // -- الحسابات (إبراز الأرقام بالنجوم) --
+    sb.AppendLine("*ملخص الحساب:* 💰");
+    sb.AppendLine($"الإجمالي: *{Model.Booking.TotalAmount:N0}* ج.م");
+    sb.AppendLine($"المدفوع: *{Model.Booking.PaidAmount:N0}* ج.م");
+
+    // حالة المتبقي
+    if (Model.RemainingRental > 0)
+    {
+        sb.AppendLine($"⭕ *المبلغ المتبقي: {Model.RemainingRental:N0} ج.م*");
+    }
+    else
+    {
+        sb.AppendLine($"✅ *تم سداد كامل المبلغ*");
+    }
+
+    // التأمين
+    if (Model.Booking.InsuranceAmount > 0)
+    {
+        sb.AppendLine($"🔒 التأمين: *{Model.Booking.InsuranceAmount:N0}* ج.م (يسترد عند الإرجاع)");
+    }
+
+    // -- العنوان والخاتمة --
+    //if (Model.Booking.Branch != null && !string.IsNullOrEmpty(Model.Booking.Branch.Address))
+    //{
+    //    sb.AppendLine();
+    //    sb.AppendLine($"📍 *العنوان:* {Model.Booking.Branch.Address}");
+    //    if (!string.IsNullOrEmpty(Model.Booking.Branch.MapUrl))
+    //    {
+    //        sb.AppendLine($"🗺️ اللوكيشن: {Model.Booking.Branch.MapUrl}");
+    //    }
+    //}
+
+    sb.AppendLine();
+    sb.AppendLine("شكراً لثقتكم بنا ✨");
+
+    // تجهيز الرابط
     string msgContent = Uri.EscapeDataString(sb.ToString());
     string waLink = string.IsNullOrEmpty(cleanPhone) ? "#" : $"https://wa.me/{cleanPhone}?text={msgContent}";
 }

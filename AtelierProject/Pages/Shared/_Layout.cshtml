@@ -277,9 +277,12 @@
                     </a>
                     <div class="collapse" id="menuReports">
 
-                        <a asp-page="/Reports/Safe" class="list-group-item list-group-item-action submenu-link text-info fw-bold">
-                            <i class="fa-solid fa-vault me-1"></i> حركة الخزينة
-                        </a>
+                        @if (currentUser.BranchId == null) // يظهر فقط للمدير العام (الذي ليس له فرع محدد)
+                        {
+                            <a asp-page="/Reports/Safe" class="list-group-item list-group-item-action submenu-link text-info fw-bold">
+                                <i class="fa-solid fa-vault me-1"></i> حركة الخزينة
+                            </a>
+                        }
 
                         @* ✅ الرابط الجديد: جرد المنتجات *@
                         <a asp-page="/Reports/Inventory" class="list-group-item list-group-item-action submenu-link">

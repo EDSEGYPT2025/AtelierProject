@@ -25,20 +25,20 @@ namespace AtelierProject.Pages.Bookings
         public string SearchTerm { get; set; }
 
         [BindProperty(SupportsGet = true)]
-        public string StatusFilter { get; set; } // New, PickedUp, Returned...
+        public string StatusFilter { get; set; }
 
         [BindProperty(SupportsGet = true)]
         public DateTime? DateFilter { get; set; }
 
         [BindProperty(SupportsGet = true)]
-        public string TypeFilter { get; set; } // Pickup, Return
+        public string TypeFilter { get; set; }
 
         public async Task OnGetAsync()
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return;
 
-            // 1. الاستعلام الأساسي (مع Include للبيانات المرتبطة)
+            // 1. الاستعلام الأساسي
             var query = _context.Bookings
                 .Include(b => b.Client)
                 .Include(b => b.BookingItems)
@@ -52,10 +52,9 @@ namespace AtelierProject.Pages.Bookings
                 query = query.Where(b => b.BranchId == user.BranchId);
             }
 
-            // 3. فلتر البحث (اسم العميل، الهاتف، أو رقم الحجز)
+            // 3. فلتر البحث
             if (!string.IsNullOrEmpty(SearchTerm))
             {
-                // إذا كان البحث رقمي، نبحث في رقم الحجز أو الهاتف
                 if (int.TryParse(SearchTerm, out int id))
                 {
                     query = query.Where(b => b.Id == id || b.Client.Phone.Contains(SearchTerm));
@@ -72,28 +71,51 @@ namespace AtelierProject.Pages.Bookings
                 query = query.Where(b => b.Status == status);
             }
 
-            // 5. فلتر التاريخ والنوع (تسليمات اليوم / مرتجعات اليوم)
+            // 5. فلتر التاريخ
             if (DateFilter.HasValue)
             {
-                if (TypeFilter == "Pickup") // أريد تسليمات هذا اليوم
+                if (TypeFilter == "Pickup")
                 {
                     query = query.Where(b => b.PickupDate.Date == DateFilter.Value.Date);
                 }
-                else if (TypeFilter == "Return") // أريد مرتجعات هذا اليوم
+                else if (TypeFilter == "Return")
                 {
                     query = query.Where(b => b.ReturnDate.Date == DateFilter.Value.Date);
                 }
                 else
                 {
-                    // بحث عام بالتاريخ (تاريخ الإنشاء)
                     query = query.Where(b => b.CreatedDate.Date == DateFilter.Value.Date);
                 }
             }
 
-            // 6. فلتر الأقسام (صلاحيات الموظف) - اختياري ولكن مفضل
-            // نقوم بسحب البيانات ثم الفلترة في الذاكرة إذا كان الاستعلام معقداً، 
-            // لكن هنا سنعرض الكل ونعتمد على أن الموظف يرى حجوزات فرعه.
-            // (يمكنك إضافة منطق لإخفاء حجوزات الرجال عن موظف النساء هنا)
+            // ============================================================
+            // 6. ✅ فلتر الأقسام (حسب صلاحيات الموظف) ✅
+            // ============================================================
+
+            // الحالة أ: إذا كان المستخدم يملك الصلاحيتين (أو مدير عام)، لا نفلتر شيئاً (يرى الكل)
+            if (user.CanAccessMenSection && user.CanAccessWomenSection)
+            {
+                // لا تغيير - يرى جميع الحجوزات
+            }
+            // الحالة ب: مصرح له بالرجالي فقط
+            else if (user.CanAccessMenSection && !user.CanAccessWomenSection)
+            {
+                // نعرض الحجوزات التي تحتوي على قطعة واحدة على الأقل من قسم الرجال
+                query = query.Where(b => b.BookingItems.Any(bi => bi.ProductItem.ProductDefinition.Department == DepartmentType.Men));
+            }
+            // الحالة ج: مصرح له بالحريمي فقط
+            else if (!user.CanAccessMenSection && user.CanAccessWomenSection)
+            {
+                // نعرض الحجوزات التي تحتوي على قطعة واحدة على الأقل من قسم النساء
+                query = query.Where(b => b.BookingItems.Any(bi => bi.ProductItem.ProductDefinition.Department == DepartmentType.Women));
+            }
+            // الحالة د: ليس لديه أي صلاحية (حالة نادرة)
+            else
+            {
+                // نعرض قائمة فارغة
+                query = query.Where(b => false);
+            }
+            // ============================================================
 
             // الترتيب: الأحدث أولاً
             Bookings = await query.OrderByDescending(b => b.CreatedDate).ToListAsync();

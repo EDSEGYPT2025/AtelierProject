@@ -135,6 +135,8 @@
                 @if (Model.Appointment.Status != SalonAppointmentStatus.Cancelled)
                 {
                     @if (Model.Appointment.RemainingAmount > 0)
+               
+                    
                     {
                         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#payModal">
                             <i class="fa fa-money-bill"></i> دفع المتبقي
@@ -245,6 +247,17 @@
                 </div>
             }
         </div>
+
+        @* --- بداية كود الملاحظات --- *@
+        @if (!string.IsNullOrEmpty(Model.Appointment.Notes))
+        {
+            <div style="margin: 20px 0; padding: 15px; background: #fffcf0; border: 1px dashed #d4af37; border-radius: 4px;">
+                <strong style="display: block; font-size: 12px; color: #999; margin-bottom: 5px;">ملاحظات إضافية:</strong>
+                <div style="color: #333; font-weight: 600;">@Model.Appointment.Notes</div>
+            </div>
+        }
+        @* --- نهاية كود الملاحظات --- *@
+
 
         <div style="margin-top:auto; padding-top:20px; border-top:1px solid #eee; font-size:12px; color:#777; text-align:center;">
             شكراً لزيارتكم صالون أتيليه.
