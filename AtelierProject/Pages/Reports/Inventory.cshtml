@@ -1,0 +1,185 @@
+﻿@page
+@model AtelierProject.Pages.Reports.InventoryModel
+@using AtelierProject.Models
+@{
+    ViewData["Title"] = "تقرير جرد المنتجات";
+}
+
+<style>
+    /* ========================================= */
+    /* 🖨️ إعدادات الطباعة */
+    /* ========================================= */
+    @@media print {
+        /* إخفاء القوائم والعناصر غير الضرورية */
+        #sidebar-wrapper, .navbar, .no-print {
+            display: none !important;
+        }
+        /* ضبط الصفحة للعرض الكامل */
+        body, #wrapper, #page-content-wrapper {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            display: block !important;
+            background-color: white !important;
+        }
+
+        .container-fluid {
+            padding: 0 !important;
+        }
+        /* تنسيق الجدول */
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+            page-break-inside: avoid;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #000 !important;
+            padding: 8px; /* زيادة الهامش قليلاً للقراءة */
+            color: black !important;
+            font-size: 14px; /* تكبير الخط قليلاً */
+        }
+        /* تنسيق النصوص */
+        h2, h3, p, span, div {
+            color: black !important;
+        }
+
+        .badge {
+            border: 1px solid #000;
+            color: #000 !important;
+            background: transparent !important;
+        }
+    }
+
+    .header-gold {
+        background-color: #c5a059;
+        color: white;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm mb-4 no-print bg-light border-0">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                @if (Model.IsAdmin)
+                {
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">الفرع</label>
+                        <select asp-for="BranchId" asp-items="ViewBag.BranchList" class="form-select">
+                            <option value="">-- كل الفروع (تقرير شامل) --</option>
+                        </select>
+                    </div>
+                }
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">القسم</label>
+                    <select asp-for="Department" asp-items="Html.GetEnumSelectList<DepartmentType>()" class="form-select">
+                        <option value="">-- كل الأقسام --</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                        <i class="fa fa-search"></i> عرض الجرد
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="text-center mb-4">
+        <h2 class="fw-bold" style="font-family:'Playfair Display'">جرد المنتجات والمخزون</h2>
+        <p class="text-muted">
+            تاريخ التقرير: <span class="fw-bold">@DateTime.Now.ToString("yyyy-MM-dd HH:mm")</span> |
+            @if (Model.BranchId.HasValue)
+            {
+                <span class="badge bg-info text-dark">فرع محدد</span>
+            }
+            else
+            {
+                <span class="badge bg-dark">كل الفروع</span>
+            }
+        </p>
+    </div>
+
+    @if (!Model.InventoryGroups.Any())
+    {
+        <div class="alert alert-warning text-center">لا توجد منتجات مطابقة لخيارات البحث.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            @foreach (var modelGroup in Model.InventoryGroups)
+            {
+                <div class="card mb-3 border border-secondary">
+                    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fw-bold fs-5">@modelGroup.Name</span>
+                            <span class="badge bg-secondary ms-2">@modelGroup.Department</span>
+                        </div>
+                        <div>
+                            <span class="no-print">
+                                <small>سعر الإيجار:</small> <span class="text-warning fw-bold">@modelGroup.RentalPrice.ToString("N0")</span>
+                                <span class="mx-2">|</span>
+                            </span>
+                            <small>العدد:</small> <span class="badge bg-light text-dark rounded-pill">@modelGroup.ProductItems.Count</span>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-bordered table-sm mb-0 text-center">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="40%">اسم القطعة / الموديل</th>
+                                    <th>الفرع الحالي</th>
+                                    <th>الحالة</th>
+                                    <th>الباركود</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in modelGroup.ProductItems)
+                                {
+                                    <tr>
+                                        <td class="fw-bold text-start ps-3">
+                                            @(!string.IsNullOrEmpty(item.Name) ? item.Name : modelGroup.Name)
+                                        </td>
+
+                                        <td>@item.Branch?.Name</td>
+
+                                        <td>
+                                            @if (item.Status == ItemStatus.Available)
+                                            {
+                                                <span class="badge bg-success">متاح</span>
+                                            }
+                                            else if (item.Status == ItemStatus.Rented)
+                                            {
+                                                <span class="badge bg-warning text-dark">مؤجر بالخارج</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">@item.Status</span>
+                                            }
+                                        </td>
+
+                                        <td class="small text-muted font-monospace">@item.Barcode</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <button onclick="window.print()" class="btn btn-dark rounded-circle shadow-lg no-print"
+            style="position: fixed; bottom: 30px; left: 30px; width: 60px; height: 60px; font-size: 24px; z-index: 1000;"
+            title="طباعة التقرير">
+        <i class="fa fa-print"></i>
+    </button>
+
+</div>
