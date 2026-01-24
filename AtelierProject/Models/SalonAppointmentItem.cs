@@ -17,5 +17,7 @@ namespace AtelierProject.Models
         // نسجل السعر وقت الحجز تحسباً لتغير سعر الخدمة مستقبلاً
         [Column(TypeName = "decimal(18,2)")]
         public decimal Price { get; set; }
+
+        public int Quantity { get; set; } = 1; // ✅ الإضافة الجديدة: الكمية (الافتراضي 1)
     }
 }

@@ -29,9 +29,12 @@ namespace AtelierProject.Pages.Salon.Appointments
         [BindProperty]
         public List<int> SelectedServiceIds { get; set; } = new List<int>();
 
+        // ✅ 1. خاصية جديدة لاستقبال الكميات (مفتاح: رقم الخدمة، قيمة: العدد)
+        [BindProperty]
+        public Dictionary<int, int> ServiceQuantities { get; set; } = new Dictionary<int, int>();
+
         public async Task<IActionResult> OnGetAsync()
         {
-            // 👇 1. استعلام العملاء ليشمل الاسم ورقم الهاتف
             var clients = await _context.Clients
                 .Select(c => new {
                     c.Id,
@@ -86,40 +89,56 @@ namespace AtelierProject.Pages.Salon.Appointments
                 Appointment.BranchId = currentUser.BranchId;
             }
 
+            // جلب بيانات الخدمات المختارة من قاعدة البيانات
             var selectedServicesInfo = await _context.SalonServices
                 .Where(s => SelectedServiceIds.Contains(s.Id))
                 .ToListAsync();
 
-            decimal totalAmount = selectedServicesInfo.Sum(s => s.Price);
+            decimal totalAmount = 0;
 
             Appointment.Status = SalonAppointmentStatus.Confirmed;
-            Appointment.TotalAmount = totalAmount;
+            // سيتم حساب TotalAmount لاحقاً بعد معرفة الكميات
 
             _context.SalonAppointments.Add(Appointment);
 
             foreach (var service in selectedServicesInfo)
             {
+                // ✅ 2. تحديد الكمية (الافتراضي 1 إذا لم تُرسل)
+                int qty = 1;
+                if (ServiceQuantities != null && ServiceQuantities.ContainsKey(service.Id))
+                {
+                    qty = ServiceQuantities[service.Id];
+                    if (qty < 1) qty = 1; // حماية من القيم السالبة أو الصفر
+                }
+
                 var item = new SalonAppointmentItem
                 {
                     SalonAppointment = Appointment,
                     SalonServiceId = service.Id,
-                    Price = service.Price
+                    Price = service.Price,
+                    Quantity = qty // ✅ 3. حفظ الكمية
                 };
+
                 _context.SalonAppointmentItems.Add(item);
+
+                // ✅ 4. جمع الإجمالي (السعر × الكمية)
+                totalAmount += (service.Price * qty);
             }
+
+            Appointment.TotalAmount = totalAmount; // تعيين الإجمالي النهائي
 
             // حفظ الحجز أولاً للحصول على الـ ID
             await _context.SaveChangesAsync();
 
             // ============================================================
-            // ✅ الإضافة الجديدة: تسجيل العربون في خزنة الكوافير
+            // ✅ تسجيل العربون في خزنة الكوافير
             // ============================================================
             if (Appointment.PaidAmount > 0)
             {
                 var transaction = new SafeTransaction
                 {
                     Amount = Appointment.PaidAmount,
-                    Type = TransactionType.Income,           // نوع الحركة: إيراد
+                    Type = TransactionType.Income,            // نوع الحركة: إيراد
                     Department = DepartmentType.BeautySalon, // القسم: كوافير
                     BranchId = Appointment.BranchId ?? 1,
                     TransactionDate = DateTime.Now,

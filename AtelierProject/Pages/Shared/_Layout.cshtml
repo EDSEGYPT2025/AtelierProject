@@ -288,16 +288,11 @@
                         <a asp-page="/Reports/Inventory" class="list-group-item list-group-item-action submenu-link">
                             <i class="fa-solid fa-list-check me-1"></i> جرد المنتجات
                         </a>
-
-                        @*<a asp-page="/Reports/GeneralReport" class="list-group-item list-group-item-action submenu-link text-warning fw-bold">
-                                <i class="fa-solid fa-star me-1"></i> التقرير الشامل
-                            </a>*@
-                        @*<a asp-page="/Reports/Daily" class="list-group-item list-group-item-action submenu-link">اليومية (قديم)</a>*@
-                        @*<a asp-page="/Reports/Monthly" class="list-group-item list-group-item-action submenu-link">الشهرية (قديم)</a>*@
                     </div>
 
-                    @* --- الإدارة (للمدير العام فقط) --- *@
-                    @if (currentUser.BranchId == null)
+                    @* --- الإدارة (للمدير العام أو من يملك جميع الصلاحيات) --- *@
+                    @* ✅ التعديل هنا: إضافة شرط (currentUser.CanAccess... && ...) *@
+                    @if (currentUser.BranchId == null || (currentUser.CanAccessMenSection && currentUser.CanAccessWomenSection && currentUser.CanAccessBeautySection))
                     {
                         <div class="border-top border-secondary mx-3 my-2"></div>
                         <a asp-page="/Branches/Index" class="list-group-item list-group-item-action">

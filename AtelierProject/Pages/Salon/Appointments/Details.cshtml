@@ -5,6 +5,59 @@
 @{
     Layout = null;
     ViewData["Title"] = $"فاتورة كوافير #{Model.Appointment.Id}";
+
+    // ============================================================
+    // 📱 1. تجهيز بيانات الواتساب
+    // ============================================================
+    string clientName = Model.Appointment.Client?.Name ?? "عميلتنا العزيزة";
+    string phone = Model.Appointment.Client?.Phone ?? "";
+
+    // تنظيف رقم الهاتف (إزالة المسافات، التأكد من كود الدولة 20 لمصر)
+    string cleanPhone = new string(phone.Where(char.IsDigit).ToArray());
+    if (cleanPhone.StartsWith("0")) cleanPhone = "20" + cleanPhone.Substring(1);
+
+    // بناء نص الرسالة
+    var sb = new System.Text.StringBuilder();
+    sb.AppendLine($"أهلاً بك يا *{clientName}* 🌸");
+    sb.AppendLine("نورتينا في *أتيليه فريدة* ✨");
+    sb.AppendLine();
+    sb.AppendLine($"📝 *تفاصيل الحجز رقم:* #{Model.Appointment.Id}");
+    sb.AppendLine($"📅 *الموعد:* {Model.Appointment.AppointmentDate:yyyy-MM-dd} الساعة {Model.Appointment.AppointmentDate:hh:mm tt}");
+    sb.AppendLine("------------------");
+    sb.AppendLine("*الخدمات المختارة:* 💅");
+
+    foreach (var item in Model.Appointment.Items)
+    {
+        // عرض العدد في الرسالة إذا كان أكبر من 1
+        string qtyText = item.Quantity > 1 ? $" (عدد {item.Quantity})" : "";
+        sb.AppendLine($"- {item.SalonService?.Name}{qtyText} : {item.Price * item.Quantity:N0}");
+    }
+
+    sb.AppendLine("------------------");
+    sb.AppendLine($"💰 *الإجمالي:* {Model.Appointment.TotalAmount:N0} ج.م");
+    sb.AppendLine($"✅ *المدفوع:* {Model.Appointment.PaidAmount:N0} ج.م");
+
+    if (Model.Appointment.RemainingAmount > 0)
+    {
+        sb.AppendLine($"⭕ *المبلغ المتبقي:* {Model.Appointment.RemainingAmount:N0} ج.م");
+    }
+    else
+    {
+        sb.AppendLine("🎉 *الحساب خالص*");
+    }
+
+    if (!string.IsNullOrEmpty(Model.Appointment.Notes))
+    {
+        sb.AppendLine();
+        sb.AppendLine($"📌 *ملاحظات:* {Model.Appointment.Notes}");
+    }
+
+    sb.AppendLine();
+    sb.AppendLine("في انتظارك! 💖");
+
+    // تشفير الرسالة لتناسب الرابط
+    string msgContent = Uri.EscapeDataString(sb.ToString());
+    string waLink = string.IsNullOrEmpty(cleanPhone) ? "#" : $"https://wa.me/{cleanPhone}?text={msgContent}";
 }
 
 <!DOCTYPE html>
@@ -128,15 +181,13 @@
 <body>
 
     <div class="no-print container mb-4">
-        <div class="bg-white p-3 rounded shadow-sm d-flex justify-content-between align-items-center">
+        <div class="bg-white p-3 rounded shadow-sm d-flex justify-content-between align-items-center flex-wrap gap-2">
             <a asp-page="./Index" class="btn btn-outline-secondary btn-sm"><i class="fa fa-arrow-right"></i> عودة</a>
 
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap">
                 @if (Model.Appointment.Status != SalonAppointmentStatus.Cancelled)
                 {
                     @if (Model.Appointment.RemainingAmount > 0)
-               
-                    
                     {
                         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#payModal">
                             <i class="fa fa-money-bill"></i> دفع المتبقي
@@ -148,12 +199,20 @@
                     }
 
                     <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#cancelModal">
-                        <i class="fa fa-times"></i> إلغاء الموعد
+                        <i class="fa fa-times"></i> إلغاء
                     </button>
                 }
                 else
                 {
                     <span class="badge bg-danger p-2">تم إلغاء هذا الحجز</span>
+                }
+
+                @* ✅ 2. زر الواتساب الجديد ✅ *@
+                @if (!string.IsNullOrEmpty(phone))
+                {
+                    <a href="@waLink" target="_blank" class="btn btn-success btn-sm text-white">
+                        <i class="fa-brands fa-whatsapp"></i> إرسال واتساب
+                    </a>
                 }
 
                 <button onclick="window.print()" class="btn btn-dark btn-sm"><i class="fa fa-print"></i> طباعة</button>
@@ -195,9 +254,10 @@
         <table class="table-clean">
             <thead>
                 <tr>
-                    <th width="60%">الخدمة</th>
-                    <th width="20%">المدة</th>
-                    <th width="20%">السعر</th>
+                    <th width="50%">الخدمة</th>
+                    <th width="15%">السعر</th>
+                    <th width="15%">العدد</th>
+                    <th width="20%">الإجمالي</th>
                 </tr>
             </thead>
             <tbody>
@@ -211,8 +271,13 @@
                                 <br><small style="color:#888;">@item.SalonService?.Description</small>
                             }
                         </td>
-                        <td>@item.SalonService?.DurationMinutes دقيقة</td>
                         <td>@item.Price.ToString("N0")</td>
+
+                        @* عرض الكمية *@
+                        <td style="text-align: center;">x @item.Quantity</td>
+
+                        @* حساب إجمالي السطر *@
+                        <td>@((item.Price * item.Quantity).ToString("N0"))</td>
                     </tr>
                 }
             </tbody>
@@ -248,7 +313,6 @@
             }
         </div>
 
-        @* --- بداية كود الملاحظات --- *@
         @if (!string.IsNullOrEmpty(Model.Appointment.Notes))
         {
             <div style="margin: 20px 0; padding: 15px; background: #fffcf0; border: 1px dashed #d4af37; border-radius: 4px;">
@@ -256,8 +320,6 @@
                 <div style="color: #333; font-weight: 600;">@Model.Appointment.Notes</div>
             </div>
         }
-        @* --- نهاية كود الملاحظات --- *@
-
 
         <div style="margin-top:auto; padding-top:20px; border-top:1px solid #eee; font-size:12px; color:#777; text-align:center;">
             شكراً لزيارتكم صالون أتيليه.
