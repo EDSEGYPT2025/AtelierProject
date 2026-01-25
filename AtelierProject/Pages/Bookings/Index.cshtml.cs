@@ -20,7 +20,7 @@ namespace AtelierProject.Pages.Bookings
 
         public IList<Booking> Bookings { get; set; } = default!;
 
-        // فلاتر البحث
+        // --- خصائص الفلاتر (Binding) ---
         [BindProperty(SupportsGet = true)]
         public string SearchTerm { get; set; }
 
@@ -33,92 +33,131 @@ namespace AtelierProject.Pages.Bookings
         [BindProperty(SupportsGet = true)]
         public string TypeFilter { get; set; }
 
+        // =========================================================
+        // 1. دالة العرض (GET)
+        // =========================================================
         public async Task OnGetAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return;
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return;
 
-            // 1. الاستعلام الأساسي
-            var query = _context.Bookings
+            // 1. الاستعلام الأساسي (مع جلب البيانات المرتبطة)
+            IQueryable<Booking> query = _context.Bookings
                 .Include(b => b.Client)
                 .Include(b => b.BookingItems)
                     .ThenInclude(bi => bi.ProductItem)
-                        .ThenInclude(pi => pi.ProductDefinition)
-                .AsQueryable();
+                    .ThenInclude(pi => pi.ProductDefinition)
+                .OrderByDescending(b => b.Id); // الأحدث أولاً
 
-            // 2. فلتر الفرع (إجباري)
-            if (user.BranchId.HasValue)
+            // 2. 🛑 فلتر الأمان (الفرع):
+            // إذا كان المستخدم له فرع محدد، نعرض له حجوزات فرعه فقط.
+            // إذا كان (Admin) والفرع null، يتجاوز هذا الشرط ويرى الكل.
+            if (currentUser.BranchId != null)
             {
-                query = query.Where(b => b.BranchId == user.BranchId);
+                query = query.Where(b => b.BranchId == currentUser.BranchId);
             }
 
-            // 3. فلتر البحث
+            // 3. فلتر البحث (رقم الحجز، اسم العميل، الهاتف)
             if (!string.IsNullOrEmpty(SearchTerm))
             {
+                // إذا كان البحث برقم (نبحث عن رقم الحجز)
                 if (int.TryParse(SearchTerm, out int id))
                 {
                     query = query.Where(b => b.Id == id || b.Client.Phone.Contains(SearchTerm));
                 }
+                // وإلا نبحث بالاسم أو الهاتف
                 else
                 {
                     query = query.Where(b => b.Client.Name.Contains(SearchTerm) || b.Client.Phone.Contains(SearchTerm));
                 }
             }
 
-            // 4. فلتر الحالة
-            if (!string.IsNullOrEmpty(StatusFilter) && Enum.TryParse<BookingStatus>(StatusFilter, out var status))
-            {
-                query = query.Where(b => b.Status == status);
-            }
-
-            // 5. فلتر التاريخ
+            // 4. فلتر التاريخ والنوع
             if (DateFilter.HasValue)
             {
-                if (TypeFilter == "Pickup")
+                if (TypeFilter == "Pickup") // مواعيد التسليم
                 {
                     query = query.Where(b => b.PickupDate.Date == DateFilter.Value.Date);
                 }
-                else if (TypeFilter == "Return")
+                else if (TypeFilter == "Return") // مواعيد الإرجاع
                 {
                     query = query.Where(b => b.ReturnDate.Date == DateFilter.Value.Date);
                 }
-                else
+                else // تاريخ الإنشاء (الافتراضي)
                 {
                     query = query.Where(b => b.CreatedDate.Date == DateFilter.Value.Date);
                 }
             }
 
-            // ============================================================
-            // 6. ✅ فلتر الأقسام (حسب صلاحيات الموظف) ✅
-            // ============================================================
+            // 5. فلتر الحالة (اختياري لو أردت استخدامه مستقبلاً)
+            if (!string.IsNullOrEmpty(StatusFilter) && Enum.TryParse<BookingStatus>(StatusFilter, out var status))
+            {
+                query = query.Where(b => b.Status == status);
+            }
 
-            // الحالة أ: إذا كان المستخدم يملك الصلاحيتين (أو مدير عام)، لا نفلتر شيئاً (يرى الكل)
-            if (user.CanAccessMenSection && user.CanAccessWomenSection)
-            {
-                // لا تغيير - يرى جميع الحجوزات
-            }
-            // الحالة ب: مصرح له بالرجالي فقط
-            else if (user.CanAccessMenSection && !user.CanAccessWomenSection)
-            {
-                // نعرض الحجوزات التي تحتوي على قطعة واحدة على الأقل من قسم الرجال
-                query = query.Where(b => b.BookingItems.Any(bi => bi.ProductItem.ProductDefinition.Department == DepartmentType.Men));
-            }
-            // الحالة ج: مصرح له بالحريمي فقط
-            else if (!user.CanAccessMenSection && user.CanAccessWomenSection)
-            {
-                // نعرض الحجوزات التي تحتوي على قطعة واحدة على الأقل من قسم النساء
-                query = query.Where(b => b.BookingItems.Any(bi => bi.ProductItem.ProductDefinition.Department == DepartmentType.Women));
-            }
-            // الحالة د: ليس لديه أي صلاحية (حالة نادرة)
-            else
-            {
-                // نعرض قائمة فارغة
-                query = query.Where(b => false);
-            }
-            // ============================================================
+            // تنفيذ الاستعلام
+            Bookings = await query.ToListAsync();
+        }
 
-            // الترتيب: الأحدث أولاً
-            Bookings = await query.OrderByDescending(b => b.CreatedDate).ToListAsync();
+        // =========================================================
+        // 2. دالة إلغاء الحجز (POST)
+        // =========================================================
+        public async Task<IActionResult> OnPostCancelBookingAsync(int bookingId, decimal refundAmount)
+        {
+            // أ. جلب الحجز
+            var booking = await _context.Bookings
+                .Include(b => b.BookingItems)
+                .ThenInclude(bi => bi.ProductItem)
+                .ThenInclude(pi => pi.ProductDefinition)
+                .FirstOrDefaultAsync(b => b.Id == bookingId);
+
+            if (booking == null) return NotFound();
+
+            // ب. التحقق من الصلاحية (الأمان)
+            var currentUser = await _userManager.GetUserAsync(User);
+            // لو المستخدم له فرع، والحجز لفرع آخر -> ممنوع
+            if (currentUser.BranchId != null && booking.BranchId != currentUser.BranchId)
+            {
+                return Forbid();
+            }
+
+            // ج. تحديث الحالة
+            booking.Status = BookingStatus.Cancelled;
+            booking.Notes += $" | تم الإلغاء بواسطة {currentUser.FullName} بتاريخ {DateTime.Now:yyyy-MM-dd}";
+
+            // د. معالجة الخزينة (إذا كان هناك استرداد)
+            if (refundAmount > 0)
+            {
+                if (refundAmount > booking.PaidAmount) refundAmount = booking.PaidAmount;
+
+                // تحديد القسم (رجال/سيدات) بناءً على أول قطعة
+                var firstItemDef = booking.BookingItems.FirstOrDefault()?.ProductItem?.ProductDefinition;
+                DepartmentType targetDept = DepartmentType.Women; // الافتراضي
+
+                if (firstItemDef != null && firstItemDef.Department == DepartmentType.Men)
+                {
+                    targetDept = DepartmentType.Men;
+                }
+
+                var transaction = new SafeTransaction
+                {
+                    Amount = refundAmount,
+                    Type = TransactionType.Expense, // مصروف
+                    Department = targetDept,
+                    BranchId = booking.BranchId ?? currentUser.BranchId ?? 1,
+                    TransactionDate = DateTime.Now,
+                    Description = $"استرداد الغاء حجز رقم #{booking.Id}",
+                    ReferenceId = booking.Id.ToString(),
+                    CreatedByUserId = currentUser.Id
+                };
+
+                _context.SafeTransactions.Add(transaction);
+            }
+
+            // هـ. حفظ التغييرات
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage();
         }
     }
 }

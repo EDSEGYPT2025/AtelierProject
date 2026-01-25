@@ -1,8 +1,10 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
 @using AtelierProject.Models
+@using Microsoft.Extensions.Configuration
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
+@inject IConfiguration Configuration
 
 @{
     // 1. جلب بيانات المستخدم والفرع
@@ -38,13 +40,14 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
     <style>
+        /* --- 1. إعدادات الصفحة العامة --- */
         body {
             font-family: 'Cairo', sans-serif;
-            background-color: #f4f6f9;
+            background-color: #f1f5f9; /* رمادي فاتح مريح للعين */
             overflow-x: hidden;
         }
 
-        /* --- هيكل الصفحة والقائمة --- */
+        /* --- 2. السايد بار الفخم (Luxury Sidebar) --- */
         #wrapper {
             display: flex;
             width: 100%;
@@ -53,89 +56,151 @@
         }
 
         #sidebar-wrapper {
-            min-width: 260px;
-            max-width: 260px;
+            min-width: 270px;
+            max-width: 270px;
             min-height: 100vh;
-            background: #2c3e50;
+            /* تدرج لوني فخم (كحلي ليلي) */
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
             color: #fff;
             transition: all 0.3s;
             z-index: 1000;
             display: flex;
-            flex-direction: column; /* لضمان دفع زر الدعم للأسفل */
+            flex-direction: column;
+            box-shadow: 4px 0 25px rgba(0,0,0,0.15); /* ظل قوي للعمق */
         }
 
         #wrapper.toggled #sidebar-wrapper {
-            margin-right: -260px;
+            margin-right: -270px;
         }
 
         .sidebar-heading {
-            padding: 1.5rem;
-            font-weight: 700;
-            font-size: 1.3rem;
-            color: #ecf0f1;
-            background: rgba(0,0,0,0.1);
+            padding: 2rem 1.5rem;
+            background: rgba(255,255,255,0.02); /* إضاءة خفيفة */
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 1.4rem;
         }
 
-        .list-group-item {
-            background-color: transparent;
-            color: #b0c4de;
-            border: none;
-            padding: 12px 20px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.2s;
+        /* --- 3. حركة الشعار (Golden Pulse) --- */
+        .animated-brand {
             display: flex;
             align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            animation: pulse-glow 3s infinite ease-in-out;
         }
 
-            .list-group-item:hover, .list-group-item.active {
-                background-color: #34495e;
+            .animated-brand i {
+                color: #fbbf24; /* ذهبي */
+                margin-left: 10px;
+                transition: transform 0.5s;
+            }
+
+            .animated-brand:hover i {
+                transform: rotate(360deg);
+            }
+
+        @@keyframes pulse-glow {
+            0% {
+                transform: scale(1);
+                text-shadow: 0 0 0 rgba(251, 191, 36, 0);
+            }
+
+            50% {
+                transform: scale(1.05);
+                text-shadow: 0 0 15px rgba(251, 191, 36, 0.5);
                 color: #fff;
-                border-right: 4px solid #3498db;
-                padding-right: 16px;
+            }
+
+            100% {
+                transform: scale(1);
+                text-shadow: 0 0 0 rgba(251, 191, 36, 0);
+            }
+        }
+
+        /* --- 4. تصميم الروابط (Interactive Items) --- */
+        .list-group-item {
+            background-color: transparent;
+            color: #94a3b8; /* لون نص هادئ */
+            border: none;
+            padding: 14px 25px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            margin: 4px 12px; /* مسافة بين العناصر */
+            border-radius: 10px !important; /* حواف دائرية */
+        }
+
+            /* تأثير المرور (Hover) */
+            .list-group-item:hover, .list-group-item.active {
+                background-color: rgba(197, 160, 89, 0.15) !important; /* خلفية ذهبية شفافة */
+                color: #fbbf24 !important; /* نص ذهبي */
+                transform: translateX(-5px); /* حركة لليسار */
             }
 
             .list-group-item i {
                 width: 30px;
                 text-align: center;
                 font-size: 1.1rem;
+                color: #64748b;
+                transition: color 0.3s;
+            }
+
+            .list-group-item:hover i, .list-group-item.active i {
+                color: #fbbf24; /* الأيقونة تصبح ذهبية */
             }
 
         .submenu-link {
-            padding-right: 55px !important;
+            padding-right: 50px !important;
             font-size: 0.9rem;
-            background-color: rgba(0,0,0,0.15);
+            margin: 2px 12px; /* تصغير المسافة للقوائم الفرعية */
         }
 
         .arrow-icon {
             font-size: 0.8rem !important;
             width: auto !important;
             margin-right: auto;
+            opacity: 0.7;
         }
 
+        /* --- 5. الناف بار العائم (Floating Navbar) --- */
         #page-content-wrapper {
             width: 100%;
-            padding: 20px;
+            padding: 0;
         }
 
-        /* --- تنسيق شريط المستخدم والفرع --- */
+        .navbar {
+            margin: 20px; /* مسافة من جميع الجهات ليكون عائماً */
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+            background-color: rgba(255, 255, 255, 0.95); /* شفافية بسيطة */
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0,0,0,0.02);
+            padding: 0.8rem 1rem;
+        }
+
+        .container-fluid-content {
+            padding: 0 25px 25px 25px; /* المحتوى الداخلي */
+        }
+
+        /* --- 6. تنسيق كبسولة المستخدم --- */
         .user-info-pill {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
+            background-color: transparent;
+            border: 1px solid #f1f5f9;
             border-radius: 50px;
-            padding: 5px 15px;
+            padding: 6px 16px;
             display: flex;
             align-items: center;
             gap: 12px;
             transition: all 0.3s ease;
             cursor: pointer;
-            max-width: 100%;
         }
 
             .user-info-pill:hover {
                 background-color: #fff;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-                border-color: #dee2e6;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+                border-color: #c5a059; /* حدود ذهبية عند اللمس */
             }
 
         .branch-badge {
@@ -143,7 +208,7 @@
             color: #0d6efd;
             padding: 5px 12px;
             border-radius: 12px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -151,60 +216,41 @@
             line-height: 1.2;
         }
 
-        .user-name-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
         .user-avatar {
-            width: 32px;
-            height: 32px;
-            background-color: #0d6efd;
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #0d6efd, #0a58ca);
             color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
-            flex-shrink: 0;
+            font-size: 1rem;
+            box-shadow: 0 2px 5px rgba(13, 110, 253, 0.3);
         }
 
         .user-name-text {
             font-weight: 700;
-            color: #495057;
-            font-size: 0.95rem;
-            white-space: nowrap;
+            color: #334155;
+            font-size: 0.9rem;
         }
 
         @@media (max-width: 768px) {
             #sidebar-wrapper {
-                margin-right: -260px;
+                margin-right: -270px;
             }
 
             #wrapper.toggled #sidebar-wrapper {
                 margin-right: 0;
             }
 
-            .user-info-pill {
-                padding: 4px 10px;
-                gap: 8px;
+            .navbar {
+                margin: 10px;
+                border-radius: 10px;
             }
 
-            .branch-badge {
-                padding: 4px 8px;
-                font-size: 0.75rem;
-            }
-
-            .user-name-text {
-                font-size: 0.85rem;
-            }
-
-            .branch-details div {
-                max-width: 100px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
+            .container-fluid-content {
+                padding: 0 15px 15px 15px;
             }
         }
     </style>
@@ -215,8 +261,9 @@
         @if (SignInManager.IsSignedIn(User) && currentUser != null)
         {
             <div id="sidebar-wrapper">
-                <div class="sidebar-heading text-center">
-                    <i class="fa-solid fa-gem me-2 text-warning"></i> أتيليه برو
+
+                <div class="sidebar-heading text-center animated-brand">
+                    <i class="fa-solid fa-gem fa-lg"></i> أتيليه برو
                 </div>
 
                 <div class="list-group list-group-flush my-3 flex-grow-1">
@@ -277,24 +324,22 @@
                     </a>
                     <div class="collapse" id="menuReports">
 
-                        @if (currentUser.BranchId == null) // يظهر فقط للمدير العام (الذي ليس له فرع محدد)
+                        @if (currentUser.BranchId == null)
                         {
                             <a asp-page="/Reports/Safe" class="list-group-item list-group-item-action submenu-link text-info fw-bold">
                                 <i class="fa-solid fa-vault me-1"></i> حركة الخزينة
                             </a>
                         }
 
-                        @* ✅ الرابط الجديد: جرد المنتجات *@
                         <a asp-page="/Reports/Inventory" class="list-group-item list-group-item-action submenu-link">
                             <i class="fa-solid fa-list-check me-1"></i> جرد المنتجات
                         </a>
                     </div>
 
-                    @* --- الإدارة (للمدير العام أو من يملك جميع الصلاحيات) --- *@
-                    @* ✅ التعديل هنا: إضافة شرط (currentUser.CanAccess... && ...) *@
-                    @if (currentUser.BranchId == null || (currentUser.CanAccessMenSection && currentUser.CanAccessWomenSection && currentUser.CanAccessBeautySection))
+                    @* --- الإدارة --- *@
+                    @if (currentUser.BranchId == null)
                     {
-                        <div class="border-top border-secondary mx-3 my-2"></div>
+                        <div class="border-top border-secondary mx-3 my-2" style="opacity:0.2"></div>
                         <a asp-page="/Branches/Index" class="list-group-item list-group-item-action">
                             <i class="fa-solid fa-building"></i> الفروع
                         </a>
@@ -304,17 +349,22 @@
                     }
                 </div>
 
-                <div class="mt-auto border-top border-secondary pt-3 px-3 pb-3">
-                    <a href="#" data-bs-toggle="modal" data-bs-target="#supportModal" class="btn btn-outline-warning w-100 fw-bold d-flex align-items-center justify-content-center gap-2">
+                <div class="mt-auto border-top border-secondary pt-3 px-3 pb-3" style="border-color: rgba(255,255,255,0.05) !important;">
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#supportModal" class="btn btn-outline-warning w-100 fw-bold d-flex align-items-center justify-content-center gap-2" style="border-radius:10px;">
                         <i class="fa-solid fa-headset fa-lg"></i>
                         <span>الدعم الفني</span>
                     </a>
+
+                    @* --- رقم الإصدار --- *@
+                    <div class="text-center mt-3 text-white-50" style="font-size: 0.75rem;">
+                        <small>إصدار النظام: <span class="text-warning font-monospace">@Configuration["AppVersion"]</span></small>
+                    </div>
                 </div>
             </div>
         }
 
         <div id="page-content-wrapper">
-            <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
+            <nav class="navbar navbar-expand-lg navbar-light">
                 <div class="container-fluid">
                     @if (SignInManager.IsSignedIn(User))
                     {
@@ -348,7 +398,7 @@
                                                     }
                                                 </div>
                                             </div>
-                                            <div style="width: 1px; height: 24px; background-color: #dee2e6;"></div>
+                                            <div style="width: 1px; height: 24px; background-color: #e2e8f0;"></div>
                                             <div class="user-name-container">
                                                 <span class="user-name-text">@currentUser.FullName</span>
                                                 <div class="user-avatar">
@@ -357,12 +407,12 @@
                                             </div>
                                         </div>
                                     </a>
-                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow mt-2" aria-labelledby="navbarDropdown">
-                                        <li><h6 class="dropdown-header text-center">@currentUser.Email</h6></li>
-                                        <li><hr class="dropdown-divider"></li>
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg mt-2 p-2" style="border-radius:12px;" aria-labelledby="navbarDropdown">
+                                        @*<li><h6 class="dropdown-header text-center fw-bold">@currentUser.Email</h6></li>*@
+                                        @*<li><hr class="dropdown-divider"></li>*@
 
                                         <li>
-                                            <a asp-page="/Account/ChangePassword" class="dropdown-item text-dark">
+                                            <a asp-page="/Account/ChangePassword" class="dropdown-item text-dark rounded">
                                                 <i class="fa-solid fa-key me-2 text-warning"></i> تغيير كلمة المرور
                                             </a>
                                         </li>
@@ -370,7 +420,7 @@
 
                                         <li>
                                             <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
-                                                <button type="submit" class="dropdown-item text-danger fw-bold">
+                                                <button type="submit" class="dropdown-item text-danger fw-bold rounded">
                                                     <i class="fa-solid fa-right-from-bracket me-2"></i> تسجيل خروج
                                                 </button>
                                             </form>
@@ -391,91 +441,255 @@
                 </div>
             </nav>
 
-            <div class="container-fluid">
+            <div class="container-fluid-content">
                 @RenderBody()
             </div>
         </div>
     </div>
 
+    <style>
+        /* 1. تصميم الزجاج */
+        .glass-modal-content {
+            background: rgba(255, 255, 255, 0.85); /* شفافية */
+            backdrop-filter: blur(20px); /* تأثير الضباب */
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        /* 2. الهيدر المدمج */
+        .glass-header {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+            color: #c5a059; /* ذهبي */
+            padding: 25px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+        }
+
+        /* 3. حركة الأيقونة الرئيسية */
+        .support-icon-main {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            display: inline-block;
+            animation: float-icon 3s ease-in-out infinite;
+            text-shadow: 0 5px 15px rgba(197, 160, 89, 0.4);
+        }
+
+        @@keyframes float-icon {
+            0%, 100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* 4. كروت الاتصال */
+        .contact-card {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            opacity: 0; /* مخفي في البداية للحركة */
+            animation: slideUp 0.5s forwards;
+        }
+
+            /* تأخير ظهور العناصر لجعلها متتالية */
+            .contact-card:nth-child(1) {
+                animation-delay: 0.1s;
+            }
+
+            .contact-card:nth-child(2) {
+                animation-delay: 0.2s;
+            }
+
+            .contact-card:nth-child(3) {
+                animation-delay: 0.3s;
+            }
+
+        .programs-row {
+            opacity: 0;
+            animation: slideUp 0.5s forwards 0.4s;
+        }
+
+        /* تأثير عند المرور على الكارت */
+        .contact-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            background: #fff;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+            border-color: #c5a059;
+        }
+
+        /* أيقونات الكروت */
+        .card-icon-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-left: 15px; /* RTL */
+        }
+
+        .icon-phone {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+
+        .icon-mobile {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+        }
+
+        .icon-mail {
+            background: linear-gradient(135deg, #fa709a, #fee140);
+        }
+
+        /* الأزرار الصغيرة داخل الكارت */
+        .action-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            transition: 0.2s;
+            color: white;
+            text-decoration: none;
+        }
+
+            .action-btn:hover {
+                transform: scale(1.1) rotate(15deg);
+            }
+
+        /* حركة الظهور للأعلى */
+        @@keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* زر الإغلاق */
+        .btn-close-custom {
+            position: absolute;
+            top: 15px;
+            right: 15px; /* RTL: قد تحتاج لتغييرها لـ left حسب اتجاه الصفحة */
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            color: white;
+            transition: 0.3s;
+        }
+
+            .btn-close-custom:hover {
+                background: rgba(255,255,255,0.3);
+                transform: rotate(90deg);
+            }
+    </style>
+
     <div class="modal fade" id="supportModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg" style="border-top: 5px solid #c5a059 !important;">
+            <div class="modal-content glass-modal-content">
 
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title fw-bold">
-                        <i class="fa-solid fa-life-ring text-warning me-2"></i> مركز المساعدة والدعم
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body p-4 text-center">
-                    <p class="text-muted mb-4">نحن هنا لمساعدتك على مدار الساعة لضمان سير عملك بكل كفاءة.</p>
-
-                    <div class="d-grid gap-3">
-
-                        <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between bg-light">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                    <i class="fa-solid fa-phone"></i>
-                                </div>
-                                <div class="text-end">
-                                    <small class="text-muted d-block">الدعم الفني (1)</small>
-                                    <span class="fw-bold" dir="ltr">01010475455</span>
-                                </div>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <a href="tel:01010475455" class="btn btn-sm btn-outline-primary"><i class="fa fa-phone"></i></a>
-                                <a href="https://wa.me/201010475455" target="_blank" class="btn btn-sm btn-success"><i class="fa-brands fa-whatsapp"></i></a>
-                            </div>
-                        </div>
-
-                        <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between bg-light">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                    <i class="fa-solid fa-mobile-screen"></i>
-                                </div>
-                                <div class="text-end">
-                                    <small class="text-muted d-block">الدعم الفني (2)</small>
-                                    <span class="fw-bold" dir="ltr">01111292878</span>
-                                </div>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <a href="tel:01111292878" class="btn btn-sm btn-outline-primary"><i class="fa fa-phone"></i></a>
-                                <a href="https://wa.me/201111292878" target="_blank" class="btn btn-sm btn-success"><i class="fa-brands fa-whatsapp"></i></a>
-                            </div>
-                        </div>
-
-                        <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between bg-light">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                    <i class="fa-solid fa-envelope"></i>
-                                </div>
-                                <div class="text-end">
-                                    <small class="text-muted d-block">البريد الإلكتروني</small>
-                                    <span class="fw-bold" style="font-size: 0.9rem;">edsegypt@outlook.com</span>
-                                </div>
-                            </div>
-                            <a href="mailto:edsegypt@outlook.com" class="btn btn-sm btn-outline-danger"><i class="fa fa-paper-plane"></i></a>
-                        </div>
-
-                        <div class="mt-2 pt-3 border-top">
-                            <small class="text-muted mb-2 d-block">تحميل برامج المساعدة عن بعد:</small>
-                            <div class="d-flex justify-content-center gap-2">
-                                <a href="https://anydesk.com/en/downloads" target="_blank" class="btn btn-sm btn-light border shadow-sm text-dark text-decoration-none">
-                                    <img src="/img/anydesk-logo.png" width="16" alt="AnyDesk"> AnyDesk
-                                </a>
-                                <a href="https://www.teamviewer.com/en/download/" target="_blank" class="btn btn-sm btn-light border shadow-sm text-dark text-decoration-none">
-                                    <img src="/img/logo-teamviewer-icon-1024.png" width="16" alt="TeamViewer"> TeamViewer
-                                </a>
-                            </div>
-                        </div>
-
+                <div class="glass-header">
+                    <button type="button" class="btn-close-custom" data-bs-dismiss="modal"><i class="fa-solid fa-xmark"></i></button>
+                    <div class="support-icon-main">
+                        <i class="fa-solid fa-headset"></i>
                     </div>
+                    <h4 class="fw-bold mb-1">مركز الدعم الفني</h4>
+                    <small style="opacity: 0.7;">نحن هنا لمساعدتك على مدار الساعة</small>
                 </div>
 
-                <div class="modal-footer justify-content-center border-0 bg-light">
-                    <small class="text-muted">
-                        <i class="fa-solid fa-clock me-1"></i> مواعيد العمل: يومياً من 10 ص إلى 10 م
+                <div class="modal-body p-4">
+
+                    <div class="contact-card">
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon-box icon-phone">
+                                <i class="fa-solid fa-phone"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">خط الدعم الأول</small>
+                                <span class="fw-bold fs-5 text-dark" dir="ltr">01010475455</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="tel:01010475455" class="action-btn bg-primary"><i class="fa-solid fa-phone-flip"></i></a>
+                            <a href="https://wa.me/201010475455" target="_blank" class="action-btn bg-success"><i class="fa-brands fa-whatsapp"></i></a>
+                        </div>
+                    </div>
+
+                    <div class="contact-card">
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon-box icon-mobile">
+                                <i class="fa-solid fa-mobile-screen-button"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">خط الدعم الثاني</small>
+                                <span class="fw-bold fs-5 text-dark" dir="ltr">01111292878</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="tel:01111292878" class="action-btn bg-primary"><i class="fa-solid fa-phone-flip"></i></a>
+                            <a href="https://wa.me/201111292878" target="_blank" class="action-btn bg-success"><i class="fa-brands fa-whatsapp"></i></a>
+                        </div>
+                    </div>
+
+                    <div class="contact-card">
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon-box icon-mail">
+                                <i class="fa-solid fa-envelope"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">البريد الإلكتروني</small>
+                                <span class="fw-bold fs-6 text-dark">edsegypt@outlook.com</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="mailto:edsegypt@outlook.com" class="action-btn bg-danger"><i class="fa-solid fa-paper-plane"></i></a>
+                        </div>
+                    </div>
+
+                    <div class="programs-row text-center mt-4 pt-3 border-top">
+                        <small class="text-muted fw-bold mb-3 d-block">تحميل برامج المساعدة عن بعد</small>
+                        <div class="d-flex justify-content-center gap-3">
+                            <a href="https://anydesk.com/en/downloads" target="_blank" class="btn btn-light shadow-sm border rounded-pill px-4 py-2 d-flex align-items-center gap-2">
+                                <img src="/img/anydesk-logo.png" width="20" alt="AnyDesk">
+                                <span class="fw-bold text-dark">AnyDesk</span>
+                            </a>
+                            <a href="https://www.teamviewer.com/en/download/" target="_blank" class="btn btn-light shadow-sm border rounded-pill px-4 py-2 d-flex align-items-center gap-2">
+                                <img src="/img/logo-teamviewer-icon-1024.png" width="20" alt="TeamViewer">
+                                <span class="fw-bold text-dark">TeamViewer</span>
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer justify-content-center border-0 bg-transparent pb-3">
+                    <small class="text-muted fw-bold" style="font-size: 0.8rem;">
+                        <i class="fa-regular fa-clock text-warning me-1"></i> متاحون يومياً من 10 ص : 10 م
                     </small>
                 </div>
             </div>

@@ -1,49 +1,177 @@
 ﻿@page "{id:int}"
 @model AtelierProject.Pages.Clients.DetailsModel
 @{
-    ViewData["Title"] = "ملف العميل وسجل التعاملات";
+    ViewData["Title"] = "ملف العميل";
 }
+
+<style>
+    /* --- التنسيقات الملكية --- */
+
+    /* بطاقة العميل الرئيسية */
+    .profile-card {
+        border: none;
+        border-radius: 20px;
+        background: #fff;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+
+    .profile-header-bg {
+        height: 120px;
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    }
+
+    .profile-avatar-large {
+        width: 100px;
+        height: 100px;
+        background: #fff;
+        border: 4px solid #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #c5a059;
+        margin-top: -50px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    /* بطاقات الماليات */
+    .stat-card {
+        border: none;
+        border-radius: 15px;
+        padding: 20px;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .bg-debt {
+        background: linear-gradient(135deg, #ef4444, #b91c1c);
+    }
+
+    .bg-paid {
+        background: linear-gradient(135deg, #10b981, #047857);
+    }
+
+    .bg-clean {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
+
+    .stat-icon {
+        position: absolute;
+        right: -10px;
+        bottom: -10px;
+        font-size: 5rem;
+        opacity: 0.2;
+        transform: rotate(-15deg);
+    }
+
+    /* التبويبات */
+    .nav-tabs .nav-link {
+        border: none;
+        color: #64748b;
+        font-weight: 600;
+        padding: 15px 25px;
+        border-radius: 10px 10px 0 0;
+    }
+
+        .nav-tabs .nav-link.active {
+            color: #c5a059;
+            background: #fff;
+            border-bottom: 3px solid #c5a059;
+        }
+
+    /* الجداول */
+    .table th {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #94a3b8;
+        border-bottom-width: 1px;
+    }
+
+    /* شارة الحالة */
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .badge-banned {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    .badge-active {
+        background: #dcfce7;
+        color: #16a34a;
+        border: 1px solid #bbf7d0;
+    }
+</style>
 
 <div class="container-fluid py-4">
 
-    <div class="row mb-4">
+    <div class="row g-4 mb-4">
+
         <div class="col-lg-8">
-            <div class="card shadow-sm h-100 border-top border-4 border-primary">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h2 class="fw-bold mb-0">@Model.Client.Name</h2>
-                            <p class="text-muted mb-2"><i class="fa-solid fa-phone me-1"></i> @Model.Client.Phone</p>
-                            @if (Model.Client.IsBlacklisted)
-                            {
-                                <span class="badge bg-danger"><i class="fa-solid fa-ban"></i> محظور من التعامل (Blacklisted)</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-success">عميل نشط</span>
-                            }
+            <div class="profile-card h-100">
+                <div class="profile-header-bg"></div>
+                <div class="px-4 pb-4">
+                    <div class="d-flex justify-content-between align-items-end mb-3">
+                        <div class="profile-avatar-large">
+                            @Model.Client.Name.Substring(0, 1)
                         </div>
-                        <div class="text-end">
-                            <a asp-page="./Edit" asp-route-id="@Model.Client.Id" class="btn btn-outline-warning btn-sm">
-                                <i class="fa-solid fa-pen"></i> تعديل البيانات
+                        <div>
+                            <a asp-page="./Edit" asp-route-id="@Model.Client.Id" class="btn btn-outline-warning fw-bold rounded-pill px-4">
+                                <i class="fa-solid fa-pen me-2"></i> تعديل
                             </a>
                         </div>
                     </div>
 
-                    <hr class="my-3">
+                    <div class="row">
+                        <div class="col-md-7">
+                            <h2 class="fw-bold text-dark mb-1">@Model.Client.Name</h2>
+                            <p class="text-muted d-flex align-items-center gap-3 mb-3">
+                                <span><i class="fa-solid fa-phone me-1 text-primary"></i> @Model.Client.Phone</span>
+                                @if (!string.IsNullOrEmpty(Model.Client.NationalId))
+                                {
+                                    <span><i class="fa-regular fa-id-card me-1 text-primary"></i> @Model.Client.NationalId</span>
+                                }
+                            </p>
 
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <small class="text-muted d-block">الرقم القومي</small>
-                            <span class="fw-bold">@(!string.IsNullOrEmpty(Model.Client.NationalId) ? Model.Client.NationalId : "-")</span>
+                            @if (Model.Client.IsBlacklisted)
+                            {
+                                <div class="status-badge badge-banned d-inline-block mb-3">
+                                    <i class="fa-solid fa-ban me-1"></i> محظور من التعامل (Blacklisted)
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="status-badge badge-active d-inline-block mb-3">
+                                    <i class="fa-solid fa-check-circle me-1"></i> حساب نشط
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.Client.Address))
+                            {
+                                <p class="text-secondary small mb-2"><i class="fa-solid fa-location-dot me-2 text-danger"></i> @Model.Client.Address</p>
+                            }
                         </div>
-                        <div class="col-md-8">
-                            <small class="text-muted d-block">العنوان</small>
-                            <span class="fw-bold">@(!string.IsNullOrEmpty(Model.Client.Address) ? Model.Client.Address : "-")</span>
-                        </div>
-                        <div class="col-12">
-                            <small class="text-muted d-block">ملاحظات</small>
-                            <p class="mb-0 bg-light p-2 rounded small">@(!string.IsNullOrEmpty(Model.Client.Notes) ? Model.Client.Notes : "لا توجد ملاحظات")</p>
+
+                        <div class="col-md-5 border-start">
+                            <h6 class="fw-bold text-muted mb-2">ملاحظات</h6>
+                            <div class="bg-light p-3 rounded small text-secondary" style="min-height: 80px;">
+                                @(!string.IsNullOrEmpty(Model.Client.Notes) ? Model.Client.Notes : "لا توجد ملاحظات مسجلة.")
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -51,43 +179,49 @@
         </div>
 
         <div class="col-lg-4">
-            <div class="card shadow-sm h-100 bg-dark text-white">
-                <div class="card-body">
-                    <h5 class="card-title text-white-50 mb-4"><i class="fa-solid fa-wallet me-2"></i> الملخص المالي</h5>
+            <div class="d-flex flex-column gap-3 h-100">
 
-                    <div class="mb-3">
-                        <small class="d-block text-white-50">إجمالي المديونية (متبقي عليه)</small>
-                        @if (Model.TotalDebt > 0)
-                        {
-                            <h2 class="text-danger fw-bold">@Model.TotalDebt.ToString("N0") ج.م</h2>
-                        }
-                        else
-                        {
-                            <h2 class="text-success fw-bold">0 ج.م</h2>
-                            <span class="badge bg-success">خالص</span>
-                        }
+                @if (Model.TotalDebt > 0)
+                {
+                    <div class="stat-card bg-debt flex-grow-1">
+                        <i class="fa-solid fa-hand-holding-dollar stat-icon"></i>
+                        <h6 class="text-white-50 mb-1">إجمالي المديونية (عليه)</h6>
+                        <h2 class="fw-bold mb-0">@Model.TotalDebt.ToString("N0") ج.م</h2>
+                        <small class="text-white-50">مبلغ مستحق الدفع</small>
                     </div>
+                }
+                else
+                {
+                    <div class="stat-card bg-clean flex-grow-1">
+                        <i class="fa-solid fa-thumbs-up stat-icon"></i>
+                        <h6 class="text-white-50 mb-1">الحالة المالية</h6>
+                        <h2 class="fw-bold mb-0">خالص تماماً</h2>
+                        <small class="text-white-50">لا توجد مديونيات</small>
+                    </div>
+                }
 
-                    <div class="border-top border-secondary pt-3">
-                        <small class="d-block text-white-50">إجمالي مدفوعات العميل (تاريخياً)</small>
-                        <h4 class="text-info">@Model.TotalPaid.ToString("N0") ج.م</h4>
-                    </div>
+                <div class="stat-card bg-paid flex-grow-1">
+                    <i class="fa-solid fa-coins stat-icon"></i>
+                    <h6 class="text-white-50 mb-1">إجمالي المدفوعات</h6>
+                    <h2 class="fw-bold mb-0">@Model.TotalPaid.ToString("N0") ج.م</h2>
+                    <small class="text-white-50">تاريخياً</small>
                 </div>
+
             </div>
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-white p-0">
-            <ul class="nav nav-tabs card-header-tabs m-0" id="clientTabs" role="tablist">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom-0 p-0 px-4 pt-3">
+            <ul class="nav nav-tabs" id="clientTabs" role="tablist">
                 <li class="nav-item">
-                    <button class="nav-link active fw-bold py-3 px-4" id="atelier-tab" data-bs-toggle="tab" data-bs-target="#atelier" type="button">
-                        <i class="fa-solid fa-shirt me-2"></i> حجوزات الأتيليه (@Model.ClientBookings.Count)
+                    <button class="nav-link active" id="atelier-tab" data-bs-toggle="tab" data-bs-target="#atelier" type="button">
+                        <i class="fa-solid fa-shirt me-2"></i> الأتيليه <span class="badge bg-light text-dark ms-2 rounded-pill">@Model.ClientBookings.Count</span>
                     </button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link fw-bold py-3 px-4" id="salon-tab" data-bs-toggle="tab" data-bs-target="#salon" type="button">
-                        <i class="fa-solid fa-spa me-2"></i> سجل الكوافير (@Model.ClientAppointments.Count)
+                    <button class="nav-link" id="salon-tab" data-bs-toggle="tab" data-bs-target="#salon" type="button">
+                        <i class="fa-solid fa-spa me-2"></i> الصالون <span class="badge bg-light text-dark ms-2 rounded-pill">@Model.ClientAppointments.Count</span>
                     </button>
                 </li>
             </ul>
@@ -103,34 +237,43 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="bg-light">
                                     <tr>
-                                        <th>رقم الحجز</th>
+                                        <th class="ps-4">رقم الحجز</th>
                                         <th>تاريخ الاستلام</th>
                                         <th>الأصناف</th>
                                         <th>الحالة</th>
                                         <th>الإجمالي</th>
                                         <th>المتبقي</th>
-                                        <th>إجراء</th>
+                                        <th class="text-center">إجراء</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var item in Model.ClientBookings)
                                     {
                                         <tr>
-                                            <td>#@item.Id</td>
+                                            <td class="ps-4 fw-bold text-muted">#@item.Id</td>
                                             <td>@item.PickupDate.ToString("yyyy-MM-dd")</td>
                                             <td>
                                                 @foreach (var prod in item.BookingItems)
                                                 {
-                                                    <span class="d-block small">• @prod.ProductItem?.ProductDefinition?.Name</span>
+                                                    <span class="badge bg-light text-dark border me-1">@prod.ProductItem?.ProductDefinition?.Name</span>
                                                 }
                                             </td>
-                                            <td>@item.Status</td>
-                                            <td>@item.TotalAmount.ToString("N0")</td>
-                                            <td class="@(item.RemainingRentalAmount > 0 ? "text-danger fw-bold" : "text-success")">
-                                                @item.RemainingRentalAmount.ToString("N0")
-                                            </td>
+                                            <td><span class="badge bg-secondary">@item.Status</span></td>
+                                            <td class="fw-bold">@item.TotalAmount.ToString("N0")</td>
                                             <td>
-                                                <a asp-page="/Reservations/Details" asp-route-id="@item.Id" class="btn btn-sm btn-primary">تفاصيل</a>
+                                                @if (item.RemainingRentalAmount > 0)
+                                                {
+                                                    <span class="text-danger fw-bold">@item.RemainingRentalAmount.ToString("N0")</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-success"><i class="fa-solid fa-check"></i></span>
+                                                }
+                                            </td>
+                                            <td class="text-center">
+                                                <a asp-page="/Bookings/Details" asp-route-id="@item.Id" class="btn btn-sm btn-light text-primary border shadow-sm rounded-circle">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </a>
                                             </td>
                                         </tr>
                                     }
@@ -140,7 +283,10 @@
                     }
                     else
                     {
-                        <div class="text-center py-5 text-muted">لا توجد حجوزات ملابس سابقة.</div>
+                        <div class="text-center py-5">
+                            <i class="fa-solid fa-box-open fa-3x text-light mb-3"></i>
+                            <p class="text-muted">لا توجد حجوزات ملابس سابقة.</p>
+                        </div>
                     }
                 </div>
 
@@ -151,32 +297,44 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="bg-light">
                                     <tr>
-                                        <th>الموعد</th>
+                                        <th class="ps-4">الموعد</th>
                                         <th>الخدمات</th>
                                         <th>الحالة</th>
                                         <th>الإجمالي</th>
                                         <th>المتبقي</th>
-                                        <th>إجراء</th>
+                                        <th class="text-center">إجراء</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var item in Model.ClientAppointments)
                                     {
                                         <tr>
-                                            <td>@item.AppointmentDate.ToString("yyyy-MM-dd hh:mm tt")</td>
+                                            <td class="ps-4">
+                                                <div class="fw-bold">@item.AppointmentDate.ToString("yyyy-MM-dd")</div>
+                                                <small class="text-muted">@item.AppointmentDate.ToString("hh:mm tt")</small>
+                                            </td>
                                             <td>
                                                 @foreach (var srv in item.Items)
                                                 {
-                                                    <span class="badge bg-secondary me-1">@srv.SalonService?.Name</span>
+                                                    <span class="badge bg-light text-dark border me-1">@srv.SalonService?.Name</span>
                                                 }
                                             </td>
-                                            <td>@item.Status</td>
-                                            <td>@item.TotalAmount.ToString("N0")</td>
-                                            <td class="@(item.RemainingAmount > 0 ? "text-danger fw-bold" : "text-success")">
-                                                @item.RemainingAmount.ToString("N0")
-                                            </td>
+                                            <td><span class="badge bg-info text-dark">@item.Status</span></td>
+                                            <td class="fw-bold">@item.TotalAmount.ToString("N0")</td>
                                             <td>
-                                                <a asp-page="/Salon/Appointments/Details" asp-route-id="@item.Id" class="btn btn-sm btn-primary">تفاصيل</a>
+                                                @if (item.RemainingAmount > 0)
+                                                {
+                                                    <span class="text-danger fw-bold">@item.RemainingAmount.ToString("N0")</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-success"><i class="fa-solid fa-check"></i></span>
+                                                }
+                                            </td>
+                                            <td class="text-center">
+                                                <a asp-page="/Salon/Appointments/Details" asp-route-id="@item.Id" class="btn btn-sm btn-light text-primary border shadow-sm rounded-circle">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </a>
                                             </td>
                                         </tr>
                                     }
@@ -186,7 +344,10 @@
                     }
                     else
                     {
-                        <div class="text-center py-5 text-muted">لا توجد زيارات سابقة للصالون.</div>
+                        <div class="text-center py-5">
+                            <i class="fa-solid fa-scissors fa-3x text-light mb-3"></i>
+                            <p class="text-muted">لا توجد زيارات سابقة للصالون.</p>
+                        </div>
                     }
                 </div>
 
@@ -194,7 +355,10 @@
         </div>
     </div>
 
-    <div class="mt-3">
-        <a asp-page="./Index" class="btn btn-secondary">عودة للقائمة</a>
+    <div class="mt-4">
+        <a asp-page="./Index" class="btn btn-link text-muted text-decoration-none">
+            <i class="fa-solid fa-arrow-right me-2"></i> عودة لقائمة العملاء
+        </a>
     </div>
+
 </div>

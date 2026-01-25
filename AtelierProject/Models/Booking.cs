@@ -30,6 +30,12 @@ namespace AtelierProject.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalAmount { get; set; }
 
+        // ✅ 1. إضافة عمود الخصم
+        [Display(Name = "قيمة الخصم")]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Discount { get; set; } = 0;
+
+
         [Display(Name = "العربون المدفوع")]
         [Column(TypeName = "decimal(18,2)")]
         public decimal PaidAmount { get; set; }
@@ -59,21 +65,30 @@ namespace AtelierProject.Models
         // --- خصائص محسوبة (للعرض فقط) ---
 
         // المبلغ المتبقي من الإيجار (بدون التأمين)
+        // ✅ 2. تعديل معادلة المتبقي لتشمل الخصم
         [NotMapped]
         public decimal RemainingRentalAmount
         {
             get
             {
-                // إذا كانت الحالة ملغية، المتبقي يساوي صفر
                 if (Status == BookingStatus.Cancelled)
                 {
                     return 0;
                 }
 
-                // الوضع الطبيعي: الإجمالي - المدفوع
-                return TotalAmount - PaidAmount;
+                // المعادلة: (الإجمالي - الخصم) - المدفوع
+                var netTotal = TotalAmount - Discount;
+
+                // منع ظهور المتبقي بالسالب (في حالة كان الخصم + المدفوع أكبر من الإجمالي)
+                var remaining = netTotal - PaidAmount;
+                return remaining < 0 ? 0 : remaining;
             }
         }
+
+        // خاصية إضافية مفيدة للعرض: صافي المبلغ بعد الخصم
+        [NotMapped]
+        public decimal NetAmount => TotalAmount - Discount;
+
 
         // صافي المبلغ المسترد للعميل عند الإرجاع
         // (التأمين المدفوع - الخصم)

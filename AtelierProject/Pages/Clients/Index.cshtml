@@ -4,138 +4,358 @@
     ViewData["Title"] = "قاعدة العملاء";
 }
 
+<style>
+    /* --- تنسيقات الثيم الملكي --- */
+
+    .page-title {
+        font-family: 'Playfair Display', serif;
+        color: #1e293b;
+        font-weight: 700;
+    }
+
+    /* كارت البحث */
+    .filter-card {
+        border: none;
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease;
+    }
+
+        .filter-card:hover {
+            transform: translateY(-3px);
+        }
+
+    .form-control {
+        border-radius: 10px;
+        padding: 12px 15px;
+        border: 1px solid #e2e8f0;
+    }
+
+        .form-control:focus {
+            border-color: #c5a059;
+            box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.1);
+        }
+
+    /* الأزرار */
+    .btn-royal {
+        background: linear-gradient(135deg, #c5a059, #b08d4b);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 25px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(197, 160, 89, 0.3);
+        transition: 0.3s;
+    }
+
+        .btn-royal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(197, 160, 89, 0.4);
+            color: #fff;
+        }
+
+    .btn-search-dark {
+        background: #1e293b;
+        color: #fff;
+        border-radius: 10px;
+        transition: 0.3s;
+    }
+
+        .btn-search-dark:hover {
+            background: #0f172a;
+            color: #fff;
+        }
+
+    /* الجدول */
+    .luxury-table {
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+
+        .luxury-table thead th {
+            border: none;
+            color: #64748b;
+            font-weight: 600;
+            padding: 15px;
+            font-size: 0.9rem;
+        }
+
+        .luxury-table tbody tr {
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            transition: 0.2s;
+        }
+
+            .luxury-table tbody tr:hover {
+                transform: scale(1.005);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+                z-index: 2;
+                position: relative;
+            }
+
+        .luxury-table td {
+            border: none;
+            padding: 15px;
+            vertical-align: middle;
+            color: #334155;
+        }
+
+            .luxury-table td:first-child {
+                border-radius: 0 10px 10px 0;
+                border-right: 3px solid transparent;
+            }
+
+            .luxury-table td:last-child {
+                border-radius: 10px 0 0 10px;
+            }
+
+        /* تمييز الصف العادي */
+        .luxury-table tr:hover td:first-child {
+            border-right-color: #c5a059;
+        }
+
+    /* تمييز العميل المحظور */
+    .row-blacklisted td:first-child {
+        border-right-color: #dc3545 !important;
+        border-right-width: 4px !important;
+    }
+
+    .row-blacklisted {
+        background-color: #fff5f5 !important;
+    }
+
+    /* الشارات */
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .badge-active {
+        background-color: #dcfce7;
+        color: #16a34a;
+    }
+
+    .badge-banned {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    /* أفاتار العميل */
+    .client-avatar {
+        width: 45px;
+        height: 45px;
+        background: #f8fafc;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.2rem;
+        margin-left: 15px;
+    }
+
+    /* أزرار التواصل الدائرية */
+    .btn-contact {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+        border: 1px solid transparent;
+    }
+
+    .btn-whatsapp {
+        background-color: #dcfce7;
+        color: #16a34a;
+    }
+
+        .btn-whatsapp:hover {
+            background-color: #16a34a;
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+    .btn-phone {
+        background-color: #e0f2fe;
+        color: #0284c7;
+    }
+
+        .btn-phone:hover {
+            background-color: #0284c7;
+            color: #fff;
+            transform: scale(1.1);
+        }
+</style>
+
 <div class="container-fluid py-4">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="text-primary fw-bold"><i class="fa-solid fa-users"></i> قاعدة العملاء</h3>
-        <a asp-page="Create" class="btn btn-success shadow-sm">
+        <div>
+            <h3 class="page-title mb-1"><i class="fa-solid fa-users text-warning me-2"></i> قاعدة العملاء</h3>
+            <p class="text-muted small mb-0">إدارة بيانات العملاء وسجل التواصل</p>
+        </div>
+        <a asp-page="Create" class="btn btn-royal shadow-sm">
             <i class="fa-solid fa-user-plus me-2"></i> عميل جديد
         </a>
     </div>
 
-    <div class="card bg-light border-0 shadow-sm mb-4">
-        <div class="card-body">
-            <form method="get" class="row g-2 align-items-center">
-                <div class="col-md-10">
-                    <div class="input-group">
-                        <span class="input-group-text bg-white text-muted border-end-0"><i class="fa-solid fa-search"></i></span>
-                        <input type="text" name="SearchTerm" value="@Model.SearchTerm"
-                               class="form-control border-start-0 ps-0"
-                               placeholder="ابحث باسم العميل أو رقم الهاتف..." />
-                    </div>
+    <div class="filter-card p-4 mb-4">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-10">
+                <div class="input-group">
+                    <span class="input-group-text bg-white text-muted border-end-0"><i class="fa-solid fa-search"></i></span>
+                    <input type="text" name="SearchTerm" value="@Model.SearchTerm"
+                           class="form-control border-start-0 ps-0"
+                           placeholder="ابحث باسم العميل، رقم الهاتف، أو الرقم القومي..." />
                 </div>
-                <div class="col-md-2 d-grid">
-                    <button type="submit" class="btn btn-primary">بحث</button>
-                </div>
-            </form>
-        </div>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-search-dark fw-bold">بحث</button>
+            </div>
+        </form>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="px-4">اسم العميل</th>
-                            <th>رقم الهاتف</th>
-                            <th>الرقم القومي</th>
-                            <th>العنوان</th>
-                            <th class="text-center">الحالة</th>
-                            <th>تاريخ التسجيل</th>
-                            <th class="text-center">تواصل</th>
-                            <th class="text-center">إجراءات</th>
+    <div class="table-responsive">
+        <table class="table luxury-table">
+            <thead>
+                <tr>
+                    <th>اسم العميل</th>
+                    <th>بيانات الاتصال</th>
+                    <th>العنوان / الرقم القومي</th>
+                    <th class="text-center">الحالة</th>
+                    <th>تاريخ التسجيل</th>
+                    <th class="text-center">تواصل سريع</th>
+                    <th class="text-center">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Clients.Any())
+                {
+                    @foreach (var item in Model.Clients)
+                    {
+                        // كلاس خاص إذا كان محظوراً
+                        var rowClass = item.IsBlacklisted ? "row-blacklisted" : "";
+
+                        <tr class="@rowClass">
+
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="client-avatar">
+                                        @item.Name.Substring(0, 1)
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark fs-6">@item.Name</div>
+                                        <div class="text-muted small">ID: @item.Id</div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="d-flex align-items-center text-dark font-monospace" dir="ltr">
+                                    <i class="fa-solid fa-mobile-screen text-muted me-2 small"></i> @item.Phone
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="d-flex flex-column small">
+                                    @if (!string.IsNullOrEmpty(item.Address))
+                                    {
+                                        <span class="text-dark mb-1"><i class="fa-solid fa-location-dot text-danger me-1"></i> @item.Address</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted fst-italic">بدون عنوان</span>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(item.NationalId))
+                                    {
+                                        <span class="text-muted"><i class="fa-regular fa-id-card me-1"></i> @item.NationalId</span>
+                                    }
+                                </div>
+                            </td>
+
+                            <td class="text-center">
+                                @if (item.IsBlacklisted)
+                                {
+                                    <span class="status-badge badge-banned"><i class="fa-solid fa-ban me-1"></i> محظور</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge badge-active">نشط</span>
+                                }
+                            </td>
+
+                            <td class="text-muted small">
+                                <i class="fa-regular fa-calendar me-1"></i> @item.RegistrationDate.ToString("yyyy-MM-dd")
+                            </td>
+
+                            <td class="text-center">
+                                @{
+                                    var rawPhone = item.Phone ?? "";
+                                    var cleanPhone = rawPhone.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "");
+                                    var whatsappPhone = cleanPhone;
+                                    if (cleanPhone.StartsWith("0")) { whatsappPhone = "20" + cleanPhone.Substring(1); }
+                                    else if (!cleanPhone.StartsWith("20")) { whatsappPhone = "20" + cleanPhone; }
+                                }
+
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="tel:@cleanPhone" class="btn-contact btn-phone" title="اتصال">
+                                        <i class="fa-solid fa-phone"></i>
+                                    </a>
+                                    <a href="https://wa.me/@whatsappPhone" target="_blank" class="btn-contact btn-whatsapp" title="واتساب">
+                                        <i class="fa-brands fa-whatsapp"></i>
+                                    </a>
+                                </div>
+                            </td>
+
+                            <td class="text-center">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light rounded-circle shadow-sm" type="button" data-bs-toggle="dropdown">
+                                        <i class="fa-solid fa-ellipsis-vertical text-muted"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg" style="border-radius:12px;">
+                                        <li>
+                                            <a class="dropdown-item py-2" asp-page="./Edit" asp-route-id="@item.Id">
+                                                <i class="fa-solid fa-pen text-warning me-2"></i> تعديل البيانات
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2" asp-page="./Details" asp-route-id="@item.Id">
+                                                <i class="fa-solid fa-history text-info me-2"></i> سجل التعاملات
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item py-2 text-danger" asp-page="./Delete" asp-route-id="@item.Id">
+                                                <i class="fa-solid fa-trash me-2"></i> حذف العميل
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+
                         </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.Clients.Any())
-                        {
-                            @foreach (var item in Model.Clients)
-                            {
-                                // تمييز الصف باللون الأحمر الخفيف إذا كان العميل محظوراً
-                                <tr class="@(item.IsBlacklisted ? "table-danger" : "")">
-
-                                    <td class="px-4 fw-bold">@item.Name</td>
-
-                                    <td dir="ltr" class="text-end font-monospace">@item.Phone</td>
-
-                                    <td class="font-monospace">
-                                        @(!string.IsNullOrEmpty(item.NationalId) ? item.NationalId : "-")
-                                    </td>
-
-                                    <td>
-                                        @(!string.IsNullOrEmpty(item.Address) ? item.Address : "-")
-                                    </td>
-
-                                    <td class="text-center">
-                                        @if (item.IsBlacklisted)
-                                        {
-                                            <span class="badge bg-danger"><i class="fa-solid fa-ban"></i> محظور</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-success">نشط</span>
-                                        }
-                                    </td>
-
-                                    <td>@item.RegistrationDate.ToString("yyyy-MM-dd")</td>
-
-                                    <td class="text-center">
-                                        @{
-                                            // 1. تنظيف الرقم: إزالة المسافات والفواصل لضمان عمل الرابط
-                                            var rawPhone = item.Phone ?? "";
-                                            var cleanPhone = rawPhone.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "");
-
-                                            // 2. تجهيز رقم الواتساب (مخصص لمصر)
-                                            // واتساب يحتاج كود الدولة (20) وبدون الصفر الأول
-                                            // مثال: 01012345678 يصبح 201012345678
-                                            var whatsappPhone = cleanPhone;
-
-                                            if (cleanPhone.StartsWith("0"))
-                                            {
-                                                whatsappPhone = "20" + cleanPhone.Substring(1);
-                                            }
-                                            else if (!cleanPhone.StartsWith("20"))
-                                            {
-                                                // لو الرقم مش بيبدأ بـ 0 ولا بـ 20، نضيف 20 احتياطي
-                                                whatsappPhone = "20" + cleanPhone;
-                                            }
-                                        }
-
-                                        <a href="tel:@cleanPhone" class="btn btn-sm btn-outline-secondary" title="اتصال">
-                                            <i class="fa-solid fa-phone"></i>
-                                        </a>
-
-                                        <a href="https://wa.me/@whatsappPhone" target="_blank" class="btn btn-sm btn-outline-success" title="واتساب">
-                                            <i class="fa-brands fa-whatsapp"></i>
-                                        </a>
-                                    </td>
-
-                                    <td class="text-center">
-                                        <div class="btn-group btn-group-sm">
-                                            <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-outline-warning" title="تعديل">
-                                                <i class="fa-solid fa-pen"></i>
-                                            </a>
-                                            <a asp-page="./Details" asp-route-id="@item.Id" class="btn btn-outline-info" title="سجل التعاملات">
-                                                <i class="fa-solid fa-history"></i>
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="8" class="text-center py-5 text-muted">
-                                    <i class="fa-solid fa-folder-open fa-3x mb-3 d-block opacity-50"></i>
-                                    لا توجد نتائج مطابقة للبحث
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="opacity-50">
+                                <i class="fa-solid fa-users-slash fa-3x mb-3 text-muted"></i>
+                                <p class="text-muted fw-bold">لا يوجد عملاء مطابقين للبحث</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>

@@ -4,23 +4,166 @@
 @{
     ViewData["Title"] = "تقرير الخزينة";
     var reportTitle = "كشف حساب حركة الخزينة";
-    var branchTitle = Model.SelectedBranchId.HasValue ? "فرع محدد" : "كافة الفروع"; // يمكن تعديله ليجلب اسم الفرع
+    var branchTitle = Model.SelectedBranchId.HasValue ? "فرع محدد" : "كافة الفروع";
 }
 
 <style>
-    /* --------------------------------------------------------
-       تنسيقات الطباعة الاحترافية (A4 World Class Standard)
-       -------------------------------------------------------- */
+    /* ========================================= */
+    /* 👑 تنسيقات الثيم الملكي (للعرض على الشاشة) */
+    /* ========================================= */
+
+    .page-title {
+        font-family: 'Playfair Display', serif;
+        color: #1e293b;
+        font-weight: 700;
+    }
+
+    /* كروت الإحصائيات العلوية */
+    .stat-card {
+        border: none;
+        border-radius: 15px;
+        padding: 20px;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .bg-revenue {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+    /* أخضر للإيراد */
+    .bg-expense {
+        background: linear-gradient(135deg, #ef4444, #b91c1c);
+    }
+    /* أحمر للمصروف */
+    .bg-net {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
+    /* أزرق للصافي */
+    .bg-insurance {
+        background: linear-gradient(135deg, #6366f1, #4338ca);
+    }
+    /* بنفسجي للتأمين */
+
+    .stat-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 3rem;
+        opacity: 0.2;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 0;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* كارت الفلتر */
+    .filter-card {
+        border: none;
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        margin-bottom: 25px;
+    }
+
+    .form-control, .form-select {
+        border-radius: 10px;
+        padding: 10px 15px;
+        border: 1px solid #e2e8f0;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #c5a059;
+            box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.1);
+        }
+
+    /* الجدول */
+    .luxury-table {
+        border-collapse: separate;
+        border-spacing: 0 5px;
+    }
+
+        .luxury-table thead th {
+            border: none;
+            color: #64748b;
+            font-weight: 600;
+            padding: 15px;
+            font-size: 0.85rem;
+            background-color: #f8fafc;
+            text-transform: uppercase;
+        }
+
+        .luxury-table tbody tr {
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            transition: 0.2s;
+        }
+
+        .luxury-table td {
+            border: none;
+            padding: 15px;
+            vertical-align: middle;
+            color: #334155;
+        }
+
+            .luxury-table td:first-child {
+                border-radius: 10px 0 0 10px;
+            }
+
+            .luxury-table td:last-child {
+                border-radius: 0 10px 10px 0;
+            }
+
+    /* ألوان المبالغ */
+    .text-income {
+        color: #059669;
+        font-weight: bold;
+    }
+
+    .text-expense {
+        color: #dc2626;
+        font-weight: bold;
+    }
+
+    .text-insurance-in {
+        color: #2563eb;
+        font-weight: bold;
+    }
+
+    .text-insurance-out {
+        color: #4b5563;
+        font-weight: bold;
+    }
+
+    /* ========================================= */
+    /* 🖨️ إعدادات الطباعة (A4 Standard) */
+    /* ========================================= */
     @@media print {
-        /* 1. إخفاء العناصر غير المرغوبة */
-        #sidebar-wrapper, .navbar, .btn, form, .no-print, .card-header, .badge {
+        #sidebar-wrapper, .navbar, .btn, form, .no-print, .page-title-icon {
             display: none !important;
         }
-        /* 2. ضبط الصفحة */
+
         body {
             background-color: #fff !important;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 12pt;
+            font-size: 10pt;
             color: #000;
             padding: 0;
             margin: 0;
@@ -31,7 +174,7 @@
             padding: 0 !important;
             margin: 0 !important;
         }
-        /* 3. إظهار ترويسة الطباعة */
+        /* ترويسة الطباعة */
         .print-header {
             display: flex !important;
             justify-content: space-between;
@@ -40,61 +183,47 @@
             padding-bottom: 10px;
             margin-bottom: 20px;
         }
-        /* 4. تنسيق الجدول الاحترافي */
-        table {
-            width: 100% !important;
+        /* جدول الطباعة */
+        .luxury-table {
             border-collapse: collapse !important;
-            margin-bottom: 20px !important;
-            font-size: 10pt;
+            border-spacing: 0 !important;
+            box-shadow: none !important;
         }
 
-        th, td {
-            border: 1px solid #444 !important;
-            padding: 8px !important;
-            text-align: center !important;
-        }
+            .luxury-table th {
+                background-color: #f0f0f0 !important;
+                border: 1px solid #000 !important;
+                color: #000 !important;
+                padding: 5px !important;
+            }
 
-        thead th {
-            background-color: #f0f0f0 !important; /* لون رمادي فاتح */
-            color: #000 !important;
-            font-weight: bold !important;
-            -webkit-print-color-adjust: exact; /* لضمان طباعة الخلفية الرمادية */
-        }
-        /* 5. ملخص الأرصدة (بديل الكروت الملونة) */
+            .luxury-table td {
+                border: 1px solid #000 !important;
+                padding: 5px !important;
+                color: #000 !important;
+                border-radius: 0 !important;
+            }
+
+            .luxury-table tr {
+                box-shadow: none !important;
+            }
+        /* ملخص الطباعة */
         .print-summary-box {
             display: block !important;
-            margin-bottom: 20px;
             border: 1px solid #000;
             padding: 10px;
+            margin-bottom: 20px;
+            page-break-inside: avoid;
         }
-
-        .print-summary-table {
-            width: 100%;
-            border: none !important;
+        /* إخفاء الكروت الملونة واستبدالها بالجدول الملخص */
+        .stats-row {
+            display: none !important;
         }
-
-            .print-summary-table td {
-                border: none !important;
-                text-align: right !important;
-                padding: 5px 15px;
-            }
-        /* 6. التذييل والتوقيعات */
-        .print-footer {
-            display: block !important;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            text-align: center;
-            font-size: 9pt;
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
-        }
-
+        /* التوقيعات */
         .signatures {
             display: flex !important;
             justify-content: space-between;
             margin-top: 50px;
-            margin-bottom: 30px;
             page-break-inside: avoid;
         }
 
@@ -106,8 +235,8 @@
         }
     }
 
-    /* إخفاء عناصر الطباعة في الشاشة العادية */
-    .print-header, .print-footer, .print-summary-box, .signatures {
+    /* إخفاء عناصر الطباعة في الشاشة */
+    .print-header, .print-summary-box, .signatures {
         display: none;
     }
 </style>
@@ -116,241 +245,213 @@
 
     <div class="print-header">
         <div class="text-end">
-            <h2 class="m-0 fw-bold">Atelier System</h2> <p class="m-0">تقرير مالي رسمي</p>
+            <h2 class="m-0 fw-bold">Atelier System</h2>
+            <p class="m-0 small">تقرير مالي رسمي</p>
         </div>
         <div class="text-center">
             <h3 class="fw-bold text-decoration-underline">@reportTitle</h3>
-            <p class="m-0">عن الفترة من: <strong>@Model.FromDate.ToString("yyyy-MM-dd")</strong> إلى: <strong>@Model.ToDate.ToString("yyyy-MM-dd")</strong></p>
+            <p class="m-0 small">عن الفترة من: <strong>@Model.FromDate.ToString("yyyy-MM-dd")</strong> إلى: <strong>@Model.ToDate.ToString("yyyy-MM-dd")</strong></p>
         </div>
         <div class="text-start">
-            <p class="m-0">الفرع: <strong>@branchTitle</strong></p>
-            <p class="m-0">تاريخ الطباعة: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")</p>
+            <p class="m-0 small">الفرع: <strong>@branchTitle</strong></p>
+            <p class="m-0 small">تاريخ الطباعة: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")</p>
         </div>
     </div>
 
     <div class="d-flex justify-content-between align-items-center mb-4 no-print">
         <div>
-            <h2 class="fw-bold text-dark"><i class="fa-solid fa-vault me-2"></i> حركة الخزينة</h2>
+            <h3 class="page-title mb-1"><i class="fa-solid fa-vault text-warning me-2 page-title-icon"></i> حركة الخزينة</h3>
+            <p class="text-muted small mb-0">تقرير شامل للتدفقات النقدية والعمليات المالية</p>
         </div>
-        <div>
-            <button onclick="window.print()" class="btn btn-dark btn-lg px-4 shadow-sm">
-                <i class="fa-solid fa-print me-2"></i> طباعة التقرير
-            </button>
-        </div>
+        <button onclick="window.print()" class="btn btn-dark shadow-sm px-4">
+            <i class="fa-solid fa-print me-2"></i> طباعة التقرير
+        </button>
     </div>
 
-    <div class="card shadow-sm border-0 mb-4 no-print">
-        <div class="card-body bg-light">
-            <form method="get" class="row g-3 align-items-end">
-                @if (Model.IsGeneralManager)
-                {
-                    <div class="col-md-2">
-                        <label class="form-label fw-bold">الفرع</label>
-                        <select asp-for="SelectedBranchId" class="form-select" asp-items="ViewBag.BranchId" onchange="this.form.submit()">
-                            <option value="">-- كل الفروع --</option>
-                        </select>
-                    </div>
-                }
-
+    <div class="filter-card p-4 no-print">
+        <form method="get" class="row g-3 align-items-end">
+            @if (Model.IsGeneralManager)
+            {
                 <div class="col-md-2">
-                    <label class="form-label fw-bold">القسم</label>
-                    <select asp-for="SelectedDepartment" class="form-select" asp-items="Html.GetEnumSelectList<DepartmentType>()" onchange="this.form.submit()">
-                        <option value="">-- كل الأقسام --</option>
+                    <label class="form-label fw-bold text-muted small">الفرع</label>
+                    <select asp-for="SelectedBranchId" class="form-select" asp-items="ViewBag.BranchId" onchange="this.form.submit()">
+                        <option value="">-- كل الفروع --</option>
                     </select>
                 </div>
+            }
 
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">المستخدم</label>
-                    <select asp-for="SelectedUserId" class="form-select" asp-items="ViewBag.UserId" onchange="this.form.submit()">
-                        <option value="">-- كل المستخدمين --</option>
-                    </select>
-                </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold text-muted small">القسم</label>
+                <select asp-for="SelectedDepartment" class="form-select" asp-items="Html.GetEnumSelectList<DepartmentType>()" onchange="this.form.submit()">
+                    <option value="">-- كل الأقسام --</option>
+                </select>
+            </div>
 
-                <div class="col-md-2">
-                    <label class="form-label fw-bold">من</label>
-                    <input asp-for="FromDate" type="date" class="form-control" />
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-bold">إلى</label>
-                    <input asp-for="ToDate" type="date" class="form-control" />
-                </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold text-muted small">الموظف المسؤول</label>
+                <select asp-for="SelectedUserId" class="form-select" asp-items="ViewBag.UserId" onchange="this.form.submit()">
+                    <option value="">-- كل المستخدمين --</option>
+                </select>
+            </div>
 
-                <div class="col-md-1">
-                    <button type="submit" class="btn btn-primary w-100"><i class="fa fa-filter"></i></button>
-                </div>
-            </form>
-        </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold text-muted small">من تاريخ</label>
+                <input asp-for="FromDate" type="date" class="form-control" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold text-muted small">إلى تاريخ</label>
+                <input asp-for="ToDate" type="date" class="form-control" />
+            </div>
+
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-filter"></i></button>
+            </div>
+        </form>
     </div>
 
-    <div class="row mb-4 g-3 text-center no-print">
-        <div class="col">
-            <div class="card border-success border-start-4 shadow-sm h-100">
-                <div class="card-body">
-                    <h6 class="text-muted mb-2">إيرادات</h6>
-                    <h4 class="text-success fw-bold">@Model.PeriodRevenue.ToString("N0")</h4>
-                </div>
+    <div class="row g-3 mb-4 stats-row">
+        <div class="col-md-3">
+            <div class="stat-card bg-revenue">
+                <i class="fa-solid fa-sack-dollar stat-icon"></i>
+                <div class="stat-label">إجمالي الإيرادات</div>
+                <div class="stat-value">@Model.PeriodRevenue.ToString("N0") <small class="fs-6">ج.م</small></div>
             </div>
         </div>
-        <div class="col">
-            <div class="card border-info border-start-4 shadow-sm h-100">
-                <div class="card-body">
-                    <h6 class="text-dark mb-2">تأمين مستلم</h6>
-                    <h4 class="text-primary fw-bold">@Model.PeriodInsuranceIn.ToString("N0")</h4>
-                </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-expense">
+                <i class="fa-solid fa-file-invoice-dollar stat-icon"></i>
+                <div class="stat-label">إجمالي المصروفات</div>
+                <div class="stat-value">@Model.PeriodExpense.ToString("N0") <small class="fs-6">ج.م</small></div>
             </div>
         </div>
-        <div class="col">
-            <div class="card border-danger border-start-4 shadow-sm h-100">
-                <div class="card-body">
-                    <h6 class="text-muted mb-2">مصروفات</h6>
-                    <h4 class="text-danger fw-bold">@Model.PeriodExpense.ToString("N0")</h4>
-                </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-insurance">
+                <i class="fa-solid fa-shield-halved stat-icon"></i>
+                <div class="stat-label">صافي التأمين</div>
+                <div class="stat-value">@((Model.PeriodInsuranceIn - Model.PeriodInsuranceOut).ToString("N0")) <small class="fs-6">ج.م</small></div>
             </div>
         </div>
-        <div class="col">
-            <div class="card border-secondary border-start-4 shadow-sm h-100">
-                <div class="card-body">
-                    <h6 class="text-muted mb-2">تأمين مسترد</h6>
-                    <h4 class="text-secondary fw-bold">@Model.PeriodInsuranceOut.ToString("N0")</h4>
-                </div>
-            </div>
-        </div>
-        <div class="col">
-            <div class="card bg-dark text-white shadow-sm h-100">
-                <div class="card-body">
-                    <h6 class="opacity-75 mb-2">الصافي</h6>
-                    <h4 class="fw-bold text-warning">@Model.PeriodNetFlow.ToString("N0")</h4>
-                </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-net">
+                <i class="fa-solid fa-scale-balanced stat-icon"></i>
+                <div class="stat-label">صافي الحركة (Net Flow)</div>
+                <div class="stat-value">@Model.PeriodNetFlow.ToString("N0") <small class="fs-6">ج.م</small></div>
             </div>
         </div>
     </div>
 
     <div class="print-summary-box">
-        <h5 class="fw-bold mb-3 border-bottom pb-2">ملخص الفترة المالية</h5>
-        <table class="print-summary-table">
+        <h5 class="fw-bold mb-2 border-bottom pb-1">ملخص الفترة المالية</h5>
+        <table style="width:100%; border:none;">
             <tr>
-                <td class="fw-bold">إجمالي الإيرادات:</td>
-                <td>@Model.PeriodRevenue.ToString("N0") ج.م</td>
-                <td class="fw-bold">إجمالي المصروفات:</td>
-                <td>@Model.PeriodExpense.ToString("N0") ج.م</td>
-            </tr>
-            <tr>
-                <td class="fw-bold">تأمين مستلم (داخل):</td>
-                <td>@Model.PeriodInsuranceIn.ToString("N0") ج.م</td>
-                <td class="fw-bold">تأمين مسترد (خارج):</td>
-                <td>@Model.PeriodInsuranceOut.ToString("N0") ج.م</td>
-            </tr>
-            <tr style="font-size: 1.2rem; border-top: 1px solid #000;">
-                <td class="fw-bold pt-2">صافي حركة الفترة:</td>
-                <td class="pt-2 fw-bold">@Model.PeriodNetFlow.ToString("N0") ج.م</td>
-                <td class="fw-bold pt-2">الرصيد الفعلي الحالي:</td>
-                <td class="pt-2 fw-bold">@Model.TotalCashBalance.ToString("N0") ج.م</td>
+                <td style="border:none; padding:5px;"><strong>إيرادات:</strong> @Model.PeriodRevenue.ToString("N0") ج.م</td>
+                <td style="border:none; padding:5px;"><strong>مصروفات:</strong> (@Model.PeriodExpense.ToString("N0")) ج.م</td>
+                <td style="border:none; padding:5px;"><strong>تأمين (محصل - مسترد):</strong> @((Model.PeriodInsuranceIn - Model.PeriodInsuranceOut).ToString("N0")) ج.م</td>
+                <td style="border:none; padding:5px; font-size:1.1rem;"><strong>الصافي:</strong> @Model.PeriodNetFlow.ToString("N0") ج.م</td>
             </tr>
         </table>
     </div>
 
-    <div class="card shadow-sm border-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+    <div class="table-responsive">
+        <table class="table luxury-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>التاريخ</th>
+                    @if (Model.IsGeneralManager)
+                    {
+                        <th>الفرع</th>
+}
+                    <th>نوع الحركة</th>
+                    <th>القسم</th>
+                    <th>البيان / الوصف</th>
+                    <th>المستخدم</th>
+                    <th class="text-end">المبلغ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Transactions.Count == 0)
+                {
                     <tr>
-                        <th>#</th>
-                        <th>التاريخ</th>
-                        @if (Model.IsGeneralManager)
-                        {
-                            <th>الفرع</th>
-                        }
-                        <th>النوع</th>
-                        <th>القسم</th>
-                        <th>البيان</th>
-                        <th>بواسطة</th>
-                        <th class="text-end">المبلغ</th>
+                        <td colspan="8" class="text-center py-5 text-muted">لا توجد حركات مالية في هذه الفترة.</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @if (Model.Transactions.Count == 0)
+                }
+                else
+                {
+                    @foreach (var item in Model.Transactions)
                     {
                         <tr>
-                            <td colspan="8" class="text-center py-4 text-muted">لا توجد حركات في هذه الفترة</td>
+                            <td>@item.Id</td>
+
+                            <td>
+                                <div class="fw-bold">@item.TransactionDate.ToString("yyyy-MM-dd")</div>
+                                <small class="text-muted no-print">@item.TransactionDate.ToString("hh:mm tt")</small>
+                            </td>
+
+                            @if (Model.IsGeneralManager)
+                            {
+                                <td>@item.Branch?.Name</td>
+                            }
+
+                            <td>
+                                @switch (item.Type)
+                                {
+                                    case TransactionType.Income:
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 no-print">إيراد</span>
+                                        <span class="d-none d-print-inline">إيراد</span>
+                                        break;
+                                    case TransactionType.Expense:
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 no-print">مصروف</span>
+                                        <span class="d-none d-print-inline">مصروف</span>
+                                        break;
+                                    case TransactionType.InsuranceIn:
+                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-2 no-print">تأمين (قبض)</span>
+                                        <span class="d-none d-print-inline">تأمين (قبض)</span>
+                                        break;
+                                    case TransactionType.InsuranceOut:
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-2 no-print">تأمين (رد)</span>
+                                        <span class="d-none d-print-inline">تأمين (رد)</span>
+                                        break;
+                                }
+                            </td>
+
+                            <td>
+                                @switch (item.Department)
+                                {
+                                    case DepartmentType.Men:<span>رجالي</span> break;
+                                    case DepartmentType.Women: <span>حريمي</span> break;
+                                    case DepartmentType.BeautySalon: <span>كوافير</span>break;
+                                }
+                            </td>
+
+                            <td>@item.Description</td>
+
+                            <td>
+                                @{
+                                    string userName = "System";
+                                    if (item.CreatedByUserId != null && Model.UserNames.ContainsKey(item.CreatedByUserId))
+                                    {
+                                        userName = Model.UserNames[item.CreatedByUserId];
+                                    }
+                                }
+                                <span class="small text-muted">@userName</span>
+                            </td>
+
+                            <td class="text-end fw-bold">
+                                @if (item.Type == TransactionType.Expense || item.Type == TransactionType.InsuranceOut)
+                                {
+                                    <span class="text-expense">(@item.Amount.ToString("N0"))</span>
+                                }
+                                else
+                                {
+                                    <span class="text-income">@item.Amount.ToString("N0")</span>
+                                }
+                            </td>
                         </tr>
                     }
-                    else
-                    {
-                        @foreach (var item in Model.Transactions)
-                        {
-                            <tr>
-                                <td>@item.Id</td>
-                                <td>
-                                    @item.TransactionDate.ToString("yyyy-MM-dd") <br />
-                                    <small class="text-muted no-print">@item.TransactionDate.ToString("hh:mm tt")</small>
-                                    <span class="d-none d-print-inline">@item.TransactionDate.ToString("hh:mm tt")</span>
-                                </td>
-
-                                @if (Model.IsGeneralManager)
-                                {
-                                    <td>
-                                        <span class="no-print badge bg-light text-dark border">@item.Branch?.Name</span>
-                                        <span class="d-none d-print-inline">@item.Branch?.Name</span>
-                                    </td>
-                                }
-
-                                <td>
-                                    @* للشاشة: ألوان وبادجات *@
-                                    <span class="no-print">
-                                        @switch (item.Type)
-                                        {
-                                            case TransactionType.Income:<span class="badge bg-success">إيراد</span> break;
-                                            case TransactionType.Expense: <span class="badge bg-danger">مصروف</span> break;
-                                            case TransactionType.InsuranceIn: <span class="badge bg-info text-dark">تأمين داخل</span> break;
-                                            case TransactionType.InsuranceOut: <span class="badge bg-secondary">تأمين خارج</span>break;
-                                        }
-                                    </span>
-                                    @* للطباعة: نص عادي *@
-                                    <span class="d-none d-print-inline fw-bold">
-                                        @switch (item.Type)
-                                        {
-                                            case TransactionType.Income:@:إيراد
-                                                break;
-                                            case TransactionType.Expense: @:مصروف
-                                                break;
-                                            case TransactionType.InsuranceIn: @:تأمين (قبض)
-                                                break;
-                                            case TransactionType.InsuranceOut: @:تأمين (رد)
-                                                break;
-                                        }
-                                    </span>
-                                </td>
-                                <td>
-                                    @switch (item.Department)
-                                    {
-                                        case DepartmentType.Men:<span>رجالي</span> break;
-                                        case DepartmentType.Women: <span>حريمي</span> break;
-                                        case DepartmentType.BeautySalon: <span>كوافير</span>break;
-                                    }
-                                </td>
-                                <td class="text-start">@item.Description</td>
-
-                                <td>
-                                    @{
-                                        string userName = "غير معروف";
-                                        if (item.CreatedByUserId != null && Model.UserNames.ContainsKey(item.CreatedByUserId))
-                                        {
-                                            userName = Model.UserNames[item.CreatedByUserId];
-                                        }
-                                    }
-                                    <span class="no-print badge bg-light text-secondary border">@userName</span>
-                                    <span class="d-none d-print-inline">@userName</span>
-                                </td>
-
-                                <td class="text-end fw-bold">
-                                    @item.Amount.ToString("N0")
-                                </td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
-        </div>
+                }
+            </tbody>
+        </table>
     </div>
 
     <div class="signatures">
@@ -363,13 +464,9 @@
             <p>..................</p>
         </div>
         <div class="signature-box">
-            <p class="mb-4">المدير العام</p>
+            <p class="mb-4">اعتماد الإدارة</p>
             <p>..................</p>
         </div>
-    </div>
-
-    <div class="print-footer">
-        <p>تم استخراج هذا التقرير آلياً من نظام Atelier System - صفحة رقم <span class="page-number"></span></p>
     </div>
 
 </div>

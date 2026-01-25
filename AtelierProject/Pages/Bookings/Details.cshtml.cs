@@ -21,8 +21,18 @@ namespace AtelierProject.Pages.Bookings
         }
 
         public Booking Booking { get; set; } = default!;
-        // حساب المتبقي (الإجمالي - المدفوع)
-        public decimal RemainingRental => Booking.TotalAmount - Booking.PaidAmount;
+
+        // ✅ تعديل: حساب المتبقي ليشمل الخصم
+        public decimal RemainingRental
+        {
+            get
+            {
+                if (Booking == null) return 0;
+                var netTotal = Booking.TotalAmount - Booking.Discount;
+                var remaining = netTotal - Booking.PaidAmount;
+                return remaining < 0 ? 0 : remaining;
+            }
+        }
 
         // دالة التحقق من الصلاحية
         private async Task<bool> IsUserAllowed(int? bookingBranchId)
@@ -50,12 +60,21 @@ namespace AtelierProject.Pages.Bookings
 
             if (!await IsUserAllowed(Booking.BranchId)) return Forbid();
 
+            // إصلاح مشكلة ظهور الإجمالي صفر (للبيانات القديمة)
+            if (Booking.TotalAmount == 0 && Booking.BookingItems.Any())
+            {
+                Booking.TotalAmount = Booking.BookingItems.Sum(item =>
+                    item.RentalPrice > 0
+                    ? item.RentalPrice
+                    : (item.ProductItem?.ProductDefinition?.RentalPrice ?? 0)
+                );
+            }
+
             return Page();
         }
 
         public async Task<IActionResult> OnPostUpdateStatusAsync(int id, BookingStatus newStatus)
         {
-            // ✅ تم إضافة .ThenInclude(pi => pi.ProductDefinition) للوصول للقسم
             var booking = await _context.Bookings
                 .Include(b => b.BookingItems)
                     .ThenInclude(bi => bi.ProductItem)
@@ -67,31 +86,37 @@ namespace AtelierProject.Pages.Bookings
 
             booking.Status = newStatus;
 
-            // عند تحويل الحالة إلى "تم الاستلام"
+            // عند التسليم (PickedUp)
             if (newStatus == BookingStatus.PickedUp)
             {
-                // 1. تحديث حالة المخزون
+                // 1. تحديث المخزون
                 foreach (var item in booking.BookingItems)
                 {
                     if (item.ProductItem != null) item.ProductItem.Status = ItemStatus.Rented;
                 }
 
-                // 2. تسجيل الحركات المالية في الخزنة
+                // 2. تسجيل المالية
                 var currentUser = await _userManager.GetUserAsync(User);
-                // تحديد القسم بناءً على أول قطعة (افتراضي حريمي لو لم يوجد)
                 var dept = booking.BookingItems.FirstOrDefault()?.ProductItem?.ProductDefinition?.Department ?? DepartmentType.Women;
 
-                // أ) تحصيل باقي مبلغ الإيجار (إن وجد)
-                decimal remaining = booking.TotalAmount - booking.PaidAmount;
+                // إصلاح التوتال لو كان صفر
+                if (booking.TotalAmount == 0)
+                {
+                    decimal calculatedTotal = booking.BookingItems.Sum(item => item.RentalPrice > 0 ? item.RentalPrice : (item.ProductItem?.ProductDefinition?.RentalPrice ?? 0));
+                    booking.TotalAmount = calculatedTotal;
+                }
+
+                // ✅ تعديل: حساب المتبقي بعد الخصم
+                decimal netTotal = booking.TotalAmount - booking.Discount;
+                decimal remaining = netTotal - booking.PaidAmount;
+
                 if (remaining > 0)
                 {
-                    // نعتبر أنه دفع الباقي عند الاستلام
                     booking.PaidAmount += remaining;
-
                     _context.SafeTransactions.Add(new SafeTransaction
                     {
                         Amount = remaining,
-                        Type = TransactionType.Income, // إيراد
+                        Type = TransactionType.Income,
                         Department = dept,
                         BranchId = booking.BranchId ?? 1,
                         TransactionDate = DateTime.Now,
@@ -101,13 +126,13 @@ namespace AtelierProject.Pages.Bookings
                     });
                 }
 
-                // ب) استلام مبلغ التأمين (أمانات)
+                // تأمين
                 if (booking.InsuranceAmount > 0)
                 {
                     _context.SafeTransactions.Add(new SafeTransaction
                     {
                         Amount = booking.InsuranceAmount,
-                        Type = TransactionType.InsuranceIn, // دخول تأمين للخزنة
+                        Type = TransactionType.InsuranceIn,
                         Department = dept,
                         BranchId = booking.BranchId ?? 1,
                         TransactionDate = DateTime.Now,
@@ -124,7 +149,6 @@ namespace AtelierProject.Pages.Bookings
 
         public async Task<IActionResult> OnPostAddPaymentAsync(int id, decimal paymentAmount)
         {
-            // ✅ تغيير البحث ليجلب تفاصيل القطعة لتحديد القسم
             var booking = await _context.Bookings
                 .Include(b => b.BookingItems)
                     .ThenInclude(bi => bi.ProductItem)
@@ -138,7 +162,6 @@ namespace AtelierProject.Pages.Bookings
             {
                 booking.PaidAmount += paymentAmount;
 
-                // تسجيل الحركة في الخزنة
                 var currentUser = await _userManager.GetUserAsync(User);
                 var dept = booking.BookingItems.FirstOrDefault()?.ProductItem?.ProductDefinition?.Department ?? DepartmentType.Women;
 
@@ -161,7 +184,6 @@ namespace AtelierProject.Pages.Bookings
 
         public async Task<IActionResult> OnPostReturnAsync(int id, decimal deductionAmount)
         {
-            // ✅ إضافة الـ Includes
             var booking = await _context.Bookings
                 .Include(b => b.BookingItems)
                     .ThenInclude(bi => bi.ProductItem)
@@ -174,17 +196,14 @@ namespace AtelierProject.Pages.Bookings
             booking.Status = BookingStatus.Returned;
             booking.InsuranceDeduction = deductionAmount;
 
-            // إعادة جميع القطع للحالة "متاح"
             foreach (var item in booking.BookingItems)
             {
                 if (item.ProductItem != null) item.ProductItem.Status = ItemStatus.Available;
             }
 
-            // تسجيل رد التأمين (خروج مال من الخزنة)
-            // المبلغ المسترد = التأمين الأصلي - الخصم
             decimal refund = booking.InsuranceAmount - deductionAmount;
 
-            if (refund > 0) // لو فيه فلوس هترجع للعميل
+            if (refund > 0)
             {
                 var currentUser = await _userManager.GetUserAsync(User);
                 var dept = booking.BookingItems.FirstOrDefault()?.ProductItem?.ProductDefinition?.Department ?? DepartmentType.Women;
@@ -192,7 +211,7 @@ namespace AtelierProject.Pages.Bookings
                 _context.SafeTransactions.Add(new SafeTransaction
                 {
                     Amount = refund,
-                    Type = TransactionType.InsuranceOut, // خروج تأمين
+                    Type = TransactionType.InsuranceOut,
                     Department = dept,
                     BranchId = booking.BranchId ?? 1,
                     TransactionDate = DateTime.Now,

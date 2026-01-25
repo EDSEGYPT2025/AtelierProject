@@ -22,30 +22,50 @@ namespace AtelierProject.Pages.Bookings
         [BindProperty]
         public Booking Booking { get; set; } = default!;
 
-        // ✅ التعديل 1: تحويل المتغير لقائمة لاستقبال أكثر من قطعة
+        // لاستقبال قائمة IDs للقطع المختارة
         [BindProperty]
         public List<int> SelectedItemIds { get; set; } = new List<int>();
 
+        // =========================================================
+        // 1. عند فتح الصفحة (GET)
+        // =========================================================
         public async Task<IActionResult> OnGetAsync()
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToPage("/Account/Login");
+
+            // ⛔ منع المدير العام (بدون فرع) من إنشاء حجوزات، يجب أن يكون موظف فرع
+            if (user.BranchId == null)
+            {
+                TempData["Error"] = "غير مسموح للمدير العام بإنشاء حجوزات. يرجى الدخول بحساب موظف الفرع.";
+                return RedirectToPage("./Index");
+            }
+
+            // إعداد القيم الافتراضية
             Booking = new Booking
             {
                 PickupDate = DateTime.Today,
                 ReturnDate = DateTime.Today.AddDays(3),
                 PaidAmount = 0,
-                TotalAmount = 0
+                TotalAmount = 0,
+                Discount = 0,      // ✅ قيمة افتراضية للخصم
+                InsuranceAmount = 0
             };
 
             await LoadSelectListsAsync();
             return Page();
         }
 
+        // =========================================================
+        // 2. عند الحفظ (POST)
+        // =========================================================
         public async Task<IActionResult> OnPostAsync()
         {
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null) return RedirectToPage("/Account/Login");
+            if (currentUser.BranchId == null) return RedirectToPage("./Index");
 
-            // التحقق من صحة التواريخ
+            // 1. التحقق من منطقية التواريخ
             if (Booking.ReturnDate <= Booking.PickupDate)
             {
                 ModelState.AddModelError("Booking.ReturnDate", "تاريخ الإرجاع يجب أن يكون بعد تاريخ الاستلام.");
@@ -53,15 +73,16 @@ namespace AtelierProject.Pages.Bookings
                 return Page();
             }
 
-            // التحقق من اختيار قطعة واحدة على الأقل
+            // 2. التحقق من اختيار قطع
             if (SelectedItemIds == null || !SelectedItemIds.Any())
             {
-                ModelState.AddModelError(string.Empty, "يجب اختيار قطعة واحدة على الأقل لإتمام الحجز.");
+                ModelState.AddModelError(string.Empty, "يجب اختيار قطعة واحدة على الأقل.");
                 await LoadSelectListsAsync();
                 return Page();
             }
 
-            // التحقق من توفر جميع القطع المختارة
+            // 3. التحقق من توفر القطع (منع التداخل في الحجوزات)
+            // الشرح: نتأكد أن القطعة غير محجوزة في أي حجز آخر (غير ملغي أو مرتجع) يتقاطع زمنياً مع الحجز الحالي
             foreach (var itemId in SelectedItemIds)
             {
                 bool isBooked = await _context.BookingItems
@@ -79,70 +100,63 @@ namespace AtelierProject.Pages.Bookings
 
                 if (isBooked)
                 {
-                    var itemName = _context.ProductItems.Include(p => p.ProductDefinition)
-                                    .Where(p => p.Id == itemId)
-                                    .Select(p => p.ProductDefinition.Name + " (" + p.Barcode + ")")
-                                    .FirstOrDefault();
+                    var itemInfo = await _context.ProductItems
+                        .Include(p => p.ProductDefinition)
+                        .Where(p => p.Id == itemId)
+                        .Select(p => p.ProductDefinition.Name + " (" + p.Barcode + ")")
+                        .FirstOrDefaultAsync();
 
-                    ModelState.AddModelError(string.Empty, $"عذراً، القطعة '{itemName}' محجوزة بالفعل في هذه الفترة.");
+                    ModelState.AddModelError(string.Empty, $"عذراً، القطعة '{itemInfo}' محجوزة بالفعل في هذه الفترة.");
                     await LoadSelectListsAsync();
                     return Page();
                 }
             }
 
-            // إعداد بيانات الحجز الأساسية
+            // 4. إعداد وحفظ بيانات الحجز
             Booking.BranchId = currentUser.BranchId;
+            Booking.CreatedDate = DateTime.Now;
             Booking.Status = BookingStatus.New;
 
-            if (Booking.BookingItems == null)
-            {
-                Booking.BookingItems = new List<BookingItem>();
-            }
+            // ✅ ملاحظة: Booking.TotalAmount و Booking.Discount يأتيان تلقائياً من الـ Form
 
-            // إضافة القطع للحجز
-            foreach (var itemId in SelectedItemIds)
+            Booking.BookingItems = new List<BookingItem>();
+
+            // جلب تفاصيل القطع لربطها وحفظ سعرها الأصلي للمرجع
+            var selectedItemsDetails = await _context.ProductItems
+                .Include(p => p.ProductDefinition)
+                .Where(p => SelectedItemIds.Contains(p.Id))
+                .ToListAsync();
+
+            foreach (var item in selectedItemsDetails)
             {
-                var bookingItem = new BookingItem
+                Booking.BookingItems.Add(new BookingItem
                 {
-                    ProductItemId = itemId,
-                    RentalPrice = 0 // السعر الإجمالي مسجل في Booking.TotalAmount
-                };
-                Booking.BookingItems.Add(bookingItem);
+                    ProductItemId = item.Id,
+                    RentalPrice = item.ProductDefinition.RentalPrice // تسجيل السعر الأصلي للقطعة
+                });
             }
 
-            // 1. حفظ الحجز أولاً للحصول على رقم الحجز (BookingId)
             _context.Bookings.Add(Booking);
             await _context.SaveChangesAsync();
 
-            // ============================================================
-            // ✅ إضافة جديدة: تسجيل العربون في خزنة القسم المختص
-            // ============================================================
+            // 5. تسجيل حركة مالية في الخزينة (إذا تم دفع عربون)
             if (Booking.PaidAmount > 0)
             {
-                // محاولة معرفة القسم (رجالي/حريمي) من أول قطعة تم اختيارها
-                var department = DepartmentType.Women; // الافتراضي
-                var firstItemId = SelectedItemIds.FirstOrDefault();
-                if (firstItemId != 0)
+                // تحديد القسم (أولوية للرجال إذا وجد، وإلا نساء) - منطق اختياري
+                var department = DepartmentType.Women;
+                if (selectedItemsDetails.Any(x => x.ProductDefinition.Department == DepartmentType.Men))
                 {
-                    var item = await _context.ProductItems
-                        .Include(p => p.ProductDefinition)
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(p => p.Id == firstItemId);
-
-                    if (item?.ProductDefinition != null)
-                    {
-                        department = item.ProductDefinition.Department;
-                    }
+                    department = DepartmentType.Men;
                 }
 
                 var transaction = new SafeTransaction
                 {
                     Amount = Booking.PaidAmount,
                     Type = TransactionType.Income, // إيراد
-                    Department = department,       // الخزنة المحددة (رجالي/حريمي)
-                    BranchId = Booking.BranchId ?? 1,
+                    Department = department,
+                    BranchId = Booking.BranchId.Value,
                     TransactionDate = DateTime.Now,
-                    Description = $"عربون حجز رقم {Booking.Id}",
+                    Description = $"عربون حجز رقم #{Booking.Id} - العميل: {Booking.ClientId}", // يفضل جلب اسم العميل
                     ReferenceId = Booking.Id.ToString(),
                     CreatedByUserId = currentUser.Id
                 };
@@ -150,97 +164,21 @@ namespace AtelierProject.Pages.Bookings
                 _context.SafeTransactions.Add(transaction);
                 await _context.SaveChangesAsync();
             }
-            // ============================================================
 
             return RedirectToPage("./Index");
         }
-        //public async Task<IActionResult> OnPostAsync()
-        //{
-        //    var currentUser = await _userManager.GetUserAsync(User);
-        //    if (currentUser == null) return RedirectToPage("/Account/Login");
 
-        //    if (Booking.ReturnDate <= Booking.PickupDate)
-        //    {
-        //        ModelState.AddModelError("Booking.ReturnDate", "تاريخ الإرجاع يجب أن يكون بعد تاريخ الاستلام.");
-        //        await LoadSelectListsAsync();
-        //        return Page();
-        //    }
-
-        //    // ✅ التعديل 2: التحقق من اختيار قطعة واحدة على الأقل
-        //    if (SelectedItemIds == null || !SelectedItemIds.Any())
-        //    {
-        //        ModelState.AddModelError(string.Empty, "يجب اختيار قطعة واحدة على الأقل لإتمام الحجز.");
-        //        await LoadSelectListsAsync();
-        //        return Page();
-        //    }
-
-        //    // ✅ التعديل 3: التحقق من توفر جميع القطع المختارة
-        //    foreach (var itemId in SelectedItemIds)
-        //    {
-        //        bool isBooked = await _context.BookingItems
-        //            .Include(bi => bi.Booking)
-        //            .AnyAsync(bi =>
-        //                bi.ProductItemId == itemId &&
-        //                bi.Booking.Status != BookingStatus.Cancelled &&
-        //                bi.Booking.Status != BookingStatus.Returned &&
-        //                (
-        //                    (Booking.PickupDate >= bi.Booking.PickupDate && Booking.PickupDate < bi.Booking.ReturnDate) ||
-        //                    (Booking.ReturnDate > bi.Booking.PickupDate && Booking.ReturnDate <= bi.Booking.ReturnDate) ||
-        //                    (Booking.PickupDate <= bi.Booking.PickupDate && Booking.ReturnDate >= bi.Booking.ReturnDate)
-        //                )
-        //            );
-
-        //        if (isBooked)
-        //        {
-        //            // جلب اسم القطعة المحجوزة لعرضه في الخطأ
-        //            var itemName = _context.ProductItems.Include(p => p.ProductDefinition)
-        //                            .Where(p => p.Id == itemId)
-        //                            .Select(p => p.ProductDefinition.Name + " (" + p.Barcode + ")")
-        //                            .FirstOrDefault();
-
-        //            ModelState.AddModelError(string.Empty, $"عذراً، القطعة '{itemName}' محجوزة بالفعل في هذه الفترة.");
-        //            await LoadSelectListsAsync();
-        //            return Page();
-        //        }
-        //    }
-
-        //    Booking.BranchId = currentUser.BranchId;
-        //    Booking.Status = BookingStatus.New;
-
-        //    if (Booking.BookingItems == null)
-        //    {
-        //        Booking.BookingItems = new List<BookingItem>();
-        //    }
-
-        //    // ✅ التعديل 4: إضافة جميع القطع المختارة للحجز
-        //    foreach (var itemId in SelectedItemIds)
-        //    {
-        //        var bookingItem = new BookingItem
-        //        {
-        //            ProductItemId = itemId,
-        //            // بما أن السعر الإجمالي مسجل في Booking.TotalAmount
-        //            // يمكننا وضع 0 هنا أو توزيع السعر لاحقاً إذا أردت
-        //            RentalPrice = 0
-        //        };
-        //        Booking.BookingItems.Add(bookingItem);
-        //    }
-
-        //    _context.Bookings.Add(Booking);
-        //    await _context.SaveChangesAsync();
-
-
-
-        //    return RedirectToPage("./Index");
-        //}
-
+        // دالة مساعدة لتحميل القوائم
         private async Task LoadSelectListsAsync()
         {
             var user = await _userManager.GetUserAsync(User);
             int? branchId = user?.BranchId;
 
-            var clientsQuery = _context.Clients.AsQueryable();
+            // قائمة العملاء
+            var clientsQuery = _context.Clients.OrderBy(c => c.Name).AsQueryable();
             ViewData["ClientId"] = new SelectList(await clientsQuery.ToListAsync(), "Id", "Name");
 
+            // قائمة المنتجات (حسب الفرع وصلاحيات المستخدم)
             var itemsQuery = _context.ProductItems
                 .AsNoTracking()
                 .Include(p => p.ProductDefinition)
@@ -253,20 +191,24 @@ namespace AtelierProject.Pages.Bookings
 
             var allItems = await itemsQuery.ToListAsync();
 
+            // فلترة حسب الصلاحية (رجالي/حريمي)
             var filteredItems = allItems.Where(p =>
             {
                 if (p.ProductDefinition == null) return false;
                 var dept = p.ProductDefinition.Department;
+
                 if (dept == DepartmentType.Men && user.CanAccessMenSection) return true;
                 if (dept == DepartmentType.Women && user.CanAccessWomenSection) return true;
+
                 return false;
             })
             .Select(p => new
             {
                 Id = p.Id,
+                // نص العرض في القائمة: [الكود] الاسم (النسخة) - المقاس - السعر
                 DisplayText = $"[{(string.IsNullOrEmpty(p.Barcode) ? "بدون كود" : p.Barcode)}] " +
                               $"{(string.IsNullOrEmpty(p.Name) ? p.ProductDefinition.Name : p.ProductDefinition.Name + " (" + p.Name + ")")} " +
-                              $"- {p.Size}"
+                              $"- {p.Size} - {p.ProductDefinition.RentalPrice:N0} ج.م"
             })
             .OrderBy(x => x.DisplayText)
             .ToList();

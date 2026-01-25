@@ -54,6 +54,13 @@ namespace AtelierProject.Pages.Expenses
             if (user.BranchId != null)
             {
                 query = query.Where(e => e.BranchId == user.BranchId);
+
+                // ب) ✅ التعديل الجديد: يرى مصروفاته هو فقط
+                query = query.Where(e => e.CreatedByUserId == user.Id);
+            }
+            else
+            {
+
             }
 
             // 2. فلتر التاريخ

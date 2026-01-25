@@ -7,155 +7,151 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 
 <style>
+    /* --- المتغيرات الملكية --- */
     :root {
         --royal-gold: #c5a059;
         --royal-gold-dark: #b08d4b;
         --royal-black: #1a1a1a;
-        --text-dark: #333;
         --bg-cream: #fffcf5;
     }
 
     body {
-        background-color: #f4f4f4;
+        background-color: #f8fafc;
         font-family: 'Cairo', sans-serif;
     }
 
-    /* الكارت الرئيسي */
+    /* الكارت الأساسي */
     .royal-card {
         border: none;
-        border-radius: 12px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
         overflow: hidden;
         background: #fff;
-        border-top: 5px solid var(--royal-gold);
     }
 
-    /* الهيدر */
     .royal-header {
-        background-color: var(--royal-black);
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         padding: 25px;
         text-align: center;
+        border-bottom: 4px solid var(--royal-gold);
     }
 
         .royal-header h4 {
-            color: var(--royal-gold);
+            color: #fff;
             font-family: 'Playfair Display', serif;
             margin: 0;
-            font-size: 1.8rem;
             letter-spacing: 1px;
         }
 
-    /* عناوين الأقسام */
+    /* العناوين */
     .section-label {
-        font-weight: 700;
-        color: var(--royal-black);
-        border-bottom: 2px solid #eee;
-        padding-bottom: 10px;
+        font-weight: 800;
+        color: #334155;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
         margin-bottom: 20px;
-        display: block;
-        position: relative;
     }
 
         .section-label::after {
             content: '';
-            position: absolute;
-            bottom: -2px;
-            right: 0;
-            width: 50px;
+            flex-grow: 1;
             height: 2px;
-            background-color: var(--royal-gold);
+            background: #f1f5f9;
+            margin-right: 15px;
         }
 
     /* حقول الإدخال */
-    .form-control, .form-select, .input-group-text {
-        border-radius: 8px;
-        border: 1px solid #e0e0e0;
-        padding: 12px;
-        transition: all 0.3s;
+    .form-control, .form-select {
+        border-radius: 12px;
+        padding: 12px 15px;
+        border: 1px solid #e2e8f0;
+        background-color: #fdfdfd;
+        transition: 0.3s;
     }
 
         .form-control:focus, .form-select:focus {
             border-color: var(--royal-gold);
             box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.15);
-            background-color: var(--bg-cream);
+            background-color: #fff;
         }
 
-    .input-group-text {
-        background-color: var(--royal-black);
-        color: var(--royal-gold);
-        border: 1px solid var(--royal-black);
-    }
-
-    /* --- تنسيق قائمة الخدمات القابلة للتمرير --- */
+    /* حاوية الخدمات */
     .services-scroll-container {
-        max-height: 400px; /* تحديد ارتفاع ثابت */
-        overflow-y: auto; /* تفعيل التمرير العمودي */
-        padding: 10px;
-        border: 1px solid #f0f0f0;
-        border-radius: 8px;
-        background-color: #fff;
-        margin-bottom: 15px;
+        max-height: 450px;
+        overflow-y: auto;
+        padding: 15px;
+        border: 1px solid #f1f5f9;
+        border-radius: 15px;
+        background-color: #f8fafc;
+        margin-bottom: 20px;
     }
 
-        /* تنسيق شريط التمرير */
-        .services-scroll-container::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .services-scroll-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        .services-scroll-container::-webkit-scrollbar-thumb {
-            background: var(--royal-gold);
-            border-radius: 4px;
-        }
-
-            .services-scroll-container::-webkit-scrollbar-thumb:hover {
-                background: var(--royal-gold-dark);
-            }
-
-    /* كروت الخدمات */
+    /* كارت الخدمة */
     .service-card {
-        border: 1px solid #eee;
-        border-radius: 10px;
-        padding: 10px; /* تقليل الحشو قليلاً */
         background: #fff;
+        border: 2px solid transparent;
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
         transition: all 0.2s ease-in-out;
         cursor: pointer;
         position: relative;
-        overflow: hidden;
-        height: 100%; /* لضمان تساوي الارتفاع */
+        height: 100%;
     }
 
         .service-card:hover {
-            border-color: var(--royal-gold);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.05);
         }
 
-    /* عند اختيار الخدمة */
-    .form-check-input:checked + label .service-name-text {
-        color: var(--royal-black);
+    /* تأثير الاختيار (Selected State) */
+    .service-check:checked ~ label .service-card-inner {
+        /* لا شيء هنا، سنغير الكارت الأب */
+    }
+
+    /* نقوم بتلوين الكارت عند اختيار الشيك بوكس بداخله باستخدام JS أو CSS has selector */
+    .service-card.selected {
+        border-color: var(--royal-gold);
+        background-color: #fffbf2; /* كريمي فاتح جداً */
+        box-shadow: 0 8px 20px rgba(197, 160, 89, 0.15);
+    }
+
+    .service-name {
+        font-weight: 700;
+        color: #334155;
+    }
+
+    .service-price {
+        color: var(--royal-gold-dark);
         font-weight: bold;
+        font-size: 0.9rem;
     }
 
-    .form-check-input:checked ~ label .price-tag {
-        color: var(--royal-gold-dark) !important;
-    }
-
-    /* شريط السعر العائم */
+    /* مربع الإجمالي الفاخر */
     .price-summary-box {
-        background: linear-gradient(135deg, var(--royal-black) 0%, #2c2c2c 100%);
-        color: var(--royal-gold);
-        border-radius: 10px;
-        padding: 15px 25px;
-        margin-bottom: 20px;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        color: #fff;
+        border-radius: 15px;
+        padding: 20px 30px;
+        box-shadow: 0 10px 30px rgba(30, 41, 59, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
     }
 
-        .price-summary-box .h4 {
-            color: #fff;
+        .price-summary-box::before {
+            content: '\f51e'; /* أيقونة Coins */
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            left: -20px;
+            bottom: -20px;
+            font-size: 8rem;
+            opacity: 0.05;
+            transform: rotate(20deg);
         }
 
     /* الأزرار */
@@ -165,181 +161,151 @@
         border: none;
         padding: 12px 40px;
         font-weight: bold;
-        border-radius: 8px;
-        transition: transform 0.2s;
+        border-radius: 10px;
+        transition: 0.3s;
+        box-shadow: 0 5px 15px rgba(197, 160, 89, 0.3);
     }
 
         .btn-royal-save:hover {
             transform: translateY(-2px);
             color: #fff;
-            box-shadow: 0 5px 15px rgba(197, 160, 89, 0.4);
+            box-shadow: 0 8px 20px rgba(197, 160, 89, 0.5);
         }
 
     .btn-royal-cancel {
-        border: 1px solid #ccc;
-        color: #666;
-        padding: 12px 30px;
-        border-radius: 8px;
         background: #fff;
+        border: 1px solid #e2e8f0;
+        color: #64748b;
+        padding: 12px 30px;
+        border-radius: 10px;
+        transition: 0.3s;
     }
 
         .btn-royal-cancel:hover {
-            background: #f8f8f8;
-            color: #000;
+            background: #f1f5f9;
+            color: #334155;
         }
-
-    /* Select2 Customization */
-    .select2-container--bootstrap-5 .select2-selection {
-        border-color: #e0e0e0 !important;
-        border-radius: 8px !important;
-        padding: 8px !important;
-    }
-
-    .select2-container--bootstrap-5.select2-container--focus .select2-selection {
-        border-color: var(--royal-gold) !important;
-        box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.15) !important;
-    }
 </style>
 
-<div class="container mt-5 mb-5">
+<div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-9">
+        <div class="col-lg-10">
             <div class="card royal-card">
 
                 <div class="card-header royal-header">
-                    <h4 class="mb-0"><i class="fa-solid fa-spa ms-2"></i> حجز موعد صالون</h4>
+                    <h4><i class="fa-solid fa-spa ms-2 text-warning"></i> حجز موعد صالون</h4>
                 </div>
 
                 <div class="card-body p-5">
                     <form method="post">
 
-                        <div class="row mb-4">
+                        <label class="section-label"><i class="fa-regular fa-id-card ms-2 text-warning"></i> البيانات الأساسية</label>
+                        <div class="row g-4 mb-5">
                             <div class="col-md-6">
-                                <label asp-for="Appointment.ClientId" class="form-label fw-bold">العميلة</label>
+                                <label asp-for="Appointment.ClientId" class="form-label fw-bold small text-muted">العميلة</label>
                                 <select asp-for="Appointment.ClientId" id="clientSelect" class="form-select" asp-items="ViewBag.ClientId" required>
-                                    <option value="">-- اختر العميلة --</option>
+                                    <option value="">-- ابحثي عن العميلة --</option>
                                 </select>
-                                <span asp-validation-for="Appointment.ClientId" class="text-danger"></span>
+                                <span asp-validation-for="Appointment.ClientId" class="text-danger small"></span>
                             </div>
                             <div class="col-md-6">
-                                <label asp-for="Appointment.AppointmentDate" class="form-label fw-bold">تاريخ ووقت الموعد</label>
+                                <label asp-for="Appointment.AppointmentDate" class="form-label fw-bold small text-muted">تاريخ ووقت الزيارة</label>
                                 <input asp-for="Appointment.AppointmentDate"
                                        class="form-control"
                                        type="datetime-local"
                                        asp-format="{0:yyyy-MM-ddTHH:mm}"
                                        required />
-                                <span asp-validation-for="Appointment.AppointmentDate" class="text-danger"></span>
+                                <span asp-validation-for="Appointment.AppointmentDate" class="text-danger small"></span>
                             </div>
                         </div>
 
-                        <div class="mb-5">
-                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-4">
-                                <label class="section-label mb-0 border-0 p-0">
-                                    <i class="fa-solid fa-wand-magic-sparkles ms-2 text-warning"></i> الخدمات المطلوبة
-                                    <small class="text-muted fw-normal ms-2" style="font-size: 0.8rem;">(قم بالتمرير لرؤية المزيد)</small>
-                                </label>
-                                <div class="input-group w-50">
-                                    <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"></i></span>
-                                    <input type="text" id="serviceSearchInput" class="form-control border-start-0 ps-0" placeholder="ابحث عن خدمة..." autocomplete="off">
-                                </div>
+                        <div class="d-flex justify-content-between align-items-end mb-3">
+                            <label class="section-label mb-0 border-0"><i class="fa-solid fa-wand-magic-sparkles ms-2 text-warning"></i> الخدمات المطلوبة</label>
+                            <div class="input-group w-50 shadow-sm" style="border-radius:10px; overflow:hidden;">
+                                <span class="input-group-text bg-white border-0"><i class="fa fa-search text-muted"></i></span>
+                                <input type="text" id="serviceSearchInput" class="form-control border-0" placeholder="بحث سريع عن خدمة..." autocomplete="off">
                             </div>
+                        </div>
 
-                            <div class="services-scroll-container">
-                                <div class="row g-3" id="servicesListContainer">
-                                    @foreach (var service in Model.AvailableServices)
-                                    {
-                                        <div class="col-md-6 service-item">
-                                            <div class="service-card position-relative p-3 h-100">
-                                                <div class="row align-items-center g-2">
+                        <div class="services-scroll-container">
+                            <div class="row g-3" id="servicesListContainer">
+                                @foreach (var service in Model.AvailableServices)
+                                {
+                                    <div class="col-md-6 service-item">
+                                        <div class="service-card h-100" id="card_@service.Id" onclick="triggerCheckbox(@service.Id)">
+                                            <div class="row align-items-center g-2">
 
-                                                    @* 1. مربع الاختيار والاسم (يسار) *@
-                                                    <div class="col-8 col-sm-9">
-                                                        <div class="form-check m-0">
-                                                            <input class="form-check-input service-check fs-5" type="checkbox"
-                                                                   name="SelectedServiceIds"
-                                                                   value="@service.Id"
-                                                                   id="srv_@service.Id"
-                                                                   data-price="@service.Price"
-                                                                   onchange="toggleQuantity(this, @service.Id)"
-                                                                   style="cursor: pointer;">
+                                                <div class="col-8">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input service-check" type="checkbox"
+                                                               name="SelectedServiceIds"
+                                                               value="@service.Id"
+                                                               id="srv_@service.Id"
+                                                               data-price="@service.Price"
+                                                               onclick="event.stopPropagation(); toggleQuantity(this, @service.Id)"
+                                                               style="transform: scale(1.2); margin-left: 10px;">
 
-                                                            <label class="form-check-label w-100 ps-2" for="srv_@service.Id" style="cursor: pointer;">
-                                                                <div class="service-name-text fw-bold text-truncate" title="@service.Name">@service.Name</div>
-                                                                <div class="text-muted small">@service.Price.ToString("N0") ج.م</div>
-                                                            </label>
-                                                        </div>
+                                                        <label class="form-check-label w-100" for="srv_@service.Id">
+                                                            <div class="service-name text-truncate" title="@service.Name">@service.Name</div>
+                                                            <div class="service-price">@service.Price.ToString("N0") ج.م</div>
+                                                        </label>
                                                     </div>
-
-                                                    @* 2. مربع الكمية (يمين) - ظاهر دائماً ولكن معطل *@
-                                                    <div class="col-4 col-sm-3 text-end">
-                                                        <div class="quantity-wrapper" id="qty_wrapper_@service.Id" style="opacity: 0.5; pointer-events: none;">
-                                                            <div class="input-group input-group-sm">
-                                                                <span class="input-group-text bg-light px-2 border-0 small text-muted">عدد</span>
-                                                                <input type="number"
-                                                                       name="ServiceQuantities[@service.Id]"
-                                                                       id="qty_input_@service.Id"
-                                                                       class="form-control text-center fw-bold px-1"
-                                                                       value="1" min="1" max="50"
-                                                                       onchange="updateTotal()"
-                                                                       onkeyup="updateTotal()"
-                                                                       style="max-width: 60px;">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
                                                 </div>
+
+                                                <div class="col-4 text-end">
+                                                    <div class="quantity-wrapper" id="qty_wrapper_@service.Id" style="opacity: 0.3; pointer-events: none; transition: 0.3s;">
+                                                        <div class="input-group input-group-sm">
+                                                            <span class="input-group-text bg-light border small text-muted px-1">عدد</span>
+                                                            <input type="number"
+                                                                   name="ServiceQuantities[@service.Id]"
+                                                                   id="qty_input_@service.Id"
+                                                                   class="form-control text-center fw-bold"
+                                                                   value="1" min="1" max="10"
+                                                                   onclick="event.stopPropagation()"
+                                                                   onchange="updateTotal()"
+                                                                   onkeyup="updateTotal()">
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                             </div>
                                         </div>
-                                    }
-                                </div>
-
-                                <div id="noServicesFound" class="alert alert-light text-center mt-3 text-muted border border-dashed" style="display: none;">
-                                    <i class="fa fa-circle-exclamation me-2"></i> لا توجد خدمة بهذا الاسم
-                                </div>
+                                    </div>
+                                }
+                            </div>
+                            <div id="noServicesFound" class="alert alert-light text-center mt-3 text-muted" style="display: none;">
+                                <i class="fa-solid fa-circle-exclamation me-1"></i> لا توجد خدمة بهذا الاسم
                             </div>
                         </div>
 
-                        <div class="price-summary-box d-flex justify-content-between align-items-center">
+                        <div class="price-summary-box mb-4">
                             <div>
-                                <h5 class="mb-0 text-white-50 small text-uppercase">إجمالي التكلفة المتوقعة</h5>
-                                <span class="h2 fw-bold text-white mb-0" id="totalPriceDisplay">0 ج.م</span>
+                                <h6 class="text-white-50 mb-1 text-uppercase ls-1">الإجمالي المتوقع</h6>
+                                <h1 class="fw-bold mb-0 text-white" id="totalPriceDisplay">0 ج.م</h1>
                             </div>
                             <div class="text-end">
-                                <i class="fa-solid fa-coins fa-2x text-white-50"></i>
-                            </div>
-                        </div>
-
-                        <div class="row mt-4 p-4 bg-light rounded-3 border g-4 align-items-end">
-                            <div class="col-md-6">
-                                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
-                                    <span class="text-muted">مجموع الخدمات:</span>
-                                    <span class="fw-bold" id="totalPriceDisplayBottom">0 ج.م</span>
-                                </div>
-                                <small class="text-muted"><i class="fa fa-info-circle"></i> السعر النهائي قد يختلف بناءً على إضافات أثناء العمل.</small>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label asp-for="Appointment.PaidAmount" class="form-label fw-bold text-success">العربون المدفوع (إن وجد)</label>
-                                <div class="input-group">
-                                    <input asp-for="Appointment.PaidAmount" class="form-control fw-bold text-success" placeholder="0" value="0" />
-                                    <span class="input-group-text">ج.م</span>
+                                <label asp-for="Appointment.PaidAmount" class="form-label text-white-50 small mb-1">العربون (إن وجد)</label>
+                                <div class="input-group input-group-sm" style="width: 150px;">
+                                    <input asp-for="Appointment.PaidAmount" class="form-control bg-white border-0 fw-bold text-success text-center" placeholder="0" />
+                                    <span class="input-group-text bg-white border-0 text-success">ج.م</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="mt-4 mb-4">
-                            <label asp-for="Appointment.Notes" class="form-label fw-bold">ملاحظات إضافية</label>
-                            <textarea asp-for="Appointment.Notes" class="form-control" rows="2" placeholder="أي تفاصيل خاصة بالعميلة..."></textarea>
+                        <div class="mb-4">
+                            <label asp-for="Appointment.Notes" class="form-label fw-bold text-muted small">ملاحظات إضافية</label>
+                            <textarea asp-for="Appointment.Notes" class="form-control" rows="2" placeholder="اكتب أي تفاصيل إضافية هنا..."></textarea>
                         </div>
 
                         <div class="d-flex justify-content-between pt-3 border-top">
                             <a asp-page="./Index" class="btn btn-royal-cancel">
-                                <i class="fa-solid fa-arrow-right ms-2"></i> إلغاء
+                                <i class="fa-solid fa-xmark me-1"></i> إلغاء
                             </a>
-                            <button type="submit" class="btn btn-royal-save shadow-lg">
-                                <i class="fa-solid fa-check ms-2"></i> تأكيد الحجز
+                            <button type="submit" class="btn btn-royal-save">
+                                <i class="fa-solid fa-check me-2"></i> تأكيد وحفظ الموعد
                             </button>
                         </div>
+
                     </form>
                 </div>
             </div>
@@ -354,42 +320,45 @@
 
     <script>
         $(document).ready(function () {
-            // تفعيل Select2 للعملاء
+            // تفعيل Select2 مع تحسين بسيط
             $('#clientSelect').select2({
                 theme: 'bootstrap-5',
-                placeholder: '-- ابحث عن العميلة --',
+                placeholder: 'اختر العميلة...',
                 width: '100%',
                 language: { noResults: function () { return "لا توجد نتائج"; } }
             });
         });
 
-        // ==========================================
-        // 1. دالة تفعيل/تعطيل الكمية (التصميم الجديد)
-        // ==========================================
+        // تفعيل الكارت عند الضغط عليه (UX Enhancement)
+        function triggerCheckbox(id) {
+            var checkbox = document.getElementById('srv_' + id);
+            checkbox.checked = !checkbox.checked;
+            toggleQuantity(checkbox, id);
+        }
+
+        // تفعيل/تعطيل الكمية + تغيير ستايل الكارت
         function toggleQuantity(checkbox, id) {
-            // نبحث عن الحاوية الخاصة بالكمية
             var qtyWrapper = document.getElementById('qty_wrapper_' + id);
             var qtyInput = document.getElementById('qty_input_' + id);
-
-            if (!qtyWrapper || !qtyInput) return; // حماية
+            var card = document.getElementById('card_' + id);
 
             if (checkbox.checked) {
-                // تفعيل: شفافية كاملة + السماح بالكتابة
+                // تفعيل
                 qtyWrapper.style.opacity = '1';
                 qtyWrapper.style.pointerEvents = 'auto';
-                qtyInput.focus(); // نقل المؤشر للكتابة فوراً
+                card.classList.add('selected'); // إضافة حدود ذهبية
+                qtyInput.focus();
             } else {
-                // تعطيل: شفافية 50% + منع الكتابة
-                qtyWrapper.style.opacity = '0.5';
+                // تعطيل
+                qtyWrapper.style.opacity = '0.3';
                 qtyWrapper.style.pointerEvents = 'none';
-                qtyInput.value = 1; // إعادة العدد لـ 1
+                card.classList.remove('selected'); // إزالة الحدود
+                qtyInput.value = 1;
             }
             updateTotal();
         }
 
-        // ==========================================
-        // 2. دالة حساب الإجمالي
-        // ==========================================
+        // حساب الإجمالي
         function updateTotal() {
             let total = 0;
             const checkboxes = document.querySelectorAll('.service-check');
@@ -399,56 +368,34 @@
                     let price = parseFloat(chk.getAttribute('data-price')) || 0;
                     let serviceId = chk.value;
                     let qtyInput = document.getElementById('qty_input_' + serviceId);
-
-                    let qty = 1;
-                    if (qtyInput) {
-                        qty = parseInt(qtyInput.value) || 1;
-                    }
+                    let qty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
 
                     total += (price * qty);
                 }
             });
 
-            const formattedTotal = total.toLocaleString() + ' ج.م';
-
-            const topLabel = document.getElementById('totalPriceDisplay');
-            const bottomLabel = document.getElementById('totalPriceDisplayBottom');
-
-            if (topLabel) topLabel.textContent = formattedTotal;
-            if (bottomLabel) bottomLabel.textContent = formattedTotal;
+            document.getElementById('totalPriceDisplay').textContent = total.toLocaleString() + ' ج.م';
         }
 
-        // ==========================================
-        // 3. كود البحث (الفلترة)
-        // ==========================================
-        const searchInput = document.getElementById('serviceSearchInput');
-        if (searchInput) {
-            searchInput.addEventListener('keyup', function () {
-                let filter = this.value.toLowerCase();
-                let items = document.querySelectorAll('.service-item');
-                let hasVisibleItems = false;
+        // البحث الفوري
+        document.getElementById('serviceSearchInput').addEventListener('keyup', function () {
+            let filter = this.value.toLowerCase();
+            let items = document.querySelectorAll('.service-item');
+            let hasVisible = false;
 
-                items.forEach(function (item) {
-                    let nameEl = item.querySelector('.service-name-text');
-                    if (nameEl) {
-                        let serviceName = nameEl.textContent.toLowerCase();
-                        if (serviceName.includes(filter)) {
-                            item.style.display = '';
-                            hasVisibleItems = true;
-                        } else {
-                            item.style.display = 'none';
-                        }
-                    }
-                });
-
-                let noResultMsg = document.getElementById('noServicesFound');
-                if (noResultMsg) {
-                    noResultMsg.style.display = hasVisibleItems ? 'none' : 'block';
+            items.forEach(function (item) {
+                let name = item.querySelector('.service-name').textContent.toLowerCase();
+                if (name.includes(filter)) {
+                    item.style.display = '';
+                    hasVisible = true;
+                } else {
+                    item.style.display = 'none';
                 }
             });
-        }
 
-        // تشغيل الحساب مرة واحدة عند التحميل
-        updateTotal();
+            document.getElementById('noServicesFound').style.display = hasVisible ? 'none' : 'block';
+        });
+
+        updateTotal(); // تشغيل عند التحميل
     </script>
 }

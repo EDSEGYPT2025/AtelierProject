@@ -8,36 +8,36 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 
 <style>
+    /* --- تنسيقات الثيم الملكي --- */
     :root {
         --royal-gold: #c5a059;
         --royal-gold-dark: #b08d4b;
         --royal-black: #1a1a1a;
-        --royal-grey: #f9f9f9;
         --text-dark: #333;
     }
 
     body {
-        background-color: #f4f4f4;
+        background-color: #f8fafc;
+        font-family: 'Cairo', sans-serif;
     }
 
     .royal-card {
         border: none;
-        border-radius: 12px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        border-radius: 20px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
         overflow: hidden;
         background: #fff;
-        border-top: 5px solid var(--royal-gold);
     }
 
     .royal-header {
-        background-color: var(--royal-black);
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         padding: 25px;
         text-align: center;
-        position: relative;
+        border-bottom: 4px solid var(--royal-gold);
     }
 
         .royal-header h3 {
-            color: var(--royal-gold);
+            color: #fff;
             font-family: 'Playfair Display', serif;
             margin: 0;
             font-size: 1.8rem;
@@ -46,44 +46,40 @@
 
     .section-title {
         font-family: 'Cairo', sans-serif;
-        color: var(--royal-black);
-        font-weight: 700;
+        color: #334155;
+        font-weight: 800;
         font-size: 1.1rem;
-        position: relative;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-        margin-top: 10px;
-        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        margin-bottom: 25px;
+        margin-top: 15px;
     }
 
         .section-title::after {
             content: '';
-            position: absolute;
-            bottom: -1px;
-            right: 0;
-            width: 60px;
-            height: 3px;
-            background-color: var(--royal-gold);
+            flex-grow: 1;
+            height: 2px;
+            background: #f1f5f9;
+            margin-right: 15px;
         }
 
     .form-control, .form-select, .input-group-text {
-        border-radius: 8px;
-        border: 1px solid #e0e0e0;
-        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        padding: 12px 15px;
         font-size: 0.95rem;
-        transition: all 0.3s ease;
+        transition: 0.3s;
     }
 
         .form-control:focus, .form-select:focus {
             border-color: var(--royal-gold);
             box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.15);
-            background-color: #fffcf5;
+            background-color: #fff;
         }
 
     .input-group-text {
-        background-color: var(--royal-black);
-        color: var(--royal-gold);
-        border: 1px solid var(--royal-black);
+        background-color: #f8fafc;
+        color: #64748b;
         font-weight: bold;
     }
 
@@ -93,88 +89,122 @@
         border: none;
         padding: 12px 40px;
         font-weight: bold;
-        border-radius: 8px;
-        transition: transform 0.2s, box-shadow 0.2s;
+        border-radius: 10px;
+        transition: 0.3s;
+        box-shadow: 0 5px 15px rgba(197, 160, 89, 0.3);
     }
 
         .btn-royal-save:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(197, 160, 89, 0.4);
+            box-shadow: 0 8px 20px rgba(197, 160, 89, 0.5);
             color: #fff;
         }
 
     .btn-royal-cancel {
         background-color: #fff;
-        color: #555;
-        border: 1px solid #ddd;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
         padding: 12px 30px;
-        border-radius: 8px;
-        transition: all 0.2s;
+        border-radius: 10px;
+        transition: 0.3s;
     }
 
         .btn-royal-cancel:hover {
-            background-color: #f8f8f8;
-            color: #000;
-            border-color: #bbb;
+            background-color: #f1f5f9;
+            color: #334155;
         }
 
-    /* تنسيقات الجدول المضاف */
-    .table-selected-items thead {
-        background-color: var(--royal-black);
-        color: var(--royal-gold);
+    .table-selected-items {
+        border-collapse: separate;
+        border-spacing: 0 5px;
+    }
+
+        .table-selected-items thead th {
+            background-color: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 12px;
+            font-size: 0.9rem;
+        }
+
+        .table-selected-items tbody tr {
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .table-selected-items td {
+            border: 1px solid #f1f5f9;
+            padding: 12px;
+            vertical-align: middle;
+        }
+
+    .select2-container--bootstrap-5 .select2-selection {
+        border-radius: 12px !important;
+        border-color: #e2e8f0 !important;
+        padding: 8px 12px !important;
+    }
+
+    .select2-container--bootstrap-5.select2-container--focus .select2-selection {
+        border-color: var(--royal-gold) !important;
+        box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.15) !important;
     }
 </style>
 
 <div class="container mt-5 mb-5">
     <div class="row justify-content-center">
-        <div class="col-lg-9">
+        <div class="col-lg-10">
             <div class="card royal-card">
 
                 <div class="card-header royal-header">
-                    <h3 class="mb-0"><i class="fa-solid fa-crown"></i> إنشاء حجز جديد</h3>
+                    <h3 class="mb-0"><i class="fa-solid fa-crown ms-2 text-warning"></i> حجز جديد (أتيليه)</h3>
                 </div>
 
                 <div class="card-body p-5">
                     <form method="post">
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger shadow-sm border-0 rounded-3 mb-4" role="alert"></div>
 
-                        <h5 class="section-title"><i class="fa-regular fa-id-card ms-2 text-warning"></i> البيانات الأساسية</h5>
+                        <h5 class="section-title"><i class="fa-regular fa-id-card ms-2 text-warning"></i> بيانات العميل</h5>
                         <div class="row g-4 mb-4">
                             <div class="col-md-12">
-                                <label asp-for="Booking.ClientId" class="form-label fw-bold">العميل</label>
+                                <label asp-for="Booking.ClientId" class="form-label fw-bold text-muted small">اسم العميل</label>
                                 <select asp-for="Booking.ClientId" id="clientSelect" class="form-select" asp-items="ViewBag.ClientId">
-                                    <option value="">-- اختر العميل --</option>
+                                    <option value="">-- ابحث واختر العميل --</option>
                                 </select>
-                                <span asp-validation-for="Booking.ClientId" class="text-danger"></span>
+                                <span asp-validation-for="Booking.ClientId" class="text-danger small mt-1"></span>
                             </div>
                         </div>
 
                         <h5 class="section-title"><i class="fa-solid fa-shirt ms-2 text-warning"></i> اختيار الموديلات</h5>
-                        <div class="row g-3 mb-3 bg-light p-3 rounded align-items-end mx-0">
-                            <div class="col-md-9">
-                                <label class="form-label fw-bold">القطعة (ابحث بالكود أو الاسم)</label>
-                                <select id="productSelect" class="form-select" asp-items="ViewBag.ProductItemId">
-                                    <option value="">-- ابحث واختر الموديل --</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <button type="button" id="btnAddItem" class="btn btn-dark w-100 fw-bold" style="background-color: var(--royal-black);">
-                                    <i class="fa-solid fa-plus"></i> إضافة للسلة
-                                </button>
+
+                        <div class="bg-light p-4 rounded-4 mb-4 border border-dashed">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-9">
+                                    <label class="form-label fw-bold text-muted small">بحث عن قطعة (بالاسم أو الكود)</label>
+                                    <select id="productSelect" class="form-select" asp-items="ViewBag.ProductItemId">
+                                        <option value="">-- اختر الموديل --</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="button" id="btnAddItem" class="btn btn-dark w-100 fw-bold" style="background: var(--royal-black); border-radius: 12px; padding: 10px;">
+                                        <i class="fa-solid fa-plus"></i> إضافة
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
                         <div class="table-responsive mb-4">
-                            <table class="table table-bordered table-striped text-center table-selected-items">
+                            <table class="table table-selected-items text-center">
                                 <thead>
                                     <tr>
-                                        <th>اسم الموديل / الكود</th>
+                                        <th>تفاصيل القطعة (الاسم / الكود)</th>
                                         <th style="width: 100px;">إجراء</th>
                                     </tr>
                                 </thead>
                                 <tbody id="itemsTableBody">
                                     <tr id="noItemsRow">
-                                        <td colspan="2" class="text-muted small py-3">لم يتم اختيار أي قطع بعد..</td>
+                                        <td colspan="2" class="text-muted small py-4 bg-light rounded">
+                                            <i class="fa-solid fa-basket-shopping me-2"></i> السلة فارغة.. أضف قطعاً للحجز
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -185,53 +215,77 @@
                         <h5 class="section-title"><i class="fa-regular fa-calendar-days ms-2 text-warning"></i> فترة الحجز</h5>
                         <div class="row g-4 mb-4">
                             <div class="col-md-6">
-                                <label asp-for="Booking.PickupDate" class="form-label fw-bold">تاريخ الاستلام</label>
+                                <label asp-for="Booking.PickupDate" class="form-label fw-bold text-muted small">تاريخ الاستلام</label>
                                 <input asp-for="Booking.PickupDate" class="form-control" type="date" />
+                                <span asp-validation-for="Booking.PickupDate" class="text-danger small"></span>
                             </div>
                             <div class="col-md-6">
-                                <label asp-for="Booking.ReturnDate" class="form-label fw-bold">تاريخ الإرجاع</label>
+                                <label asp-for="Booking.ReturnDate" class="form-label fw-bold text-muted small">تاريخ الإرجاع</label>
                                 <input asp-for="Booking.ReturnDate" class="form-control" type="date" />
+                                <span asp-validation-for="Booking.ReturnDate" class="text-danger small"></span>
                             </div>
                         </div>
 
-                        <h5 class="section-title"><i class="fa-solid fa-coins ms-2 text-warning"></i> الماليات والتأمين</h5>
+                        <h5 class="section-title"><i class="fa-solid fa-coins ms-2 text-warning"></i> الحسابات المالية</h5>
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-3">
+                                <label asp-for="Booking.TotalAmount" class="form-label fw-bold text-muted small">الإجمالي (قبل الخصم)</label>
+                                <div class="input-group">
+                                    <input asp-for="Booking.TotalAmount" id="inputTotal" class="form-control fw-bold text-dark" placeholder="0" onkeyup="calcNet()" />
+                                    <span class="input-group-text">ج.م</span>
+                                </div>
+                                <span asp-validation-for="Booking.TotalAmount" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label asp-for="Booking.Discount" class="form-label fw-bold text-danger small">قيمة الخصم</label>
+                                <div class="input-group">
+                                    <input asp-for="Booking.Discount" id="inputDiscount" class="form-control fw-bold text-danger" placeholder="0" value="0" onkeyup="calcNet()" />
+                                    <span class="input-group-text text-danger bg-white border-danger">ج.م</span>
+                                </div>
+                                <span asp-validation-for="Booking.Discount" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold text-primary small">الصافي بعد الخصم</label>
+                                <div class="input-group">
+                                    <input type="text" id="displayNet" class="form-control fw-bold text-primary" value="0" readonly style="background-color: #eef2ff;" />
+                                    <span class="input-group-text text-primary bg-white border-primary">ج.م</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label asp-for="Booking.PaidAmount" class="form-label fw-bold text-muted small">العربون المدفوع</label>
+                                <div class="input-group">
+                                    <input asp-for="Booking.PaidAmount" class="form-control fw-bold text-success" placeholder="0" />
+                                    <span class="input-group-text text-success bg-white border-success">ج.م</span>
+                                </div>
+                                <span asp-validation-for="Booking.PaidAmount" class="text-danger small"></span>
+                            </div>
+                        </div>
+
                         <div class="row g-4 mb-4">
                             <div class="col-md-4">
-                                <label asp-for="Booking.TotalAmount" class="form-label fw-bold">إجمالي السعر</label>
+                                <label asp-for="Booking.InsuranceAmount" class="form-label fw-bold text-muted small">مبلغ التأمين (مسترد)</label>
                                 <div class="input-group">
-                                    <input asp-for="Booking.TotalAmount" class="form-control fw-bold text-dark" placeholder="0.00" />
-                                    <span class="input-group-text">ج.م</span>
+                                    <input asp-for="Booking.InsuranceAmount" class="form-control fw-bold text-warning" placeholder="0" />
+                                    <span class="input-group-text text-warning bg-white border-warning">ج.م</span>
                                 </div>
-                            </div>
-                            <div class="col-md-4">
-                                <label asp-for="Booking.PaidAmount" class="form-label fw-bold">العربون المدفوع</label>
-                                <div class="input-group">
-                                    <input asp-for="Booking.PaidAmount" class="form-control fw-bold text-success" placeholder="0.00" />
-                                    <span class="input-group-text">ج.م</span>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <label asp-for="Booking.InsuranceAmount" class="form-label fw-bold text-danger">مبلغ التأمين</label>
-                                <div class="input-group">
-                                    <input asp-for="Booking.InsuranceAmount" class="form-control fw-bold text-danger" placeholder="0.00" />
-                                    <span class="input-group-text">ج.م</span>
-                                </div>
-                                <div class="form-text small mt-1"><i class="fa-solid fa-circle-info ms-1"></i> يسترد عند الإرجاع</div>
                             </div>
                         </div>
 
-                        <h5 class="section-title"><i class="fa-solid fa-scissors ms-2 text-warning"></i> ملاحظات الخياطة</h5>
+                        <h5 class="section-title"><i class="fa-solid fa-scissors ms-2 text-warning"></i> تفاصيل إضافية</h5>
                         <div class="mb-5">
-                            <label asp-for="Booking.Notes" class="form-label fw-bold">تعديلات المقاسات / ملاحظات أخرى</label>
-                            <textarea asp-for="Booking.Notes" class="form-control" rows="3" placeholder="اكتب هنا تفاصيل التعديلات المطلوبة..."></textarea>
+                            <label asp-for="Booking.Notes" class="form-label fw-bold text-muted small">تعديلات الخياطة / ملاحظات</label>
+                            <textarea asp-for="Booking.Notes" class="form-control" rows="3" placeholder="مثال: تضييق الخصر، تقصير الطول..."></textarea>
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <div class="d-flex justify-content-between align-items-center pt-4 border-top">
                             <a asp-page="Index" class="btn btn-royal-cancel">
-                                <i class="fa-solid fa-arrow-right ms-1"></i> إلغاء
+                                <i class="fa-solid fa-xmark ms-1"></i> إلغاء
                             </a>
-                            <button type="submit" class="btn btn-royal-save shadow-sm">
-                                <i class="fa-solid fa-check ms-1"></i> تأكيد وحفظ الحجز
+                            <button type="submit" class="btn btn-royal-save">
+                                <i class="fa-solid fa-check ms-2"></i> تأكيد وحفظ الحجز
                             </button>
                         </div>
                     </form>
@@ -265,7 +319,7 @@
                 language: { noResults: function () { return "عميل غير موجود"; } }
             });
 
-            // ✅ كود إضافة وحذف العناصر
+            // كود إضافة وحذف العناصر
             $('#btnAddItem').click(function () {
                 var itemId = $('#productSelect').val();
                 var itemName = $('#productSelect option:selected').text();
@@ -287,15 +341,15 @@
 
                 // إضافة الصف للجدول
                 var newRow = `
-                        <tr data-id="${itemId}">
-                            <td class="fw-bold text-start align-middle">${itemName}</td>
-                            <td>
-                                <button type="button" class="btn btn-danger btn-sm btn-remove-item rounded-circle" title="حذف">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
+                            <tr data-id="${itemId}">
+                                <td class="fw-bold text-start align-middle ps-3 text-dark">${itemName}</td>
+                                <td>
+                                    <button type="button" class="btn btn-outline-danger btn-sm btn-remove-item rounded-circle border-0 shadow-sm" title="حذف">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
                 $('#itemsTableBody').append(newRow);
 
                 // إضافة حقل مخفي يرسل الـ ID للسيرفر
@@ -316,9 +370,28 @@
 
                 // إذا فرغت القائمة، أعد صف "لا يوجد عناصر"
                 if ($('#itemsTableBody tr').length === 0) {
-                    $('#itemsTableBody').html('<tr id="noItemsRow"><td colspan="2" class="text-muted small py-3">لم يتم اختيار أي قطع بعد..</td></tr>');
+                    $('#itemsTableBody').html('<tr id="noItemsRow"><td colspan="2" class="text-muted small py-4 bg-light rounded"><i class="fa-solid fa-basket-shopping me-2"></i> السلة فارغة.. أضف قطعاً للحجز</td></tr>');
                 }
             });
         });
+
+        // ✅ دالة حساب الصافي (الجافاسكريبت)
+        function calcNet() {
+            var total = parseFloat(document.getElementById('inputTotal').value) || 0;
+            var discount = parseFloat(document.getElementById('inputDiscount').value) || 0;
+
+            // التأكد أن الخصم لا يتعدى الإجمالي
+            if (discount > total) {
+                // يمكن إظهار رسالة أو تصحيح القيمة
+                // discount = total;
+                // document.getElementById('inputDiscount').value = total;
+            }
+
+            var net = total - discount;
+            if (net < 0) net = 0; // حماية
+
+            // تحديث حقل العرض (الصافي) مع تنسيق الأرقام
+            document.getElementById('displayNet').value = net.toLocaleString();
+        }
     </script>
 }

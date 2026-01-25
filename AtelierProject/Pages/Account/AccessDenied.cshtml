@@ -4,13 +4,123 @@
     ViewData["Title"] = "غير مصرح";
 }
 
-<div class="container py-5 text-center">
-    <div class="card shadow-sm border-danger p-5">
-        <h1 class="text-danger display-1"><i class="fa-solid fa-ban"></i></h1>
-        <h2 class="fw-bold text-danger">عذراً، غير مصرح لك بالدخول</h2>
-        <p class="lead text-muted">ليس لديك الصلاحيات الكافية لعرض هذه الصفحة.</p>
-        <div class="mt-4">
-            <a asp-page="/Index" class="btn btn-primary px-4">العودة للرئيسية</a>
+<style>
+    /* 1. كارت الخطأ الفخم */
+    .denied-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        background: #fff;
+        max-width: 500px;
+        margin: 0 auto;
+        position: relative;
+    }
+
+    /* 2. الهيدر (رأس الكارت) */
+    .denied-header {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); /* كحلي ليلي */
+        padding: 3rem 1rem 2rem 1rem;
+        text-align: center;
+        border-bottom: 4px solid #ef4444; /* خط أحمر للتحذير */
+        position: relative;
+    }
+
+    /* زخرفة خلفية خفيفة */
+    .denied-header::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-image: radial-gradient(#ffffff 1px, transparent 1px);
+        background-size: 20px 20px;
+        opacity: 0.05;
+    }
+
+    /* 3. حركة القفل (Shake Animation) */
+    .lock-icon-wrapper {
+        width: 100px;
+        height: 100px;
+        background: rgba(239, 68, 68, 0.1); /* خلفية حمراء شفافة */
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px auto;
+        border: 2px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .lock-icon {
+        font-size: 3.5rem;
+        color: #ef4444; /* أحمر */
+        animation: lock-shake 0.8s ease-in-out both;
+        animation-delay: 0.3s;
+    }
+
+    @@keyframes lock-shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+
+    /* 4. النصوص */
+    .denied-title {
+        font-family: 'Playfair Display', serif;
+        color: #fff;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        letter-spacing: 1px;
+    }
+
+    .denied-text {
+        color: #94a3b8;
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    /* 5. زر العودة الفخم */
+    .btn-return {
+        background: linear-gradient(135deg, #c5a059, #b08d4b);
+        color: #fff;
+        border: none;
+        padding: 12px 35px;
+        font-weight: bold;
+        border-radius: 50px;
+        transition: all 0.3s;
+        box-shadow: 0 5px 15px rgba(197, 160, 89, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-return:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(197, 160, 89, 0.5);
+        color: #fff;
+    }
+</style>
+
+<div class="container py-5 d-flex align-items-center" style="min-height: 80vh;">
+    <div class="denied-card w-100">
+
+        <div class="denied-header">
+            <div class="lock-icon-wrapper">
+                <i class="fa-solid fa-user-lock lock-icon"></i>
+            </div>
+            <h1 class="denied-title">تم رفض الوصول</h1>
+            <p class="text-white-50 mb-0">Access Denied</p>
         </div>
+
+        <div class="card-body text-center p-5">
+            <h5 class="fw-bold text-dark mb-3">عذراً، ليس لديك الصلاحية الكافية</h5>
+            <p class="denied-text mb-4">
+                أنت تحاول الوصول إلى منطقة مخصصة للإدارة أو لفرع آخر.<br>
+                يرجى التأكد من صلاحيات حسابك أو التواصل مع المدير العام.
+            </p>
+
+            <a asp-page="/Index" class="btn btn-return">
+                <i class="fa-solid fa-house"></i> العودة للرئيسية
+            </a>
+        </div>
+
     </div>
 </div>

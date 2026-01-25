@@ -1,164 +1,407 @@
 ﻿@page
 @model AtelierProject.Pages.Bookings.IndexModel
+@using Microsoft.AspNetCore.Identity
+@using AtelierProject.Models
+@inject UserManager<ApplicationUser> UserManager
+
 @{
     ViewData["Title"] = "سجل الحجوزات";
     var today = DateTime.Today.ToString("yyyy-MM-dd");
+
+    var currentUser = await UserManager.GetUserAsync(User);
+    bool isAdmin = currentUser != null && currentUser.BranchId == null;
 }
+
+<style>
+    /* --- تنسيقات الصفحة الخاصة --- */
+    .page-header-title {
+        font-family: 'Playfair Display', serif;
+        color: #1e293b;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    /* كارت الفلاتر */
+    .filter-card {
+        border: none;
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease;
+    }
+
+        .filter-card:hover {
+            transform: translateY(-3px);
+        }
+
+    /* حقول الإدخال */
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        padding: 10px 15px;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #c5a059;
+            box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.1);
+        }
+
+    /* الأزرار الملكية */
+    .btn-royal {
+        background: linear-gradient(135deg, #c5a059, #b08d4b);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(197, 160, 89, 0.3);
+        transition: 0.3s;
+    }
+
+        .btn-royal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(197, 160, 89, 0.4);
+            color: #fff;
+        }
+
+    .btn-filter-dark {
+        background: #1e293b;
+        color: #fff;
+        border-radius: 10px;
+        padding: 10px;
+        transition: 0.3s;
+    }
+
+        .btn-filter-dark:hover {
+            background: #0f172a;
+            color: #fff;
+        }
+
+    /* الجدول الفاخر */
+    .luxury-table {
+        border-collapse: separate;
+        border-spacing: 0 10px; /* مسافة بين الصفوف */
+    }
+
+        .luxury-table thead th {
+            border: none;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 15px;
+        }
+
+        .luxury-table tbody tr {
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            transition: 0.2s;
+        }
+
+            .luxury-table tbody tr:hover {
+                transform: scale(1.005);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+                z-index: 10;
+                position: relative;
+            }
+
+        .luxury-table td {
+            border: none;
+            padding: 15px;
+            vertical-align: middle;
+            color: #334155;
+        }
+
+            .luxury-table td:first-child {
+                border-radius: 0 10px 10px 0;
+                border-right: 3px solid transparent;
+            }
+
+            .luxury-table td:last-child {
+                border-radius: 10px 0 0 10px;
+            }
+
+        /* تمييز الصفوف بخط ملون حسب الحالة (اختياري) */
+        .luxury-table tr:hover td:first-child {
+            border-right-color: #c5a059;
+        }
+
+    /* الشارات (Badges) */
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .badge-new {
+        background-color: #e0f2fe;
+        color: #0284c7;
+    }
+
+    .badge-pickup {
+        background-color: #fef3c7;
+        color: #d97706;
+    }
+
+    .badge-returned {
+        background-color: #dcfce7;
+        color: #16a34a;
+    }
+
+    .badge-cancelled {
+        background-color: #f1f5f9;
+        color: #64748b;
+    }
+</style>
 
 <div class="container-fluid py-4">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold text-dark"><i class="fa-solid fa-calendar-check text-primary me-2"></i> سجل حجوزات الأتيليه</h3>
-        <a asp-page="Create" class="btn btn-primary shadow-sm">
-            <i class="fa-solid fa-plus me-2"></i> حجز جديد
-        </a>
+        <div>
+            <h3 class="page-header-title mb-1"><i class="fa-solid fa-calendar-check text-warning me-2"></i> سجل الحجوزات</h3>
+            <p class="text-muted small mb-0">إدارة ومتابعة جميع عمليات الإيجار</p>
+        </div>
+
+        @if (!isAdmin)
+        {
+            <a asp-page="Create" class="btn btn-royal">
+                <i class="fa-solid fa-plus me-2"></i> حجز جديد
+            </a>
+        }
     </div>
 
-    <div class="card border-0 shadow-sm mb-4 bg-light">
-        <div class="card-body">
-            <form method="get" class="row g-3 align-items-end">
+    <div class="filter-card p-4 mb-4">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-bold text-muted small">بحث شامل</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-search text-muted"></i></span>
+                    <input type="text" name="SearchTerm" value="@Model.SearchTerm" class="form-control border-start-0" placeholder="رقم الحجز، اسم العميل، الهاتف..." />
+                </div>
+            </div>
 
-                <div class="col-md-4">
-                    <label class="form-label fw-bold small text-muted">بحث سريع</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="fa-solid fa-search"></i></span>
-                        <input type="text" name="SearchTerm" value="@Model.SearchTerm" class="form-control" placeholder="رقم الحجز، اسم العميل، هاتفه..." />
+            <div class="col-md-3">
+                <label class="form-label fw-bold text-muted small">تاريخ محدد</label>
+                <input type="date" name="DateFilter" value="@(Model.DateFilter?.ToString("yyyy-MM-dd"))" class="form-control" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-bold text-muted small">حالة الحركة</label>
+                <select name="TypeFilter" class="form-select" asp-for="TypeFilter">
+                    <option value="">-- عرض الكل --</option>
+                    <option value="Pickup">مواعيد التسليم (Pickup)</option>
+                    <option value="Return">مواعيد الإرجاع (Return)</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-filter-dark w-100 fw-bold">
+                    <i class="fa-solid fa-filter me-1"></i> تصفية
+                </button>
+            </div>
+
+            <div class="col-12 mt-3 pt-3 border-top">
+                <small class="text-muted fw-bold me-2"><i class="fa-solid fa-bolt text-warning"></i> وصول سريع:</small>
+                <a asp-page="./Index" asp-route-DateFilter="@today" asp-route-TypeFilter="Pickup" class="btn btn-sm btn-outline-warning rounded-pill me-1 px-3">
+                    تسليمات اليوم
+                </a>
+                <a asp-page="./Index" asp-route-DateFilter="@today" asp-route-TypeFilter="Return" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                    مرتجعات اليوم
+                </a>
+                <a asp-page="./Index" class="btn btn-sm btn-link text-decoration-none">إعادة تعيين</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table luxury-table">
+            <thead>
+                <tr>
+                    <th class="text-center">#</th>
+                    <th>العميل</th>
+                    <th>تفاصيل الموديل</th>
+                    <th>تواريخ الحجز</th>
+                    <th>الحساب المالي</th>
+                    <th class="text-center">الحالة</th>
+                    <th class="text-center">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Bookings.Any())
+                {
+                    @foreach (var item in Model.Bookings)
+                    {
+                        var firstItem = item.BookingItems.FirstOrDefault()?.ProductItem;
+                        var itemName = firstItem?.ProductDefinition?.Name ?? "غير محدد";
+                        var itemCount = item.BookingItems.Count;
+
+                        <tr>
+                            <td class="text-center fw-bold text-muted">@item.Id</td>
+
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold me-2" style="width:35px; height:35px;">
+                                        @item.Client.Name.Substring(0, 1)
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">@item.Client.Name</div>
+                                        <div class="text-muted small" dir="ltr">@item.Client.Phone</div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="fw-bold text-dark">@itemName</div>
+                                <div class="small text-muted">
+                                    كود: @(firstItem?.ProductDefinition?.Code ?? "-")
+                                    @if (itemCount > 1)
+                                    {
+                                        <span class="badge bg-secondary rounded-pill ms-1">+@(itemCount - 1)</span>
+                                    }
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="d-flex flex-column small">
+                                    <span class="text-success"><i class="fa-solid fa-arrow-right me-1"></i> استلام: @item.PickupDate.ToString("dd/MM")</span>
+                                    <span class="text-danger mt-1"><i class="fa-solid fa-arrow-left me-1"></i> إرجاع: @item.ReturnDate.ToString("dd/MM")</span>
+                                </div>
+                            </td>
+
+                            <td>
+                                @if (item.RemainingRentalAmount > 0)
+                                {
+                                    <div class="text-danger fw-bold">@item.RemainingRentalAmount.ToString("N0") ج.م</div>
+                                    <div class="small text-muted">متبقي</div>
+                                }
+                                else
+                                {
+                                    <div class="text-success fw-bold"><i class="fa-solid fa-check-circle"></i> خالص</div>
+                                }
+                            </td>
+
+                            <td class="text-center">
+                                @switch (item.Status)
+                                {
+                                    case AtelierProject.Models.BookingStatus.New:
+                                        <span class="status-badge badge-new">جديد</span>
+                                        break;
+                                    case AtelierProject.Models.BookingStatus.PickedUp:
+                                        <span class="status-badge badge-pickup">تم التسليم</span>
+                                        break;
+                                    case AtelierProject.Models.BookingStatus.Returned:
+                                        <span class="status-badge badge-returned">تم الإرجاع</span>
+                                        break;
+                                    case AtelierProject.Models.BookingStatus.Cancelled:
+                                        <span class="status-badge badge-cancelled">ملغي</span>
+                                        break;
+                                }
+                            </td>
+
+                            <td class="text-center">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light rounded-circle shadow-sm" type="button" data-bs-toggle="dropdown">
+                                        <i class="fa-solid fa-ellipsis-vertical text-muted"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
+                                        @if (item.Status != AtelierProject.Models.BookingStatus.Cancelled)
+                                        {
+                                            <li>
+                                                <a class="dropdown-item" asp-page="./Details" asp-route-id="@item.Id">
+                                                    <i class="fa-solid fa-eye text-primary me-2"></i> عرض وتعديل
+                                                </a>
+                                            </li>
+                                        }
+
+                                        @if (isAdmin && item.Status != AtelierProject.Models.BookingStatus.Cancelled)
+                                        {
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <button class="dropdown-item text-danger"
+                                                        onclick="setCancelModal('@item.Id', '@item.TotalAmount', '@item.PaidAmount')"
+                                                        data-bs-toggle="modal" data-bs-target="#cancelModal">
+                                                    <i class="fa-solid fa-trash-can me-2"></i> إلغاء الحجز
+                                                </button>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="text-muted opacity-50">
+                                <i class="fa-solid fa-folder-open fa-3x mb-3"></i>
+                                <p>لا توجد حجوزات مطابقة للبحث</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <form method="post" asp-page-handler="CancelBooking">
+                <input type="hidden" name="bookingId" id="cancelBookingId" />
+
+                <div class="modal-header bg-danger text-white border-0">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i> إلغاء الحجز</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <p class="fw-bold mb-3">هل أنت متأكد من رغبتك في إلغاء هذا الحجز؟</p>
+
+                    <div class="alert alert-light border d-flex align-items-center p-3 mb-3">
+                        <i class="fa-solid fa-info-circle text-primary fs-4 me-3"></i>
+                        <small class="text-muted">سيتم تحرير القطع المحجوزة وإتاحتها للحجز مرة أخرى فوراً.</small>
+                    </div>
+
+                    <div class="d-flex justify-content-between bg-light p-3 rounded mb-3">
+                        <div>
+                            <small class="text-muted d-block">إجمالي الحجز</small>
+                            <span id="displayTotal" class="fw-bold text-dark">0</span>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted d-block">المدفوع (عربون)</small>
+                            <span id="displayPaid" class="fw-bold text-success">0</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-1">
+                        <label class="form-label fw-bold">المبلغ المسترد للعميل <span class="text-danger">(يخرج من الخزينة)</span></label>
+                        <div class="input-group">
+                            <input type="number" name="refundAmount" class="form-control" value="0" min="0" step="0.01" required />
+                            <span class="input-group-text">ج.م</span>
+                        </div>
+                        <div class="form-text small mt-1">اكتب 0 إذا كنت ستخصم العربون بالكامل.</div>
                     </div>
                 </div>
 
-                <div class="col-md-3">
-                    <label class="form-label fw-bold small text-muted">التاريخ</label>
-                    <input type="date" name="DateFilter" value="@(Model.DateFilter?.ToString("yyyy-MM-dd"))" class="form-control" />
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label fw-bold small text-muted">نوع الفلتر</label>
-                    <select name="TypeFilter" class="form-select" asp-for="TypeFilter">
-                        <option value="">-- الكل --</option>
-                        <option value="Pickup">مواعيد التسليم (Pickup)</option>
-                        <option value="Return">مواعيد الإرجاع (Return)</option>
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-dark w-100"><i class="fa-solid fa-filter"></i> تصفية</button>
-                </div>
-
-                <div class="col-12 mt-2">
-                    <small class="text-muted me-2">اختصارات:</small>
-                    <a asp-page="./Index" asp-route-DateFilter="@today" asp-route-TypeFilter="Pickup" class="btn btn-sm btn-outline-primary rounded-pill me-1">
-                        <i class="fa-solid fa-truck"></i> تسليمات اليوم
-                    </a>
-                    <a asp-page="./Index" asp-route-DateFilter="@today" asp-route-TypeFilter="Return" class="btn btn-sm btn-outline-danger rounded-pill">
-                        <i class="fa-solid fa-rotate-left"></i> مرتجعات اليوم
-                    </a>
-                    <a asp-page="./Index" class="btn btn-sm btn-link text-decoration-none">عرض الكل</a>
+                <div class="modal-footer border-0 bg-light">
+                    <button type="button" class="btn btn-light text-muted fw-bold" data-bs-dismiss="modal">تراجع</button>
+                    <button type="submit" class="btn btn-danger fw-bold px-4">تأكيد الإلغاء</button>
                 </div>
             </form>
         </div>
     </div>
-
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="text-center">#</th>
-                            <th>العميل</th>
-                            <th>الموديل / الأصناف</th>
-                            <th>تاريخ الاستلام</th>
-                            <th>تاريخ الإرجاع</th>
-                            <th>المتبقي (عليه)</th>
-                            <th class="text-center">الحالة</th>
-                            <th class="text-center">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.Bookings.Any())
-                        {
-                            @foreach (var item in Model.Bookings)
-                            {
-                                var firstItem = item.BookingItems.FirstOrDefault()?.ProductItem;
-                                var itemName = firstItem?.ProductDefinition?.Name ?? "غير محدد";
-                                var itemCount = item.BookingItems.Count;
-
-                                <tr>
-                                    <td class="text-center fw-bold">@item.Id</td>
-
-                                    <td>
-                                        <div class="fw-bold">@item.Client.Name</div>
-                                        <small class="text-muted" dir="ltr">@item.Client.Phone</small>
-                                    </td>
-
-                                    <td>
-                                        <span class="text-primary fw-bold">@itemName</span>
-                                        @if (itemCount > 1)
-                                        {
-                                            <span class="badge bg-secondary rounded-pill">+@(itemCount - 1)</span>
-                                        }
-                                        <div class="small text-muted">@firstItem?.ProductDefinition?.Code</div>
-                                    </td>
-
-                                    <td>
-                                        <i class="fa-regular fa-calendar text-muted me-1"></i>
-                                        @item.PickupDate.ToString("dd/MM")
-                                    </td>
-
-                                    <td>
-                                        <i class="fa-solid fa-rotate-left text-muted me-1"></i>
-                                        @item.ReturnDate.ToString("dd/MM")
-                                    </td>
-
-                                    <td>
-                                        @if (item.RemainingRentalAmount > 0)
-                                        {
-                                            <span class="text-danger fw-bold">@item.RemainingRentalAmount.ToString("N0")</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-success"><i class="fa-solid fa-check"></i> خالص</span>
-                                        }
-                                    </td>
-
-                                    <td class="text-center">
-                                        @switch (item.Status)
-                                        {
-                                            case AtelierProject.Models.BookingStatus.New:
-                                                <span class="badge bg-info text-dark">جديد</span>
-                                                break;
-                                            case AtelierProject.Models.BookingStatus.PickedUp:
-                                                <span class="badge bg-warning text-dark">تم التسليم (خارج)</span>
-                                                break;
-                                            case AtelierProject.Models.BookingStatus.Returned:
-                                                <span class="badge bg-success">تم الإرجاع</span>
-                                                break;
-                                            case AtelierProject.Models.BookingStatus.Cancelled:
-                                                <span class="badge bg-secondary">ملغي</span>
-                                                break;
-                                        }
-                                    </td>
-
-                                    <td class="text-center">
-                                        <a asp-page="./Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary shadow-sm px-3">
-                                            <i class="fa-solid fa-eye me-1"></i> تفاصيل
-                                        </a>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="8" class="text-center py-5 text-muted">
-                                    <i class="fa-solid fa-file-circle-xmark fa-3x mb-3 d-block opacity-50"></i>
-                                    لا توجد حجوزات مطابقة للفلاتر الحالية.
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 </div>
+
+@section Scripts {
+    <script>
+        function setCancelModal(id, total, paid) {
+            document.getElementById('cancelBookingId').value = id;
+            document.getElementById('displayTotal').innerText = parseFloat(total).toLocaleString() + ' ج.م';
+            document.getElementById('displayPaid').innerText = parseFloat(paid).toLocaleString() + ' ج.م';
+        }
+    </script>
+}
